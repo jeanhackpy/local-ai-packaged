@@ -34,10 +34,13 @@ def clone_supabase_repo():
         run_command(["git", "checkout", "master"])
         os.chdir("..")
     else:
-        print("Supabase repository already exists, updating...")
-        os.chdir("supabase")
-        run_command(["git", "pull"])
-        os.chdir("..")
+        if os.path.exists("supabase/.git"):
+            print("Supabase repository already exists, updating...")
+            os.chdir("supabase")
+            run_command(["git", "pull"])
+            os.chdir("..")
+        else:
+            print("Supabase directory exists and is fully integrated (no .git folder). Skipping update.")
 
 def prepare_supabase_env():
     """Merge .env in root with .env.example in supabase/docker and write to .env in supabase/docker."""

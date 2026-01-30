@@ -15,10 +15,6 @@
     reverse_proxy open-webui:8080
 }
 
-# Langfuse
-{$LANGFUSE_HOSTNAME} {
-    reverse_proxy langfuse-web:3000
-}
 
 # # Ollama API
 # {$OLLAMA_HOSTNAME} {
