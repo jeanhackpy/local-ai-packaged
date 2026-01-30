@@ -188,6 +188,25 @@ services:
         max-size: "1m"
         max-file: "1"
 
+  moltbot:
+    image: moltbot/moltbot:latest
+    container_name: moltbot
+    restart: unless-stopped
+    init: true
+    expose:
+      - 18789/tcp
+      - 18790/tcp
+    environment:
+      - HOME=/home/node
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+    volumes:
+      - ./moltbot:/home/node/.openclaw
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   ollama-cpu:
     profiles: [ "cpu" ]
     <<: *service-ollama
