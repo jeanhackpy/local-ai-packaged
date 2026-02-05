@@ -10,6 +10,15 @@ n8n instance if you use this setup instead of the base one provided by n8n!
 
 **IMPORANT**: Supabase has updated a couple environment variables so you may have to add some new default values in your .env that I have in my .env.example if you have had this project up and running already and are just pulling new changes. Specifically, you need to add "POOLER_DB_POOL_SIZE=5" to your .env. This is required if you have had the package running before June 14th.
 
+## 📚 Documentation
+
+New to Git or VPS management? Check out these comprehensive guides:
+
+- **[Git Workflow Guide](docs/GIT_WORKFLOW.md)** - Learn to revert changes, manage branches, and recover from mistakes
+- **[VPS Maintenance Guide](docs/VPS_MAINTENANCE.md)** - Daily operations, backups, updates, and troubleshooting
+- **[OpenClaw & Caddy Guide](docs/OPENCLAW_CADDY_GUIDE.md)** - Configure AI gateway, domains, and reverse proxy
+
+
 ## Important Links
 
 - [Local AI community](https://thinktank.ottomator.ai/c/local-ai/18) forum over in the oTTomator Think Tank
