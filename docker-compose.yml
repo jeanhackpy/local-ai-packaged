@@ -8,6 +8,7 @@ volumes:
   open-webui:
   caddy-data:
   caddy-config:
+  openclaw-tools:
 
 
 x-n8n: &service-n8n
@@ -15,7 +16,7 @@ x-n8n: &service-n8n
   deploy:
     resources:
       limits:
-        memory: 512M
+        memory: 2G
   environment:
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=db
@@ -123,7 +124,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2G
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
       - NEO4J_server_memory_heap_initial__size=256m
@@ -191,24 +192,30 @@ services:
         max-size: "1m"
         max-file: "1"
 
-  moltbot:
-    image: moltbot/moltbot:latest
-    container_name: moltbot
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:2026.2.2
+    container_name: openclaw
     restart: unless-stopped
     init: true
-    expose:
-      - 18789/tcp
-      - 18790/tcp
+    ports:
+      - 18789:18789/tcp
+      - 18790:18790/tcp
     environment:
       - HOME=/home/node
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - NODE_OPTIONS=--max-old-space-size=768
+      - PIP_CACHE_DIR=/home/node/tools/.cache
+      - PYTHONUSERBASE=/home/node/tools/python
     volumes:
-      - ./moltbot:/home/node/.openclaw
+      - ./openclaw:/home/node/.openclaw
+      - openclaw-tools:/home/node/tools
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2G
 
   ollama-cpu:
     profiles: [ "cpu" ]

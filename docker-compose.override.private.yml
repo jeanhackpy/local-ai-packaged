@@ -33,3 +33,8 @@ services:
   ollama-gpu-amd:
     ports:
       - 127.0.0.1:11434:11434
+
+  openclaw:
+    ports:
+      - 18789:18789
+      - 18790:18790
