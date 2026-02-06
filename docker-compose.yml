@@ -13,6 +13,10 @@ volumes:
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
+  deploy:
+    resources:
+      limits:
+        memory: 2G
   environment:
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=db
@@ -29,6 +33,10 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
+  deploy:
+    resources:
+      limits:
+        memory: 4G
   expose:
     - 11434/tcp
   environment:
@@ -79,6 +87,10 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          memory: 768M
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
 
@@ -110,6 +122,10 @@ services:
     expose:
       - 6333/tcp
       - 6334/tcp
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     volumes:
       - qdrant_storage:/qdrant/storage
 
@@ -124,6 +140,10 @@ services:
       - 7473/tcp
       - 7474/tcp
       - 7687/tcp
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
     restart: always
@@ -135,6 +155,9 @@ services:
     ports:
       - 80:80/tcp
       - 443:443/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     expose:
       - 2019/tcp
       - 443/tcp
@@ -212,6 +235,34 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:2026.2.2
+    container_name: openclaw
+    restart: unless-stopped
+    init: true
+    ports:
+      - 18789:18789/tcp
+      - 18790:18790/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - HOME=/home/node
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - NODE_OPTIONS=--max-old-space-size=768
+      - PIP_CACHE_DIR=/home/node/tools/.cache
+      - PYTHONUSERBASE=/home/node/tools/python
+    volumes:
+      - ./openclaw:/home/node/.openclaw
+      - openclaw-tools:/home/node/tools
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   ollama-cpu:
     profiles: [ "cpu" ]
