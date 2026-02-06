@@ -24,14 +24,14 @@ import /etc/caddy/addons/*.conf
 # }
 
 # Supabase
-# {$SUPABASE_HOSTNAME} {
-#  reverse_proxy kong:8000
-# }
+{$SUPABASE_HOSTNAME} {
+reverse_proxy kong:8000
+}
 
 # Neo4j
-# {$NEO4J_HOSTNAME} {
-#  reverse_proxy neo4j:7474
-# }
+{$NEO4J_HOSTNAME} {
+reverse_proxy neo4j:7474
+}
 
 # Moltbot / OpenClaw
 # {$MOLTBOT_HOSTNAME} {
