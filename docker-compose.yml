@@ -236,6 +236,19 @@ services:
         max-size: "1m"
         max-file: "1"
 
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: crawl4ai
+    restart: unless-stopped
+    expose:
+      - 11235/tcp
+    environment:
+      - CRAWL4AI_API_TOKEN=${CRAWL4AI_API_TOKEN:-}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
   openclaw:
     image: ghcr.io/openclaw/openclaw:2026.2.2
     container_name: openclaw

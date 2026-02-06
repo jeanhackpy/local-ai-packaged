@@ -11,3 +11,5 @@ searxng/uwsgi*
 openclaw/*
 !openclaw/openclaw.json
 !openclaw/Dockerfileopenclaw/workspace-setup/
+__pycache__/
+*.pyc
