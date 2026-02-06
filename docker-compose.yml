@@ -50,6 +50,25 @@ x-init-ollama: &init-ollama
     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
+  openclaw-gateway:
+    container_name: openclaw-gateway
+    build:
+      context: ./openclaw
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    volumes:
+      - ./openclaw:/home/node/.openclaw
+      - ./shared:/data/shared
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    networks:
+      - default
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
