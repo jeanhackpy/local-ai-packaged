@@ -139,6 +139,9 @@ services:
     ports:
       - 80:80/tcp
       - 443:443/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     expose:
       - 2019/tcp
       - 443/tcp
@@ -200,6 +203,9 @@ services:
     ports:
       - 18789:18789/tcp
       - 18790:18790/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - HOME=/home/node
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
