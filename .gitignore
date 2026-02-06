@@ -6,3 +6,8 @@ shared-backup/
 .env.test
 searxng/settings.yml
 searxng/uwsgi*
+
+# OpenClaw - Ignore everything by default
+openclaw/*
+!openclaw/openclaw.json
+!openclaw/Dockerfileopenclaw/workspace-setup/

@@ -15,10 +15,10 @@ import /etc/caddy/addons/*.conf
 
 # Open WebUI
 {$WEBUI_HOSTNAME} {
- reverse_proxy open-webui:8080
+    reverse_proxy open-webui:8080
 }
 
-# Ollama API (disabled)
+# # Ollama API
 # {$OLLAMA_HOSTNAME} {
 # reverse_proxy ollama:11434
 # }

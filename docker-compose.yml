@@ -8,7 +8,7 @@ volumes:
   open-webui:
   caddy-data:
   caddy-config:
-  openclaw-tools:
+  valkey-data:
 
 
 x-n8n: &service-n8n
@@ -58,6 +58,25 @@ x-init-ollama: &init-ollama
     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
+  openclaw-gateway:
+    container_name: openclaw-gateway
+    build:
+      context: ./openclaw
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    volumes:
+      - ./openclaw:/home/node/.openclaw
+      - ./shared:/data/shared
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    networks:
+      - default
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
@@ -127,9 +146,6 @@ services:
           memory: 2G
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
-      - NEO4J_server_memory_heap_initial__size=256m
-      - NEO4J_server_memory_heap_max__size=256m
-      - NEO4J_server_memory_pagecache_size=128m
     restart: always
 
   caddy:
@@ -158,7 +174,6 @@ services:
       - OLLAMA_HOSTNAME=${OLLAMA_HOSTNAME:-":8004"}
       - SUPABASE_HOSTNAME=${SUPABASE_HOSTNAME:-":8005"}
       - SEARXNG_HOSTNAME=${SEARXNG_HOSTNAME:-":8006"}
-      - LANGFUSE_HOSTNAME=${LANGFUSE_HOSTNAME:-":8007"}
       - NEO4J_HOSTNAME=${NEO4J_HOSTNAME:-":8008"}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
     cap_drop:
@@ -170,6 +185,32 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+
+  redis:
+    container_name: redis
+    image: docker.io/valkey/valkey:8-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    expose:
+      - 6379/tcp
+    volumes:
+      - valkey-data:/data
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 3s
+      timeout: 10s
+      retries: 10
 
   searxng:
     container_name: searxng

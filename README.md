@@ -4,7 +4,6 @@
 quickly bootstraps a fully featured Local AI and Low Code development
 environment including Ollama for your local LLMs, Open WebUI for an interface to chat with your N8N agents, and Supabase for your database, vector store, and authentication. 
 
-This is Cole's version with a couple of improvements and the addition of Supabase, Open WebUI, Flowise, Neo4j, Langfuse, SearXNG, and Caddy!
 Also, the local RAG AI Agent workflows from the video will be automatically in your 
 n8n instance if you use this setup instead of the base one provided by n8n!
 
@@ -49,7 +48,6 @@ and run the latest local LLMs
 ✅ [**Open WebUI**](https://openwebui.com/) - ChatGPT-like interface to
 privately interact with your local models and N8N agents
 
-✅ [**Flowise**](https://flowiseai.com/) - No/low code AI agent
 builder that pairs very well with n8n
 
 ✅ [**Qdrant**](https://qdrant.tech/) - Open source, high performance vector
@@ -63,7 +61,6 @@ results from up to 229 search services. Users are neither tracked nor profiled, 
 
 ✅ [**Caddy**](https://caddyserver.com/) - Managed HTTPS/TLS for custom domains
 
-✅ [**Langfuse**](https://langfuse.com/) - Open source LLM engineering platform for agent observability
 
 ## Prerequisites
 
@@ -109,12 +106,8 @@ Before running the services, you need to set up your environment variables for S
    NEO4J_AUTH=
 
    ############
-   # Langfuse credentials
    ############
 
-   CLICKHOUSE_PASSWORD=
-   MINIO_ROOT_PASSWORD=
-   LANGFUSE_SALT=
    NEXTAUTH_SECRET=
    ENCRYPTION_KEY=  
    ```
@@ -130,7 +123,6 @@ Before running the services, you need to set up your environment variables for S
 
    N8N_HOSTNAME=n8n.yourdomain.com
    WEBUI_HOSTNAME=:openwebui.yourdomain.com
-   FLOWISE_HOSTNAME=:flowise.yourdomain.com
    SUPABASE_HOSTNAME=:supabase.yourdomain.com
    OLLAMA_HOSTNAME=:ollama.yourdomain.com
    SEARXNG_HOSTNAME=searxng.yourdomain.com
