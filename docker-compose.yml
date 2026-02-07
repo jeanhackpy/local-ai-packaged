@@ -58,25 +58,6 @@ x-init-ollama: &init-ollama
     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
-  openclaw-gateway:
-    container_name: openclaw-gateway
-    build:
-      context: ./openclaw
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "18789:18789"
-    volumes:
-      - ./openclaw:/home/node/.openclaw
-      - ./shared:/data/shared
-    environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
-      - SERPER_API_KEY=${SERPER_API_KEY}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-    networks:
-      - default
-
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
@@ -236,6 +217,19 @@ services:
         max-size: "1m"
         max-file: "1"
 
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: crawl4ai
+    restart: unless-stopped
+    expose:
+      - 11235/tcp
+    environment:
+      - CRAWL4AI_API_TOKEN=${CRAWL4AI_API_TOKEN:-}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
   openclaw:
     image: ghcr.io/openclaw/openclaw:2026.2.2
     container_name: openclaw
@@ -252,11 +246,13 @@ services:
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SERPER_API_KEY=${SERPER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - NODE_OPTIONS=--max-old-space-size=768
       - PIP_CACHE_DIR=/home/node/tools/.cache
       - PYTHONUSERBASE=/home/node/tools/python
     volumes:
       - ./openclaw:/home/node/.openclaw
+      - ./shared:/data/shared
       - openclaw-tools:/home/node/tools
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
