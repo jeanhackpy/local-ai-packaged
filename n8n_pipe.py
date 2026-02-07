@@ -1,7 +1,5 @@
 """
 title: n8n Pipe Function
-author: Cole Medin
-author_url: https://www.youtube.com/@ColeMedin
 version: 0.1.0
 
 This module defines a Pipe class that utilizes N8N for an Agent

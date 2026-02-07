@@ -191,7 +191,7 @@ def generate_searxng_secret_key():
         print("    $secretKey = -join ($randomBytes | ForEach-Object { \"{0:x2}\" -f $_ })")
         print("    (Get-Content searxng/settings.yml) -replace 'ultrasecretkey', $secretKey | Set-Content searxng/settings.yml")
 
-def prepare_moltbot_env():
+def prepare_openclaw_env():
     """Ensure OPENCLAW_GATEWAY_TOKEN is set in the environment and persisted in .env."""
     root_env_path = ".env"
     token_key = "OPENCLAW_GATEWAY_TOKEN"
@@ -305,7 +305,7 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    prepare_moltbot_env()
+    prepare_openclaw_env()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
 
