@@ -33,10 +33,6 @@ reverse_proxy kong:8000
 reverse_proxy neo4j:7474
 }
 
-# OpenClaw
-# {$OPENCLAW_HOSTNAME} {
-#  reverse_proxy openclaw:18789
-# }
 
 
 # SearXNG example (fully commented & closed)
