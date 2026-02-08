@@ -18,8 +18,6 @@ An advanced, self-hosted foundation for creating autonomous agentic systems. Thi
   - **Supabase (PostgreSQL)**: Main relational database and authentication.
   - **Qdrant**: High-performance vector store for RAG (Retrieval-Augmented Generation).
   - **Neo4j**: Graph database for complex relationship mapping.
-- **Monitoring**:
-  - **Langfuse**: Open-source LLM tracing and observability (Cloud or Self-hosted).
 
 ## ✨ Key Features
 
