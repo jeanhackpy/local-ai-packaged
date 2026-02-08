@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import asyncio
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -44,7 +45,8 @@ class Pipe:
         self.name = "N8N Pipe"
         self.valves = self.Valves()
         self.last_emit_time = 0
-        pass
+        # Use a session for connection pooling to improve performance
+        self.session = requests.Session()
 
     async def emit_status(
         self,
@@ -87,6 +89,9 @@ class Pipe:
         chat_id, _ = extract_event_info(__event_emitter__)
         messages = body.get("messages", [])
 
+        # Initialize n8n_response
+        n8n_response = ""
+
         # Verify a message is available
         if messages:
             question = messages[-1]["content"]
@@ -94,19 +99,26 @@ class Pipe:
                 # Invoke N8N workflow
                 headers = {
                     "Authorization": f"Bearer {self.valves.n8n_bearer_token}",
-                    "Content-Type": "application/json",
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
-                    self.valves.n8n_url, json=payload, headers=headers
+
+                # Use asyncio.to_thread to prevent blocking the event loop
+                # and use the session for connection pooling.
+                response = await asyncio.to_thread(
+                    self.session.post,
+                    self.valves.n8n_url,
+                    json=payload,
+                    headers=headers,
+                    timeout=300,  # Add timeout to prevent hanging
                 )
+
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
                     raise Exception(f"Error: {response.status_code} - {response.text}")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
                 await self.emit_status(
@@ -118,16 +130,17 @@ class Pipe:
                 return {"error": str(e)}
         # If no message is available alert user
         else:
+            n8n_response = "No messages found in the request body"
             await self.emit_status(
                 __event_emitter__,
                 "error",
-                "No messages found in the request body",
+                n8n_response,
                 True,
             )
             body["messages"].append(
                 {
                     "role": "assistant",
-                    "content": "No messages found in the request body",
+                    "content": n8n_response,
                 }
             )
 
