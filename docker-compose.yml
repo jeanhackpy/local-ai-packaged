@@ -56,8 +56,6 @@ services:
       context: ./openclaw
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "18789:18789"
     volumes:
       - ./openclaw:/home/node/.openclaw
       - ./shared:/data/shared
