@@ -52,5 +52,49 @@
       "openrouter/openrouter/free",
       "ollama/qwen2.5:7b-instruct-q4_K_M"
     ]
+  },
+  "integrations": {
+    "databases": {
+      "supabase": {
+        "enabled": true,
+        "url": "${SUPABASE_URL}",
+        "serviceKey": "${SUPABASE_KEY}",
+        "anonKey": "${SUPABASE_ANON_KEY}",
+        "description": "PostgreSQL database with real-time subscriptions and auth"
+      },
+      "qdrant": {
+        "enabled": true,
+        "url": "${QDRANT_URL}",
+        "description": "Vector database for embeddings and similarity search"
+      },
+      "neo4j": {
+        "enabled": true,
+        "url": "${NEO4J_URL}",
+        "auth": "${NEO4J_AUTH}",
+        "description": "Graph database for relationship mapping"
+      },
+      "postgres": {
+        "enabled": true,
+        "host": "${POSTGRES_HOST}",
+        "port": "${POSTGRES_PORT}",
+        "user": "${POSTGRES_USER}",
+        "password": "${POSTGRES_PASSWORD}",
+        "database": "${POSTGRES_DB}",
+        "description": "Direct PostgreSQL connection"
+      }
+    },
+    "services": {
+      "n8n": {
+        "enabled": true,
+        "url": "${N8N_URL}",
+        "webhookUrl": "${N8N_WEBHOOK_URL}",
+        "description": "Workflow automation and integrations"
+      },
+      "crawl4ai": {
+        "enabled": true,
+        "url": "${CRAWL4AI_URL}",
+        "description": "Web crawling and data extraction"
+      }
+    }
   }
 }

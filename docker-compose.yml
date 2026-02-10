@@ -263,6 +263,21 @@ services:
       - NODE_OPTIONS=--max-old-space-size=768 --dns-result-order=ipv4first
       - PIP_CACHE_DIR=/home/node/tools/.cache
       - PYTHONUSERBASE=/home/node/tools/python
+      # Service Connections
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_KEY=${SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${ANON_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_AUTH=${NEO4J_AUTH}
+      - N8N_URL=http://n8n:5678
+      - N8N_WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME}
+      - CRAWL4AI_URL=http://crawl4ai:11235
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
     volumes:
       - ./openclaw:/home/node/.openclaw
       - ./shared:/data/shared

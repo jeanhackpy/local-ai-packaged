@@ -9,7 +9,21 @@
     "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
     "NVIDIA_API_KEY": "${NVIDIA_API_KEY}",
     "OPENCLAW_GATEWAY_TOKEN": "${OPENCLAW_GATEWAY_TOKEN}",
-    "OLLAMA_API_KEY": "${OLLAMA_API_KEY}"
+    "OLLAMA_API_KEY": "${OLLAMA_API_KEY}",
+    "SUPABASE_URL": "${SUPABASE_URL}",
+    "SUPABASE_KEY": "${SUPABASE_KEY}",
+    "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
+    "QDRANT_URL": "${QDRANT_URL}",
+    "NEO4J_URL": "${NEO4J_URL}",
+    "NEO4J_AUTH": "${NEO4J_AUTH}",
+    "N8N_URL": "${N8N_URL}",
+    "N8N_WEBHOOK_URL": "${N8N_WEBHOOK_URL}",
+    "CRAWL4AI_URL": "${CRAWL4AI_URL}",
+    "POSTGRES_HOST": "${POSTGRES_HOST}",
+    "POSTGRES_PORT": "${POSTGRES_PORT}",
+    "POSTGRES_USER": "${POSTGRES_USER}",
+    "POSTGRES_PASSWORD": "${POSTGRES_PASSWORD}",
+    "POSTGRES_DB": "${POSTGRES_DB}"
   },
   "auth": {
     "profiles": {
@@ -136,7 +150,11 @@
       "nano-pdf": { "enabled": true },
       "mcporter": { "enabled": true },
       "healthcheck": { "enabled": true },
-      "crawl4ai": { "enabled": true }
+      "crawl4ai": { "enabled": true },
+      "supabase-client": { "enabled": true },
+      "qdrant-client": { "enabled": true },
+      "neo4j-client": { "enabled": true },
+      "n8n-client": { "enabled": true }
     }
   },
   "plugins": {
