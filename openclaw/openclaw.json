@@ -1,38 +1,50 @@
 {
   "meta": {
-    "lastTouchedVersion": "2026.2.6",
-    "lastTouchedAt": "2026-02-10T13:00:00.000Z"
+    "lastTouchedVersion": "2026.2.9",
+    "lastTouchedAt": "2026-02-10T08:25:26.428Z"
   },
   "env": {
-    "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
-    "SERPER_API_KEY": "${SERPER_API_KEY}",
-    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
-    "NVIDIA_API_KEY": "${NVIDIA_API_KEY}",
-    "OPENCLAW_GATEWAY_TOKEN": "${OPENCLAW_GATEWAY_TOKEN}",
-    "OLLAMA_API_KEY": "${OLLAMA_API_KEY}",
-    "OLLAMA_HOST": "${OLLAMA_HOST}",
-    "OLLAMA_CLOUD_URL": "${OLLAMA_CLOUD_URL}",
-    "SUPABASE_URL": "${SUPABASE_URL}",
-    "SUPABASE_KEY": "${SUPABASE_KEY}",
-    "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
-    "QDRANT_URL": "${QDRANT_URL}",
-    "NEO4J_URL": "${NEO4J_URL}",
-    "NEO4J_AUTH": "${NEO4J_AUTH}",
-    "N8N_URL": "${N8N_URL}",
-    "N8N_WEBHOOK_URL": "${N8N_WEBHOOK_URL}",
-    "CRAWL4AI_URL": "${CRAWL4AI_URL}",
-    "POSTGRES_HOST": "${POSTGRES_HOST}",
-    "POSTGRES_PORT": "${POSTGRES_PORT}",
-    "POSTGRES_USER": "${POSTGRES_USER}",
-    "POSTGRES_PASSWORD": "${POSTGRES_PASSWORD}",
-    "POSTGRES_DB": "${POSTGRES_DB}"
+    "OPENROUTER_API_KEY": "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",
+    "SERPER_API_KEY": "3576ebac4d420374019b118694f6ca3fc0ae696d",
+    "TELEGRAM_BOT_TOKEN": "8165585086:AAEFx3MOew3Xck2PF9KBiQbk_HzgnSZ8t8M",
+    "NVIDIA_API_KEY": "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",
+    "OPENCLAW_GATEWAY_TOKEN": "dec201ef160b96d11a38da136bf851d9acf3f3536a9ea0dc",
+    "OLLAMA_API_KEY": "cfd521c0feb74ef3b269b7f392a39d47.hZj4s6iF1fjibr_8iqu-FXXM",
+    "OLLAMA_HOST": "http://ollama:11434",
+    "OLLAMA_CLOUD_URL": "https://api.ollama.com/v1",
+    "SUPABASE_URL": "http://kong:8000",
+    "SUPABASE_KEY": "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogInNlcnZpY2Vfcm9sZSIsICJpc3MiOiAic3VwYWJhc2UiLCAiaWF0IjogMTc2ODYzNjM1MiwgImV4cCI6IDIwODM5OTYzNTJ9.uRxPC0PeQA8LJvzP7z__EKf9hyD0RLCPjYY2UXAKufg",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3Njg2MzYzNTIsICJleHAiOiAyMDgzOTk2MzUyfQ.DJdTKiMyLnptNoCWdnedepDe-Jq3FnqJrEFeE9HcSkE",
+    "QDRANT_URL": "http://qdrant:6333",
+    "NEO4J_URL": "bolt://neo4j:7687",
+    "NEO4J_AUTH": "neo4j/9PXofEGxRCw2O119HC3RnRUK",
+    "N8N_URL": "http://n8n:5678",
+    "N8N_WEBHOOK_URL": "https://n8n.recall-agency.com",
+    "CRAWL4AI_URL": "http://crawl4ai:11235",
+    "POSTGRES_HOST": "db",
+    "POSTGRES_PORT": "5432",
+    "POSTGRES_USER": "postgres",
+    "POSTGRES_PASSWORD": "xpKe3z1z8q5d1QKjx1ZZzRRgFtQlUe3K",
+    "POSTGRES_DB": "postgres"
   },
   "auth": {
     "profiles": {
-      "openrouter:default": { "provider": "openrouter", "mode": "api_key" },
-      "nvidia:default": { "provider": "nvidia", "mode": "api_key" },
-      "ollama:default": { "provider": "ollama", "mode": "api_key" },
-      "ollama-cloud:default": { "provider": "ollama-cloud", "mode": "api_key" }
+      "openrouter:default": {
+        "provider": "openrouter",
+        "mode": "api_key"
+      },
+      "nvidia:default": {
+        "provider": "nvidia",
+        "mode": "api_key"
+      },
+      "ollama:default": {
+        "provider": "ollama",
+        "mode": "api_key"
+      },
+      "ollama-cloud:default": {
+        "provider": "ollama-cloud",
+        "mode": "api_key"
+      }
     }
   },
   "models": {
@@ -45,8 +57,16 @@
             "id": "moonshotai/kimi-k2.5",
             "name": "Kimi K2.5 (NVIDIA - Primary)",
             "reasoning": false,
-            "input": ["text", "image"],
-            "cost": { "input": 5e-7, "output": 0.000002, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 5e-7,
+              "output": 0.000002,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 256000,
             "maxTokens": 8192
           }
@@ -60,8 +80,15 @@
             "id": "openrouter/openrouter/free",
             "name": "OpenRouter Free (1000/day - 4s delay)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 8192
           }
@@ -75,8 +102,15 @@
             "id": "nomic-embed-text",
             "name": "Nomic Embed Text (Local Embeddings)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 2048,
             "maxTokens": 512
           }
@@ -90,8 +124,16 @@
             "id": "qwen3-coder-next:cloud",
             "name": "Qwen3 Coder Next (Cloud)",
             "reasoning": true,
-            "input": ["text", "image"],
-            "cost": { "input": 0.000001, "output": 0.000003, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0.000001,
+              "output": 0.000003,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 128000,
             "maxTokens": 8192
           },
@@ -99,8 +141,15 @@
             "id": "ministral-3:14b-cloud",
             "name": "Ministral 3 14B (Cloud)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0.0000005, "output": 0.0000015, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 5e-7,
+              "output": 0.0000015,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 32000,
             "maxTokens": 4096
           },
@@ -108,8 +157,15 @@
             "id": "nemotron-3-nano:30b-cloud",
             "name": "Nemotron 3 Nano 30B (Cloud)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0.000002, "output": 0.000006, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.000002,
+              "output": 0.000006,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 64000,
             "maxTokens": 4096
           },
@@ -117,8 +173,15 @@
             "id": "deepseek-v3.1:671b-cloud",
             "name": "DeepSeek V3.1 671B (Cloud)",
             "reasoning": true,
-            "input": ["text"],
-            "cost": { "input": 0.000005, "output": 0.000015, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.000005,
+              "output": 0.000015,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 128000,
             "maxTokens": 8192
           },
@@ -126,8 +189,16 @@
             "id": "gemini-3-pro-preview:latest",
             "name": "Gemini 3 Pro Preview (Cloud)",
             "reasoning": true,
-            "input": ["text", "image"],
-            "cost": { "input": 0.0000035, "output": 0.0000105, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0.0000035,
+              "output": 0.0000105,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 8192
           },
@@ -135,8 +206,15 @@
             "id": "devstral-2:123b-cloud",
             "name": "Devstral 2 123B (Cloud)",
             "reasoning": true,
-            "input": ["text"],
-            "cost": { "input": 0.000004, "output": 0.000012, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.000004,
+              "output": 0.000012,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 128000,
             "maxTokens": 8192
           },
@@ -144,8 +222,15 @@
             "id": "glm-4.7:cloud",
             "name": "GLM 4.7 (Cloud)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0.0000015, "output": 0.0000045, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.0000015,
+              "output": 0.0000045,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 32000,
             "maxTokens": 4096
           },
@@ -153,8 +238,15 @@
             "id": "minimax-m2:cloud",
             "name": "MiniMax M2 (Cloud)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0.0000025, "output": 0.0000075, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.0000025,
+              "output": 0.0000075,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 64000,
             "maxTokens": 4096
           },
@@ -162,8 +254,15 @@
             "id": "gemma3:27b-cloud",
             "name": "Gemma 3 27B (Cloud)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0.000001, "output": 0.000003, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.000001,
+              "output": 0.000003,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 32000,
             "maxTokens": 4096
           },
@@ -171,8 +270,15 @@
             "id": "gpt-oss:120b-cloud",
             "name": "GPT-OSS 120B (Cloud)",
             "reasoning": true,
-            "input": ["text"],
-            "cost": { "input": 0.000006, "output": 0.000018, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.000006,
+              "output": 0.000018,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 128000,
             "maxTokens": 8192
           },
@@ -180,8 +286,16 @@
             "id": "qwen3-coder:480b-cloud",
             "name": "Qwen3 Coder 480B (Cloud)",
             "reasoning": true,
-            "input": ["text", "image"],
-            "cost": { "input": 0.000008, "output": 0.000024, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0.000008,
+              "output": 0.000024,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 256000,
             "maxTokens": 16384
           }
@@ -193,26 +307,48 @@
     "defaults": {
       "model": {
         "primary": "nvidia/moonshotai/kimi-k2.5",
-        "fallbacks": ["ollama-cloud/qwen3-coder-next:cloud", "openrouter/openrouter/free"]
+        "fallbacks": [
+          "ollama-cloud/qwen3-coder-next:cloud",
+          "openrouter/openrouter/free"
+        ]
       },
       "models": {
-        "nvidia/moonshotai/kimi-k2.5": { "alias": "Kimi K2.5 (NVIDIA - Primary)" },
-        "ollama-cloud/qwen3-coder-next:cloud": { "alias": "Qwen3 Coder Next (Ollama Cloud)" },
-        "openrouter/openrouter/free": { "alias": "OpenRouter Free (Rate Limited - 1000/day)" }
+        "nvidia/moonshotai/kimi-k2.5": {
+          "alias": "Kimi K2.5 (NVIDIA - Primary)"
+        },
+        "ollama-cloud/qwen3-coder-next:cloud": {
+          "alias": "Qwen3 Coder Next (Ollama Cloud)"
+        },
+        "openrouter/openrouter/free": {
+          "alias": "OpenRouter Free (Rate Limited - 1000/day)"
+        }
       },
       "workspace": "/home/node/.openclaw/workspace",
       "timeoutSeconds": 180,
       "maxConcurrent": 1,
-      "subagents": { "maxConcurrent": 1 },
-      "sandbox": { "mode": "off", "docker": { "image": "openclaw-sandbox:bookworm-slim" } }
+      "subagents": {
+        "maxConcurrent": 1
+      },
+      "sandbox": {
+        "mode": "off",
+        "docker": {
+          "image": "openclaw-sandbox:bookworm-slim"
+        }
+      }
     }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
   },
   "channels": {
     "telegram": {
       "enabled": true,
       "dmPolicy": "allowlist",
-      "botToken": "${TELEGRAM_BOT_TOKEN}",
-      "allowFrom": ["471505542"],
+      "botToken": "8165585086:AAEFx3MOew3Xck2PF9KBiQbk_HzgnSZ8t8M",
+      "allowFrom": [
+        "471505542"
+      ],
       "groupPolicy": "allowlist",
       "streamMode": "partial"
     }
@@ -221,46 +357,122 @@
     "port": 18789,
     "mode": "local",
     "bind": "lan",
-    "controlUi": { "allowInsecureAuth": true },
-    "auth": { "mode": "token", "token": "${OPENCLAW_GATEWAY_TOKEN}" }
+    "controlUi": {
+      "allowInsecureAuth": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "dec201ef160b96d11a38da136bf851d9acf3f3536a9ea0dc"
+    }
   },
   "skills": {
-    "install": { "nodeManager": "npm" },
+    "install": {
+      "nodeManager": "npm"
+    },
     "entries": {
-      "clawhub": { "enabled": true },
-      "obsidian": { "enabled": true },
-      "skill-creator": { "enabled": true },
-      "coding-agent": { "enabled": true },
-      "ddg-search": { "enabled": true },
-      "blogwatcher": { "enabled": true },
-      "notion": { "enabled": true },
-      "bird": { "enabled": true },
-      "summarize": { "enabled": true },
-      "session-logs": { "enabled": true },
-      "model-usage": { "enabled": true },
-      "oracle": { "enabled": true },
-      "gog": { "enabled": true },
-      "gifgrep": { "enabled": true },
-      "github": { "enabled": true },
-      "tmux": { "enabled": true },
-      "sag": { "enabled": true },
-      "sherpa-onnx-tts": { "enabled": true },
-      "gemini": { "enabled": true },
-      "nano-pdf": { "enabled": true },
-      "mcporter": { "enabled": true },
-      "healthcheck": { "enabled": true },
-      "crawl4ai": { "enabled": true },
-      "supabase-client": { "enabled": true },
-      "qdrant-client": { "enabled": true },
-      "neo4j-client": { "enabled": true },
-      "n8n-client": { "enabled": true }
+      "clawhub": {
+        "enabled": true
+      },
+      "obsidian": {
+        "enabled": true
+      },
+      "skill-creator": {
+        "enabled": true
+      },
+      "coding-agent": {
+        "enabled": true
+      },
+      "ddg-search": {
+        "enabled": true
+      },
+      "blogwatcher": {
+        "enabled": true
+      },
+      "notion": {
+        "enabled": true
+      },
+      "bird": {
+        "enabled": true
+      },
+      "summarize": {
+        "enabled": true
+      },
+      "session-logs": {
+        "enabled": true
+      },
+      "model-usage": {
+        "enabled": true
+      },
+      "oracle": {
+        "enabled": true
+      },
+      "gog": {
+        "enabled": true
+      },
+      "gifgrep": {
+        "enabled": true
+      },
+      "github": {
+        "enabled": true
+      },
+      "tmux": {
+        "enabled": true
+      },
+      "sag": {
+        "enabled": true
+      },
+      "sherpa-onnx-tts": {
+        "enabled": true
+      },
+      "gemini": {
+        "enabled": true
+      },
+      "nano-pdf": {
+        "enabled": true
+      },
+      "mcporter": {
+        "enabled": true
+      },
+      "healthcheck": {
+        "enabled": true
+      },
+      "crawl4ai": {
+        "enabled": true
+      },
+      "supabase-client": {
+        "enabled": true
+      },
+      "qdrant-client": {
+        "enabled": true
+      },
+      "neo4j-client": {
+        "enabled": true
+      },
+      "n8n-client": {
+        "enabled": true
+      }
     }
   },
   "plugins": {
     "entries": {
-      "telegram": { "enabled": true },
-      "google-antigravity-auth": { "enabled": true },
-      "google-gemini-cli-auth": { "enabled": true }
+      "telegram": {
+        "enabled": true
+      },
+      "google-antigravity-auth": {
+        "enabled": true
+      },
+      "google-gemini-cli-auth": {
+        "enabled": true
+      }
     }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-10T08:25:26.418Z",
+    "lastRunVersion": "2026.2.9",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
   }
 }
