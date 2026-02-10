@@ -107,30 +107,33 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    raise Exception(f"Error: {response.status_code}")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log the error internally (if logging were available)
+                # but return a safe message to the user
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "Error during sequence execution. Check logs for details.",
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": "An error occurred while calling the n8n workflow."}
         # If no message is available alert user
         else:
+            n8n_response = "No messages found in the request body"
             await self.emit_status(
                 __event_emitter__,
                 "error",
-                "No messages found in the request body",
+                n8n_response,
                 True,
             )
             body["messages"].append(
                 {
                     "role": "assistant",
-                    "content": "No messages found in the request body",
+                    "content": n8n_response,
                 }
             )
 

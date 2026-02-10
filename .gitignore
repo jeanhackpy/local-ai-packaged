@@ -14,3 +14,9 @@ openclaw/*
 !openclaw/Dockerfile
 !openclaw/HEALTH_CHECK_PROMPT.md
 openclaw/workspace-setup/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
