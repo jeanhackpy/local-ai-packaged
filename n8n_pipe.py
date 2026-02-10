@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import asyncio
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -44,7 +45,8 @@ class Pipe:
         self.name = "N8N Pipe"
         self.valves = self.Valves()
         self.last_emit_time = 0
-        pass
+        # Bolt ⚡: Use requests.Session for connection pooling to improve performance
+        self.session = requests.Session()
 
     async def emit_status(
         self,
@@ -81,6 +83,7 @@ class Pipe:
         __event_emitter__: Callable[[dict], Awaitable[None]] = None,
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
+        n8n_response = ""  # Bolt ⚡: Initialize to avoid UnboundLocalError
         await self.emit_status(
             __event_emitter__, "info", "/Calling N8N Workflow...", False
         )
@@ -98,7 +101,10 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+                # Bolt ⚡: Use asyncio.to_thread to prevent blocking the event loop with synchronous I/O
+                # Also use the pooled session for the request
+                response = await asyncio.to_thread(
+                    self.session.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
