@@ -10,6 +10,8 @@
     "NVIDIA_API_KEY": "${NVIDIA_API_KEY}",
     "OPENCLAW_GATEWAY_TOKEN": "${OPENCLAW_GATEWAY_TOKEN}",
     "OLLAMA_API_KEY": "${OLLAMA_API_KEY}",
+    "OLLAMA_HOST": "${OLLAMA_HOST}",
+    "OLLAMA_CLOUD_URL": "${OLLAMA_CLOUD_URL}",
     "SUPABASE_URL": "${SUPABASE_URL}",
     "SUPABASE_KEY": "${SUPABASE_KEY}",
     "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
@@ -29,7 +31,8 @@
     "profiles": {
       "openrouter:default": { "provider": "openrouter", "mode": "api_key" },
       "nvidia:default": { "provider": "nvidia", "mode": "api_key" },
-      "ollama:default": { "provider": "ollama", "mode": "api_key" }
+      "ollama:default": { "provider": "ollama", "mode": "api_key" },
+      "ollama-cloud:default": { "provider": "ollama-cloud", "mode": "api_key" }
     }
   },
   "models": {
@@ -87,6 +90,111 @@
             "maxTokens": 512
           }
         ]
+      },
+      "ollama-cloud": {
+        "baseUrl": "https://api.ollama.com/v1",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "qwen3-coder-next:cloud",
+            "name": "Qwen3 Coder Next (Cloud)",
+            "reasoning": true,
+            "input": ["text", "image"],
+            "cost": { "input": 0.000001, "output": 0.000003, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "ministral-3:14b-cloud",
+            "name": "Ministral 3 14B (Cloud)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.0000005, "output": 0.0000015, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 32000,
+            "maxTokens": 4096
+          },
+          {
+            "id": "nemotron-3-nano:30b-cloud",
+            "name": "Nemotron 3 Nano 30B (Cloud)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.000002, "output": 0.000006, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 64000,
+            "maxTokens": 4096
+          },
+          {
+            "id": "deepseek-v3.1:671b-cloud",
+            "name": "DeepSeek V3.1 671B (Cloud)",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0.000005, "output": 0.000015, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "gemini-3-pro-preview:latest",
+            "name": "Gemini 3 Pro Preview (Cloud)",
+            "reasoning": true,
+            "input": ["text", "image"],
+            "cost": { "input": 0.0000035, "output": 0.0000105, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "devstral-2:123b-cloud",
+            "name": "Devstral 2 123B (Cloud)",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0.000004, "output": 0.000012, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "glm-4.7:cloud",
+            "name": "GLM 4.7 (Cloud)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.0000015, "output": 0.0000045, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 32000,
+            "maxTokens": 4096
+          },
+          {
+            "id": "minimax-m2:cloud",
+            "name": "MiniMax M2 (Cloud)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.0000025, "output": 0.0000075, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 64000,
+            "maxTokens": 4096
+          },
+          {
+            "id": "gemma3:27b-cloud",
+            "name": "Gemma 3 27B (Cloud)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.000001, "output": 0.000003, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 32000,
+            "maxTokens": 4096
+          },
+          {
+            "id": "gpt-oss:120b-cloud",
+            "name": "GPT-OSS 120B (Cloud)",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0.000006, "output": 0.000018, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3-coder:480b-cloud",
+            "name": "Qwen3 Coder 480B (Cloud)",
+            "reasoning": true,
+            "input": ["text", "image"],
+            "cost": { "input": 0.000008, "output": 0.000024, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 256000,
+            "maxTokens": 16384
+          }
+        ]
       }
     }
   },
@@ -94,10 +202,11 @@
     "defaults": {
       "model": {
         "primary": "nvidia/moonshotai/kimi-k2.5",
-        "fallbacks": ["openrouter/openrouter/free", "ollama/qwen2.5:7b-instruct-q4_K_M"]
+        "fallbacks": ["ollama-cloud/qwen3-coder-next:cloud", "openrouter/openrouter/free", "ollama/qwen2.5:7b-instruct-q4_K_M"]
       },
       "models": {
         "nvidia/moonshotai/kimi-k2.5": { "alias": "Kimi K2.5 (NVIDIA - Primary)" },
+        "ollama-cloud/qwen3-coder-next:cloud": { "alias": "Qwen3 Coder Next (Ollama Cloud)" },
         "openrouter/openrouter/free": { "alias": "OpenRouter Free (Rate Limited - 1000/day)" },
         "ollama/qwen2.5:7b-instruct-q4_K_M": { "alias": "Qwen 2.5 7B (Local - Unlimited)" }
       },

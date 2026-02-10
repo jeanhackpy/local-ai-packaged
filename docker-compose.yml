@@ -278,6 +278,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=postgres
+      # Ollama Configuration
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_CLOUD_URL=https://api.ollama.com/v1
     volumes:
       - ./openclaw:/home/node/.openclaw
       - ./shared:/data/shared
