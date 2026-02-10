@@ -115,6 +115,60 @@ def start_local_ai(profile=None, environment=None):
     cmd.extend(["up", "-d"])
     run_command(cmd)
 
+def build_openclaw_image():
+    """Build OpenClaw Docker image if it doesn't exist or if Dockerfile changed."""
+    print("Checking OpenClaw Docker image...")
+    try:
+        # Check if image exists
+        result = subprocess.run(
+            ["docker", "images", "local-ai-packaged-openclaw", "-q"],
+            capture_output=True, text=True
+        )
+        if not result.stdout.strip():
+            print("OpenClaw image not found. Building...")
+            run_command(["docker", "compose", "-p", "localai", "-f", "docker-compose.yml", "build", "openclaw"])
+        else:
+            print("OpenClaw image exists.")
+    except Exception as e:
+        print(f"Warning: Could not check/build OpenClaw image: {e}")
+
+def wait_for_openclay(max_retries=30, delay=2):
+    """Wait for OpenClaw to be healthy."""
+    print("Waiting for OpenClaw to be ready...")
+    for i in range(max_retries):
+        try:
+            result = subprocess.run(
+                ["docker", "inspect", "--format", "{{.State.Health.Status}}", "openclaw"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0 and "healthy" in result.stdout:
+                print("✅ OpenClaw is healthy!")
+                return True
+        except:
+            pass
+        print(f"  Retry {i+1}/{max_retries}...")
+        time.sleep(delay)
+    print("⚠️  OpenClaw may not be fully ready yet.")
+    return False
+
+def check_openclaw_config():
+    """Check if OpenClaw configuration files exist."""
+    config_files = [
+        "openclaw/openclaw.json",
+        "openclaw/routing-config.json",
+        "openclaw/Dockerfile"
+    ]
+    missing = []
+    for file in config_files:
+        if not os.path.exists(file):
+            missing.append(file)
+    
+    if missing:
+        print(f"⚠️  Warning: Missing OpenClaw configuration files: {missing}")
+        print("OpenClaw may not start correctly without these files.")
+    else:
+        print("✅ OpenClaw configuration files found.")
+
 def generate_searxng_secret_key():
     """Generate a secret key for SearXNG based on the current platform."""
     print("Checking SearXNG settings...")
@@ -269,6 +323,9 @@ def main():
     # Generate SearXNG secret key and check docker-compose.yml
     generate_searxng_secret_key()
     check_and_fix_docker_compose_for_searxng()
+    
+    # Check OpenClaw configuration
+    check_openclaw_config()
 
     stop_existing_containers(args.profile)
 
@@ -279,8 +336,29 @@ def main():
     print("Waiting for Supabase to initialize...")
     time.sleep(10)
 
+    # Build OpenClaw image before starting services
+    build_openclaw_image()
+
     # Then start the local AI services
     start_local_ai(args.profile, args.environment)
+    
+    # Wait for OpenClaw to be ready
+    wait_for_openclay()
+    
+    print("\n" + "="*60)
+    print("🚀 All services started successfully!")
+    print("="*60)
+    print("\n📊 Service URLs:")
+    print("  • OpenClaw Gateway:    http://localhost:18789")
+    print("  • OpenClaw Control UI: http://localhost:18790")
+    print("  • Open WebUI:          http://localhost:8080")
+    print("  • n8n:                 http://localhost:5678")
+    print("  • Qdrant:              http://localhost:6333")
+    print("  • Neo4j Browser:       http://localhost:7474")
+    print("  • Supabase Kong:       http://localhost:8000")
+    print("  • Caddy (Proxy):       http://localhost:80")
+    print("\n📖 Documentation: docs/OPENCLAW_INTEGRATIONS.md")
+    print("="*60)
 
 if __name__ == "__main__":
     main()
