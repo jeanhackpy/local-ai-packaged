@@ -25,17 +25,8 @@
         "api": "openai-completions",
         "models": [
           {
-            "id": "qwen2.5:7b-instruct-q4_K_M",
-            "name": "Qwen 2.5 7B Instruct (Local - CPU Optimized)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 8192,
-            "maxTokens": 4096
-          },
-          {
             "id": "nomic-embed-text",
-            "name": "Nomic Embed Text (Local Embeddings)",
+            "name": "Nomic Embed Text (Local Embeddings for n8n Vector Store)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -49,8 +40,7 @@
   "routing": {
     "strategy": "cost-optimized",
     "fallbacks": [
-      "openrouter/openrouter/free",
-      "ollama/qwen2.5:7b-instruct-q4_K_M"
+      "openrouter/openrouter/free"
     ]
   },
   "integrations": {

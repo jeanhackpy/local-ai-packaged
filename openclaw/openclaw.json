@@ -72,15 +72,6 @@
         "api": "openai-completions",
         "models": [
           {
-            "id": "qwen2.5:7b-instruct-q4_K_M",
-            "name": "Qwen 2.5 7B (Local - No limits)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 8192,
-            "maxTokens": 4096
-          },
-          {
             "id": "nomic-embed-text",
             "name": "Nomic Embed Text (Local Embeddings)",
             "reasoning": false,
@@ -202,13 +193,12 @@
     "defaults": {
       "model": {
         "primary": "nvidia/moonshotai/kimi-k2.5",
-        "fallbacks": ["ollama-cloud/qwen3-coder-next:cloud", "openrouter/openrouter/free", "ollama/qwen2.5:7b-instruct-q4_K_M"]
+        "fallbacks": ["ollama-cloud/qwen3-coder-next:cloud", "openrouter/openrouter/free"]
       },
       "models": {
         "nvidia/moonshotai/kimi-k2.5": { "alias": "Kimi K2.5 (NVIDIA - Primary)" },
         "ollama-cloud/qwen3-coder-next:cloud": { "alias": "Qwen3 Coder Next (Ollama Cloud)" },
-        "openrouter/openrouter/free": { "alias": "OpenRouter Free (Rate Limited - 1000/day)" },
-        "ollama/qwen2.5:7b-instruct-q4_K_M": { "alias": "Qwen 2.5 7B (Local - Unlimited)" }
+        "openrouter/openrouter/free": { "alias": "OpenRouter Free (Rate Limited - 1000/day)" }
       },
       "workspace": "/home/node/.openclaw/workspace",
       "timeoutSeconds": 180,
