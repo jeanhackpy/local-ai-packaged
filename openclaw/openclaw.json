@@ -38,11 +38,6 @@
       "openrouter": {
         "baseUrl": "https://openrouter.ai/api/v1",
         "api": "openai-completions",
-        "rateLimit": {
-          "requestsPerDay": 1000,
-          "minDelayMs": 4000,
-          "enabled": true
-        },
         "models": [
           {
             "id": "openrouter/openrouter/free",

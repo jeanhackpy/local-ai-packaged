@@ -51,15 +51,6 @@
     "fallbacks": [
       "openrouter/openrouter/free",
       "ollama/qwen2.5:7b-instruct-q4_K_M"
-    ],
-    "rateLimiting": {
-      "enabled": true,
-      "providers": {
-        "openrouter": {
-          "maxRequestsPerDay": 1000,
-          "minDelayBetweenRequestsMs": 4000
-        }
-      }
-    }
+    ]
   }
 }
