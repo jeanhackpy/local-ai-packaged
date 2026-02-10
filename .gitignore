@@ -10,4 +10,6 @@ searxng/uwsgi*
 # OpenClaw - Ignore everything by default
 openclaw/*
 !openclaw/openclaw.json
-!openclaw/Dockerfileopenclaw/workspace-setup/
+!openclaw/routing-config.json
+!openclaw/Dockerfile
+openclaw/workspace-setup/

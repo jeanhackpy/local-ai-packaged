@@ -9,10 +9,22 @@ volumes:
   caddy-data:
   caddy-config:
   valkey-data:
+  openclaw-tools:
 
+
+networks:
+  default:
+    name: local-ai-packaged_default
+  localai:
+    external: true
+    name: localai_default
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
+  deploy:
+    resources:
+      limits:
+        memory: 2G
   environment:
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=db
@@ -29,6 +41,10 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
+  deploy:
+    resources:
+      limits:
+        memory: 4G
   expose:
     - 11434/tcp
   environment:
@@ -36,6 +52,7 @@ x-ollama: &service-ollama
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
+    - OLLAMA_API_KEY=${OLLAMA_API_KEY}
   volumes:
     - ollama_storage:/root/.ollama
 
@@ -50,27 +67,6 @@ x-init-ollama: &init-ollama
     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
-  openclaw-gateway:
-    container_name: openclaw-gateway
-    build:
-      context: ./openclaw
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "18789:18789"
-    volumes:
-      - ./openclaw:/home/node/.openclaw
-      - ./shared:/data/shared
-    environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
-      - SERPER_API_KEY=${SERPER_API_KEY}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - PIP_BREAK_SYSTEM_PACKAGES=1
-      - PYTHONUNBUFFERED=1
-    networks:
-      - default
-
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
@@ -81,6 +77,10 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
 
@@ -112,6 +112,10 @@ services:
     expose:
       - 6333/tcp
       - 6334/tcp
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     volumes:
       - qdrant_storage:/qdrant/storage
 
@@ -126,6 +130,10 @@ services:
       - 7473/tcp
       - 7474/tcp
       - 7687/tcp
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
     restart: always
@@ -137,6 +145,9 @@ services:
     ports:
       - 80:80/tcp
       - 443:443/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     expose:
       - 2019/tcp
       - 443/tcp
@@ -214,6 +225,56 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: crawl4ai
+    restart: unless-stopped
+    expose:
+      - 11235/tcp
+    environment:
+      - CRAWL4AI_API_TOKEN=${CRAWL4AI_API_TOKEN:-}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  openclaw:
+    build:
+      context: ./openclaw
+      dockerfile: Dockerfile
+    container_name: openclaw
+    restart: unless-stopped
+    init: true
+    ports:
+      - 18789:18789/tcp
+      - 18790:18790/tcp
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - HOME=/home/node
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - NODE_OPTIONS=--max-old-space-size=768 --dns-result-order=ipv4first
+      - PIP_CACHE_DIR=/home/node/tools/.cache
+      - PYTHONUSERBASE=/home/node/tools/python
+    volumes:
+      - ./openclaw:/home/node/.openclaw
+      - ./shared:/data/shared
+      - openclaw-tools:/home/node/tools
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks:
+      - default
+      - localai
 
   ollama-cpu:
     profiles: [ "cpu" ]
