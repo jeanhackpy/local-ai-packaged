@@ -64,7 +64,7 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   command:
     - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text; OLLAMA_HOST=ollama:11434 ollama pull qwen3-coder-next:cloud; OLLAMA_HOST=ollama:11434 ollama pull ministral-3:14b-cloud; OLLAMA_HOST=ollama:11434 ollama pull nemotron-3-nano:30b-cloud; OLLAMA_HOST=ollama:11434 ollama pull deepseek-v3.1:671b-cloud; OLLAMA_HOST=ollama:11434 ollama pull gemini-3-pro-preview:latest; OLLAMA_HOST=ollama:11434 ollama pull devstral-2:123b-cloud; OLLAMA_HOST=ollama:11434 ollama pull glm-4.7:cloud; OLLAMA_HOST=ollama:11434 ollama pull minimax-m2:cloud; OLLAMA_HOST=ollama:11434 ollama pull gemma3:27b-cloud; OLLAMA_HOST=ollama:11434 ollama pull gpt-oss:120b-cloud; OLLAMA_HOST=ollama:11434 ollama pull qwen3-coder:480b-cloud"
 
 services:
   open-webui:
