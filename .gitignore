@@ -12,4 +12,5 @@ openclaw/*
 !openclaw/openclaw.json
 !openclaw/routing-config.json
 !openclaw/Dockerfile
+!openclaw/HEALTH_CHECK_PROMPT.md
 openclaw/workspace-setup/
