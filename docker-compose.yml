@@ -247,8 +247,8 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - 18789:18789/tcp
-      - 18790:18790/tcp
+      - "18789:18789"
+      - "18790:18790"
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -281,6 +281,7 @@ services:
       # Ollama Configuration
       - OLLAMA_HOST=http://ollama:11434
       - OLLAMA_CLOUD_URL=https://api.ollama.com/v1
+    entrypoint: ["/bin/sh", "/home/node/.openclaw/entrypoint.sh"]
     volumes:
       - ./openclaw:/home/node/.openclaw
       - ./shared:/data/shared
