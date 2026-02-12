@@ -9,7 +9,15 @@ volumes:
   caddy-data:
   caddy-config:
   valkey-data:
+  openclaw-tools:
 
+
+networks:
+  default:
+    name: local-ai-packaged_default
+  localai:
+    external: true
+    name: localai_default
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
@@ -44,6 +52,7 @@ x-ollama: &service-ollama
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
+    - OLLAMA_API_KEY=${OLLAMA_API_KEY}
   volumes:
     - ollama_storage:/root/.ollama
 
@@ -55,7 +64,7 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   command:
     - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text; OLLAMA_HOST=ollama:11434 ollama pull qwen3-coder-next:cloud; OLLAMA_HOST=ollama:11434 ollama pull ministral-3:14b-cloud; OLLAMA_HOST=ollama:11434 ollama pull nemotron-3-nano:30b-cloud; OLLAMA_HOST=ollama:11434 ollama pull deepseek-v3.1:671b-cloud; OLLAMA_HOST=ollama:11434 ollama pull gemini-3-pro-preview:latest; OLLAMA_HOST=ollama:11434 ollama pull devstral-2:123b-cloud; OLLAMA_HOST=ollama:11434 ollama pull glm-4.7:cloud; OLLAMA_HOST=ollama:11434 ollama pull minimax-m2:cloud; OLLAMA_HOST=ollama:11434 ollama pull gemma3:27b-cloud; OLLAMA_HOST=ollama:11434 ollama pull gpt-oss:120b-cloud; OLLAMA_HOST=ollama:11434 ollama pull qwen3-coder:480b-cloud"
 
 services:
   open-webui:
@@ -71,7 +80,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1G
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
 
@@ -231,13 +240,15 @@ services:
           memory: 2G
 
   openclaw:
-    image: ghcr.io/openclaw/openclaw:2026.2.2
+    build:
+      context: ./openclaw
+      dockerfile: Dockerfile
     container_name: openclaw
     restart: unless-stopped
     init: true
     ports:
-      - 18789:18789/tcp
-      - 18790:18790/tcp
+      - "18789:18789"
+      - "18790:18790"
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -245,11 +256,32 @@ services:
       - HOME=/home/node
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
       - SERPER_API_KEY=${SERPER_API_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - NODE_OPTIONS=--max-old-space-size=768
+      - NODE_OPTIONS=--max-old-space-size=768 --dns-result-order=ipv4first
       - PIP_CACHE_DIR=/home/node/tools/.cache
       - PYTHONUSERBASE=/home/node/tools/python
+      # Service Connections
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_KEY=${SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${ANON_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_AUTH=${NEO4J_AUTH}
+      - N8N_URL=http://n8n:5678
+      - N8N_WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME}
+      - CRAWL4AI_URL=http://crawl4ai:11235
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
+      # Ollama Configuration
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_CLOUD_URL=https://api.ollama.com/v1
+    entrypoint: ["/bin/sh", "/home/node/.openclaw/entrypoint.sh"]
     volumes:
       - ./openclaw:/home/node/.openclaw
       - ./shared:/data/shared
@@ -259,6 +291,9 @@ services:
       resources:
         limits:
           memory: 2G
+    networks:
+      - default
+      - localai
 
   ollama-cpu:
     profiles: [ "cpu" ]

@@ -7,9 +7,17 @@ shared-backup/
 searxng/settings.yml
 searxng/uwsgi*
 
-# OpenClaw - Ignore everything by default
-openclaw/*
-!openclaw/openclaw.json
-!openclaw/Dockerfileopenclaw/workspace-setup/
-__pycache__/
-*.pyc
+# OpenClaw - Configuration
+# Le fichier avec placeholders est commité (pas de vraies valeurs)
+# Les fichiers générés à l'exécution sont ignorés
+openclaw/auth-profiles.json
+openclaw/*.orig
+openclaw/openclaw.json.bak*
+openclaw/workspace-setup/
+
+# Mais on commit ces fichiers :
+!openclaw/openclaw.json.template
+!openclaw/routing-config.json
+!openclaw/Dockerfile
+!openclaw/HEALTH_CHECK_PROMPT.md
+!openclaw/entrypoint.sh

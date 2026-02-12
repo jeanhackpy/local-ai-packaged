@@ -97,7 +97,10 @@ class Pipe:
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
                 response = requests.post(
-                    self.valves.n8n_url, json=payload, headers=headers
+                    self.valves.n8n_url,
+                    json=payload,
+                    headers=headers,
+                    timeout=30,
                 )
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]

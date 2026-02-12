@@ -5,3 +5,6 @@ services:
 
   supavisor:
     ports: !reset null
+
+  openclaw-gateway:
+    ports: !reset null
