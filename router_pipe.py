@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import sys
 
 class Pipe:
     class Valves(BaseModel):
@@ -142,9 +143,11 @@ class Pipe:
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                print(f"Ollama error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "Error from Ollama. Please check server logs."
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            print(f"Exception calling Ollama: {str(e)}", file=sys.stderr)
+            return "Error calling Ollama. Please check server logs."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
@@ -162,9 +165,11 @@ class Pipe:
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                print(f"OpenRouter error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "Error from OpenRouter. Please check server logs."
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            print(f"Exception calling OpenRouter: {str(e)}", file=sys.stderr)
+            return "Error calling OpenRouter. Please check server logs."
 
     def call_openclaw(self, model: str, body: dict) -> str:
         # Clean model name for OpenClaw
@@ -182,6 +187,8 @@ class Pipe:
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenClaw: {response.status_code} - {response.text}"
+                print(f"OpenClaw error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "Error from OpenClaw. Please check server logs."
         except Exception as e:
-            return f"Error calling OpenClaw: {str(e)}"
+            print(f"Exception calling OpenClaw: {str(e)}", file=sys.stderr)
+            return "Error calling OpenClaw. Please check server logs."

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -79,6 +80,7 @@ class Pipe:
         __event_emitter__: Callable[[dict], Awaitable[None]] = None,
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
+        n8n_response = "An error occurred while calling the n8n workflow. Please check the server logs for details."
         await self.emit_status(
             __event_emitter__, "info", "/Calling N8N Workflow...", False
         )
@@ -105,18 +107,22 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log detailed error to server logs, but don't expose it to the user
+                    print(f"n8n error: {response.status_code} - {response.text}", file=sys.stderr)
+                    raise Exception("Non-200 response from n8n")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                print(f"Exception during n8n pipe execution: {str(e)}", file=sys.stderr)
+                generic_error = "An error occurred while calling the n8n workflow. Please check the server logs for details."
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    generic_error,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": generic_error}
         # If no message is available alert user
         else:
             await self.emit_status(
