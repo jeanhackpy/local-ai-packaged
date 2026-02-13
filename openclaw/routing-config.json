@@ -10,11 +10,18 @@
         },
         "models": [
           {
-            "id": "openrouter/openrouter/free",
+            "id": "free",
             "name": "OpenRouter Free (1000/day - Rate Limited)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 200000,
             "maxTokens": 8192
           }
@@ -26,10 +33,17 @@
         "models": [
           {
             "id": "nomic-embed-text",
-            "name": "Nomic Embed Text (Local Embeddings for n8n Vector Store)",
+            "name": "Nomic Embed Text (Local Embeddings)",
             "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
             "contextWindow": 2048,
             "maxTokens": 512
           }
@@ -40,7 +54,7 @@
   "routing": {
     "strategy": "cost-optimized",
     "fallbacks": [
-      "openrouter/openrouter/free"
+      "openrouter/free"
     ]
   },
   "integrations": {
