@@ -25,7 +25,7 @@ class Pipe:
             description="Model to use for Easy queries (usually local)"
         )
         hard_model: str = Field(
-            default="openclaw/openrouter/z-ai/glm-4.5-air:free",
+            default="openrouter/anthropic/claude-3-haiku",
             description="Model to use for Hard queries (routed through OpenClaw)"
         )
         privacy_mode: bool = Field(
@@ -36,14 +36,7 @@ class Pipe:
             default="",
             description="API Key for OpenRouter (if calling direct)"
         )
-        openclaw_url: str = Field(
-            default="http://openclaw:18789/api/v1",
-            description="URL for the OpenClaw API"
-        )
-        openclaw_token: str = Field(
-            default="",
-            description="Token for OpenClaw Gateway"
-        )
+
 
     def __init__(self):
         self.type = "pipe"
@@ -94,9 +87,8 @@ class Pipe:
         # Simplest approach: delegate back to Open WebUI's internal call if possible,
         # but Pipes usually handle the full cycle.
 
-        if selected_model.startswith("openclaw/"):
-            response = self.call_openclaw(selected_model, body)
-        elif selected_model.startswith("openrouter/"):
+
+        if selected_model.startswith("openrouter/"):
             response = self.call_openrouter(selected_model, body)
         else:
             response = self.call_ollama(selected_model, body)
@@ -166,22 +158,4 @@ class Pipe:
         except Exception as e:
             return f"Error calling OpenRouter: {str(e)}"
 
-    def call_openclaw(self, model: str, body: dict) -> str:
-        # Clean model name for OpenClaw
-        model_id = model.replace("openclaw/", "")
-        headers = {
-            "Authorization": f"Bearer {self.valves.openclaw_token}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": model_id,
-            "messages": body.get("messages", []),
-        }
-        try:
-            response = requests.post(f"{self.valves.openclaw_url}/chat/completions", headers=headers, json=payload)
-            if response.status_code == 200:
-                return response.json()["choices"][0]["message"]["content"]
-            else:
-                return f"Error from OpenClaw: {response.status_code} - {response.text}"
-        except Exception as e:
-            return f"Error calling OpenClaw: {str(e)}"
+
