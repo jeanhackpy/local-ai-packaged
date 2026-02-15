@@ -267,6 +267,8 @@ def check_and_fix_docker_compose_for_searxng():
     except Exception as e:
         print(f"Error checking/modifying docker-compose.yml for SearXNG: {e}")
 
+
+
 def main():
     parser = argparse.ArgumentParser(description='Start the local AI and Supabase services.')
     parser.add_argument('--profile', choices=['cpu', 'gpu-nvidia', 'gpu-amd', 'none'], default='cpu',
@@ -274,6 +276,9 @@ def main():
     parser.add_argument('--environment', choices=['private', 'public'], default='private',
                       help='Environment to use for Docker Compose (default: private)')
     args = parser.parse_args()
+
+    # OpenClaw Gateway is managed by systemd (openclaw-gateway.service)
+    # No need to start it here
 
     clone_supabase_repo()
 
@@ -308,8 +313,8 @@ def main():
     print("🚀 All services started successfully!")
     print("="*60)
     print("\n📊 Service URLs:")
-    # print("  • OpenClaw Gateway:    http://localhost:18789")
-    # print("  • OpenClaw Control UI: http://localhost:18790")
+    print("  • OpenClaw Gateway:    http://localhost:18789")
+    print("  • OpenClaw Control UI: http://localhost:18789")
     print("  • Open WebUI:          http://localhost:8080")
     print("  • n8n:                 http://localhost:5678")
     print("  • Qdrant:              http://localhost:6333")
