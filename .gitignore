@@ -1,46 +1,8 @@
 .env
+.env.test
 volumes/
 shared/
 neo4j/
 shared-backup/
-.env.test
 searxng/settings.yml
 searxng/uwsgi*
-
-# OpenClaw - Configuration
-# Le fichier avec placeholders est commité (pas de vraies valeurs)
-# Les fichiers générés à l'exécution sont ignorés
-openclaw/auth-profiles.json
-openclaw/*.orig
-openclaw/*.bak
-openclaw/*.bak.*
-openclaw/openclaw.json.bak*
-openclaw/openclaw.json.backup*
-openclaw/openclaw.json.runtime
-openclaw/openclaw.json.template
-openclaw/exec-approvals.json
-openclaw/update-check.json
-openclaw/workspace-setup/
-openclaw/workspace/  # Nested git repo - ignore to prevent IDE warnings
-
-# OpenClaw - Runtime data directories (user-generated content)
-openclaw/__pycache__/
-openclaw/agents/
-openclaw/canvas/
-openclaw/completions/
-openclaw/credentials/
-openclaw/cron/
-openclaw/devices/
-openclaw/identity/
-openclaw/media/
-openclaw/settings/
-openclaw/skills/
-openclaw/subagents/
-openclaw/telegram/
-
-# Mais on commit ces fichiers :
-!openclaw/openclaw.json
-!openclaw/routing-config.json
-!openclaw/Dockerfile
-!openclaw/HEALTH_CHECK_PROMPT.md
-!openclaw/entrypoint.sh
