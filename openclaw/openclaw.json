@@ -17,7 +17,7 @@
       "models": {
         "z-ai/glm5": {}
       },
-      "workspace": "/home/phil/.openclaw/workspace",
+      "workspace": "/home/user/.openclaw/workspace",
       "maxConcurrent": 4,
       "subagents": {
         "maxConcurrent": 8
@@ -51,7 +51,7 @@
     "telegram": {
       "enabled": true,
       "dmPolicy": "pairing",
-      "botToken": "8165585086:AAEFx3MOew3Xck2PF9KBiQbk_HzgnSZ8t8M",
+      "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
       "groupPolicy": "allowlist",
       "streamMode": "partial"
     }
@@ -62,7 +62,7 @@
     "bind": "loopback",
     "auth": {
       "mode": "token",
-      "token": "b69909a4150931b2a972daabcb0e49f630071d9d822dcd0d"
+      "token": "YOUR_OPENCLAW_GATEWAY_TOKEN"
     },
     "tailscale": {
       "mode": "off",

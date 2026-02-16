@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -79,6 +80,7 @@ class Pipe:
         __event_emitter__: Callable[[dict], Awaitable[None]] = None,
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
+        n8n_response = "An error occurred during execution"
         await self.emit_status(
             __event_emitter__, "info", "/Calling N8N Workflow...", False
         )
@@ -105,18 +107,23 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log error details to stderr and raise generic exception
+                    sys.stderr.write(f"N8N Error {response.status_code}: {response.text}\n")
+                    raise Exception("Error from N8N service")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log detailed exception but return generic error to user
+                sys.stderr.write(f"Exception during N8N execution: {str(e)}\n")
+                generic_error = "Error during sequence execution. Please check server logs."
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    generic_error,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": generic_error}
         # If no message is available alert user
         else:
             await self.emit_status(
