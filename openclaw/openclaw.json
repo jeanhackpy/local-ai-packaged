@@ -12,10 +12,10 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "z-ai/glm4.7"
+        "primary": "z-ai/glm5"
       },
       "models": {
-        "z-ai/glm4.7": {}
+        "z-ai/glm5": {}
       },
       "workspace": "/home/phil/.openclaw/workspace",
       "maxConcurrent": 4,
