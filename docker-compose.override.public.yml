@@ -1,10 +1,6 @@
 services:
-
   kong:
     ports: !reset null
 
   supavisor:
-    ports: !reset null
-
-  openclaw-gateway:
     ports: !reset null
