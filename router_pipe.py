@@ -6,9 +6,7 @@ description: Routes queries between local and cloud models based on difficulty e
 
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
-import os
 import requests
-import json
 
 class Pipe:
     class Valves(BaseModel):
@@ -43,6 +41,7 @@ class Pipe:
         self.id = "llm_router"
         self.name = "LLM Router"
         self.valves = self.Valves()
+        self.session = requests.Session()
 
     async def pipe(
         self,
@@ -57,12 +56,16 @@ class Pipe:
 
         user_query = messages[-1]["content"]
 
-        if self.valves.privacy_mode:
+        if len(user_query) < 15:
+            # Fast-path for short queries to reduce latency
+            selected_model = self.valves.easy_model
+            route_reason = "Short query -> Fast-tracked to Local"
+        elif self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
         else:
             # Evaluate difficulty
-            difficulty = await self.evaluate_difficulty(user_query)
+            difficulty = self.evaluate_difficulty(user_query)
             if difficulty == "Hard":
                 selected_model = self.valves.hard_model
                 route_reason = "Evaluated as Hard -> Routing to Cloud"
@@ -104,16 +107,23 @@ class Pipe:
 
         return response
 
-    async def evaluate_difficulty(self, query: str) -> str:
+    def evaluate_difficulty(self, query: str) -> str:
         prompt = f"Evaluate the difficulty of the following user query. Respond with only one word: 'Easy' or 'Hard'.\n\nQuery: {query}\n\nDifficulty:"
         try:
             payload = {
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 5  # Limit tokens for faster evaluation
+                }
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            response = self.session.post(
+                f"{self.valves.ollama_url}/api/generate",
+                json=payload,
+                timeout=10.0
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
@@ -130,7 +140,11 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = self.session.post(
+                f"{self.valves.ollama_url}/api/chat",
+                json=payload,
+                timeout=60.0
+            )
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
@@ -150,7 +164,12 @@ class Pipe:
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = self.session.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60.0
+            )
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
