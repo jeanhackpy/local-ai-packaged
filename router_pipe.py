@@ -7,6 +7,7 @@ description: Routes queries between local and cloud models based on difficulty e
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
+import sys
 import requests
 import json
 
@@ -117,8 +118,10 @@ class Pipe:
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
+            else:
+                print(f"Ollama difficulty eval error: {response.status_code} - {response.text}", file=sys.stderr)
         except Exception as e:
-            print(f"Error evaluating difficulty: {e}")
+            print(f"Error evaluating difficulty: {e}", file=sys.stderr)
         return "Easy" # Default to Easy/Local on error
 
     def call_ollama(self, model: str, body: dict) -> str:
@@ -130,13 +133,15 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload, timeout=30)
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                print(f"Ollama error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "Error: Failed to get response from local model."
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            print(f"Error calling Ollama: {str(e)}", file=sys.stderr)
+            return "Error: Local model service is unavailable."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
@@ -150,12 +155,14 @@ class Pipe:
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=30)
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                print(f"OpenRouter error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "Error: Failed to get response from cloud model."
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            print(f"Error calling OpenRouter: {str(e)}", file=sys.stderr)
+            return "Error: Cloud model service is unavailable."
 
 
