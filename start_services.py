@@ -88,6 +88,47 @@ def prepare_supabase_env():
     
     print(f"Successfully created {target_env_path}")
 
+def prepare_openclaw_config():
+    """Prepare the openclaw.json file from the template and .env secrets."""
+    example_path = os.path.join("openclaw", "openclaw.json.example")
+    target_path = os.path.join("openclaw", "openclaw.json")
+    root_env_path = ".env"
+
+    if not os.path.exists(example_path):
+        print(f"Warning: {example_path} not found. Skipping OpenClaw config preparation.")
+        return
+
+    print("Preparing openclaw/openclaw.json...")
+
+    # Load secrets from .env
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key] = value
+
+    # Get or generate gateway token
+    gateway_token = env_vars.get("OPENCLAW_GATEWAY_TOKEN")
+    if not gateway_token:
+        print("OPENCLAW_GATEWAY_TOKEN not found in .env, generating one...")
+        gateway_token = secrets.token_hex(24)
+
+    bot_token = env_vars.get("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+
+    with open(example_path, 'r') as f:
+        config_content = f.read()
+
+    config_content = config_content.replace("YOUR_TELEGRAM_BOT_TOKEN", bot_token)
+    config_content = config_content.replace("YOUR_OPENCLAW_GATEWAY_TOKEN", gateway_token)
+
+    with open(target_path, 'w') as f:
+        f.write(config_content)
+
+    print(f"Successfully created {target_path}")
+
 def stop_existing_containers(profile=None):
     print("Stopping and removing existing containers for the unified project 'localai'...")
     cmd = ["docker", "compose", "-p", "localai"]
@@ -284,12 +325,9 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
-    
-    # Check OpenClaw configuration
-    # check_openclaw_config()
 
     stop_existing_containers(args.profile)
 
