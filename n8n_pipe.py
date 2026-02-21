@@ -1,6 +1,6 @@
 """
 title: n8n Pipe Function
-version: 0.1.0
+version: 0.1.1
 
 This module defines a Pipe class that utilizes N8N for an Agent
 """
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -102,21 +103,36 @@ class Pipe:
                     headers=headers,
                     timeout=30,
                 )
-                if response.status_code == 200:
-                    n8n_response = response.json()[self.valves.response_field]
-                else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
 
-                # Set assitant message with chain reply
+                # Check for HTTP errors without leaking response body to user
+                response.raise_for_status()
+
+                try:
+                    res_json = response.json()
+                except ValueError as e:
+                    raise Exception(f"Invalid JSON response from n8n: {str(e)}")
+
+                n8n_response = res_json.get(self.valves.response_field)
+                if n8n_response is None:
+                    raise KeyError(f"Field '{self.valves.response_field}' not found in n8n response")
+
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log detailed error to stderr for administrator review
+                print(f"Error during n8n pipe execution: {str(e)}", file=sys.stderr)
+                if 'response' in locals() and hasattr(response, 'text'):
+                    # Log first 500 chars of response body to avoid massive logs but keep enough context
+                    print(f"n8n response body: {response.text[:500]}", file=sys.stderr)
+
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "An error occurred while communicating with the n8n workflow.",
                     True,
                 )
-                return {"error": str(e)}
+                # Return generic error to user to prevent information leakage
+                return {"error": "Internal server error. Please check server logs for details."}
         # If no message is available alert user
         else:
             await self.emit_status(
