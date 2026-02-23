@@ -9,7 +9,8 @@ from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
 import time
-import requests
+import sys
+import httpx
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -42,7 +43,6 @@ class Pipe:
         self.name = "N8N Pipe"
         self.valves = self.Valves()
         self.last_emit_time = 0
-        pass
 
     async def emit_status(
         self,
@@ -94,29 +94,46 @@ class Pipe:
                     "Authorization": f"Bearer {self.valves.n8n_bearer_token}",
                     "Content-Type": "application/json",
                 }
-                payload = {"sessionId": f"{chat_id}"}
+                # Ensure sessionId is at least an empty string if chat_id is None
+                payload = {"sessionId": f"{chat_id or ''}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
-                    self.valves.n8n_url,
-                    json=payload,
-                    headers=headers,
-                    timeout=30,
-                )
-                if response.status_code == 200:
-                    n8n_response = response.json()[self.valves.response_field]
-                else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
 
-                # Set assitant message with chain reply
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        self.valves.n8n_url,
+                        json=payload,
+                        headers=headers,
+                        timeout=30,
+                    )
+
+                if response.status_code != 200:
+                    # Log internal details to stderr, not to the user
+                    print(f"n8n error: {response.status_code} - {response.text}", file=sys.stderr)
+                    raise Exception("Workflow execution failed")
+
+                result_json = response.json()
+                n8n_response = result_json.get(self.valves.response_field)
+
+                if n8n_response is None:
+                    print(f"n8n error: {self.valves.response_field} not found in {response.text}", file=sys.stderr)
+                    raise Exception("Invalid response format")
+
+                # Set assistant message with chain reply
+                if "messages" not in body:
+                    body["messages"] = []
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log detailed error to stderr
+                print(f"Error during n8n sequence execution: {str(e)}", file=sys.stderr)
+
+                error_msg = "An error occurred while communicating with the agent workflow"
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    error_msg,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
             await self.emit_status(

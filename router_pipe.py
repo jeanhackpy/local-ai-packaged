@@ -7,7 +7,8 @@ description: Routes queries between local and cloud models based on difficulty e
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
-import requests
+import sys
+import httpx
 import json
 
 class Pipe:
@@ -57,43 +58,36 @@ class Pipe:
 
         user_query = messages[-1]["content"]
 
-        if self.valves.privacy_mode:
-            selected_model = self.valves.easy_model
-            route_reason = "Privacy Mode Enabled"
-        else:
-            # Evaluate difficulty
-            difficulty = await self.evaluate_difficulty(user_query)
-            if difficulty == "Hard":
-                selected_model = self.valves.hard_model
-                route_reason = "Evaluated as Hard -> Routing to Cloud"
-            else:
+        async with httpx.AsyncClient() as client:
+            if self.valves.privacy_mode:
                 selected_model = self.valves.easy_model
-                route_reason = "Evaluated as Easy -> Routing to Local"
+                route_reason = "Privacy Mode Enabled"
+            else:
+                # Evaluate difficulty
+                difficulty = await self.evaluate_difficulty(client, user_query)
+                if difficulty == "Hard":
+                    selected_model = self.valves.hard_model
+                    route_reason = "Evaluated as Hard -> Routing to Cloud"
+                else:
+                    selected_model = self.valves.easy_model
+                    route_reason = "Evaluated as Easy -> Routing to Local"
+
+            if __event_emitter__:
+                await __event_emitter__({
+                    "type": "status",
+                    "data": {
+                        "description": f"Routing: {route_reason} ({selected_model})",
+                        "done": False
+                    }
+                })
+
+            if selected_model.startswith("openrouter/"):
+                response = await self.call_openrouter(client, selected_model, body)
+            else:
+                response = await self.call_ollama(client, selected_model, body)
 
         if __event_emitter__:
-            await __event_emitter__({
-                "type": "status",
-                "data": {
-                    "description": f"Routing: {route_reason} ({selected_model})",
-                    "done": False
-                }
-            })
 
-        # Prepare request for the selected model
-        # If it's an OpenRouter model, we might need to handle it differently
-        # but Open WebUI handles multiple backends.
-        # However, since we are in a Pipe, we need to return the response.
-
-        # Simplest approach: delegate back to Open WebUI's internal call if possible,
-        # but Pipes usually handle the full cycle.
-
-
-        if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
-        else:
-            response = self.call_ollama(selected_model, body)
-
-        if __event_emitter__:
             await __event_emitter__({
                 "type": "status",
                 "data": {
@@ -104,7 +98,7 @@ class Pipe:
 
         return response
 
-    async def evaluate_difficulty(self, query: str) -> str:
+    async def evaluate_difficulty(self, client: httpx.AsyncClient, query: str) -> str:
         prompt = f"Evaluate the difficulty of the following user query. Respond with only one word: 'Easy' or 'Hard'.\n\nQuery: {query}\n\nDifficulty:"
         try:
             payload = {
@@ -113,15 +107,17 @@ class Pipe:
                 "stream": False,
                 "options": {"temperature": 0}
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            response = await client.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
+            else:
+                print(f"Ollama evaluation error: {response.status_code} - {response.text}", file=sys.stderr)
         except Exception as e:
-            print(f"Error evaluating difficulty: {e}")
+            print(f"Error evaluating difficulty: {e}", file=sys.stderr)
         return "Easy" # Default to Easy/Local on error
 
-    def call_ollama(self, model: str, body: dict) -> str:
+    async def call_ollama(self, client: httpx.AsyncClient, model: str, body: dict) -> str:
         # Strip the provider prefix if present
         model_id = model.split("/")[-1] if "/" in model else model
         payload = {
@@ -130,15 +126,17 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = await client.post(f"{self.valves.ollama_url}/api/chat", json=payload, timeout=60)
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                print(f"Ollama error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "An error occurred while communicating with the local model."
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            print(f"Error calling Ollama: {str(e)}", file=sys.stderr)
+            return "An error occurred while communicating with the local model."
 
-    def call_openrouter(self, model: str, body: dict) -> str:
+    async def call_openrouter(self, client: httpx.AsyncClient, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
         model_id = model.replace("openrouter/", "")
         headers = {
@@ -150,12 +148,14 @@ class Pipe:
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=60)
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                print(f"OpenRouter error: {response.status_code} - {response.text}", file=sys.stderr)
+                return "An error occurred while communicating with the cloud model."
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            print(f"Error calling OpenRouter: {str(e)}", file=sys.stderr)
+            return "An error occurred while communicating with the cloud model."
 
 
