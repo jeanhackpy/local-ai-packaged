@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import json
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -118,6 +119,68 @@ def start_local_ai(profile=None, environment=None):
         cmd.extend(["-f", "docker-compose.override.public.yml"])
     cmd.extend(["up", "-d"])
     run_command(cmd)
+
+def prepare_openclaw_config():
+    """Merge root .env with openclaw/openclaw.json.example to create openclaw/openclaw.json."""
+    example_path = os.path.join("openclaw", "openclaw.json.example")
+    target_path = os.path.join("openclaw", "openclaw.json")
+    root_env_path = ".env"
+
+    if not os.path.exists(example_path):
+        print(f"Warning: {example_path} not found. Skipping OpenClaw config preparation.")
+        return
+
+    print(f"Preparing {target_path} from {example_path}...")
+
+    # Load example config
+    try:
+        with open(example_path, 'r') as f:
+            config = json.load(f)
+    except Exception as e:
+        print(f"Error reading {example_path}: {e}")
+        return
+
+    # Load env vars from root .env
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key] = value
+
+    # Get secrets from env or generate
+    bot_token = env_vars.get("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+    gateway_token = env_vars.get("OPENCLAW_GATEWAY_TOKEN")
+
+    if not gateway_token:
+        print("OPENCLAW_GATEWAY_TOKEN not found in .env, generating a new one...")
+        gateway_token = secrets.token_hex(24)
+        # In a real scenario, we might want to write this back to .env
+
+    # Inject into config
+    # 1. Telegram Bot Token
+    try:
+        if "channels" in config and "telegram" in config["channels"]:
+            config["channels"]["telegram"]["botToken"] = bot_token
+    except KeyError:
+        pass
+
+    # 2. Gateway Token
+    try:
+        if "gateway" in config and "auth" in config["gateway"]:
+            config["gateway"]["auth"]["token"] = gateway_token
+    except KeyError:
+        pass
+
+    # Write merged config
+    try:
+        with open(target_path, 'w') as f:
+            json.dump(config, f, indent=2)
+        print(f"Successfully created {target_path}")
+    except Exception as e:
+        print(f"Error writing {target_path}: {e}")
 
 
 
@@ -284,7 +347,7 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
     
