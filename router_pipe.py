@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
 
 class Pipe:
     class Valves(BaseModel):
@@ -60,6 +61,11 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < 15:
+            # BOLT OPTIMIZATION: Skip LLM evaluation for very short queries
+            # Reduces latency significantly for common phrases like "Hi", "Hello", "Thanks"
+            selected_model = self.valves.easy_model
+            route_reason = "Short Query Heuristic -> Routing to Local"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -88,10 +94,12 @@ class Pipe:
         # but Pipes usually handle the full cycle.
 
 
+        # BOLT OPTIMIZATION: Use asyncio.to_thread to prevent blocking the event loop
+        # for these synchronous network calls.
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await asyncio.to_thread(self.call_openrouter, selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            response = await asyncio.to_thread(self.call_ollama, selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
@@ -105,15 +113,25 @@ class Pipe:
         return response
 
     async def evaluate_difficulty(self, query: str) -> str:
+        # BOLT OPTIMIZATION: Reduced latency by adding num_predict: 5 and using to_thread
         prompt = f"Evaluate the difficulty of the following user query. Respond with only one word: 'Easy' or 'Hard'.\n\nQuery: {query}\n\nDifficulty:"
         try:
             payload = {
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 5  # Limit token generation to reduce latency
+                }
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            # Wrap in to_thread to keep the event loop non-blocking
+            response = await asyncio.to_thread(
+                requests.post,
+                f"{self.valves.ollama_url}/api/generate",
+                json=payload,
+                timeout=10
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
