@@ -60,6 +60,10 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < 15:
+            # BOLT OPTIMIZATION: Fast-path for short queries to reduce latency by skipping LLM evaluation
+            selected_model = self.valves.easy_model
+            route_reason = "Short query -> Routing to Local (Fast-path)"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -107,11 +111,15 @@ class Pipe:
     async def evaluate_difficulty(self, query: str) -> str:
         prompt = f"Evaluate the difficulty of the following user query. Respond with only one word: 'Easy' or 'Hard'.\n\nQuery: {query}\n\nDifficulty:"
         try:
+            # BOLT OPTIMIZATION: num_predict: 5 ensures the model stops immediately after classification
             payload = {
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 5
+                }
             }
             response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
             if response.status_code == 200:
