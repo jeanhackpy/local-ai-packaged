@@ -2,3 +2,8 @@
 **Vulnerability:** Services in the AI stack were not correctly shielded in "public" mode because `docker-compose.override.public.yml` only contained resets for Supabase services, which were not present in the AI stack's `docker-compose.yml`. This left services like `openclaw-gateway` exposed even when the user selected the "public" environment.
 **Learning:** In a multi-stack Docker Compose setup, it's easy to copy-paste override files. If an override file is applied to a stack that doesn't contain the specified services, the `!reset null` directives do nothing, leading to a false sense of security.
 **Prevention:** Always verify that environment-specific overrides correctly target the services defined in the specific base compose file they are intended for. Use `docker compose config` with the specific files to verify the final effective configuration.
+
+## 2026-02-14 - Hardcoded Secrets in OpenClaw Configuration
+**Vulnerability:** The `openclaw/openclaw.json` file contained a hardcoded Telegram Bot Token and a Gateway Auth Token. This file was tracked by Git, leading to credential leakage in the repository history.
+**Learning:** Automated configuration generators (like OpenClaw's onboarding) often create local files containing secrets. If the development workflow doesn't explicitly account for these files by templating them and adding them to `.gitignore`, they will inevitably be committed.
+**Prevention:** Implement a "template and inject" pattern for all configuration files containing secrets. Use a `.example` file for version control and a startup script to populate the actual config from environment variables. Ensure sensitive config files are added to `.gitignore` before they are ever populated with real data.
