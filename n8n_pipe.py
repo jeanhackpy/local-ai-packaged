@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
+import asyncio
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -96,27 +98,33 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
-                    self.valves.n8n_url,
-                    json=payload,
-                    headers=headers,
-                    timeout=30,
-                )
+
+                def make_request():
+                    return requests.post(
+                        self.valves.n8n_url,
+                        json=payload,
+                        headers=headers,
+                        timeout=30,
+                    )
+
+                response = await asyncio.to_thread(make_request)
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    print(f"Error from n8n: {response.status_code} - {response.text}", file=sys.stderr)
+                    n8n_response = "An error occurred while processing your request through the workflow."
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                print(f"Exception during n8n sequence execution: {str(e)}", file=sys.stderr)
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "Error during sequence execution",
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": "An internal error occurred during sequence execution."}
         # If no message is available alert user
         else:
             await self.emit_status(
