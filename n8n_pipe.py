@@ -1,6 +1,6 @@
 """
 title: n8n Pipe Function
-version: 0.1.0
+version: 0.1.1
 
 This module defines a Pipe class that utilizes N8N for an Agent
 """
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -80,10 +81,15 @@ class Pipe:
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
         await self.emit_status(
-            __event_emitter__, "info", "/Calling N8N Workflow...", False
+            __event_emitter__, "info", "Calling N8N Workflow...", False
         )
         chat_id, _ = extract_event_info(__event_emitter__)
-        messages = body.get("messages", [])
+
+        if "messages" not in body:
+            body["messages"] = []
+        messages = body["messages"]
+
+        n8n_response = "An error occurred while processing your request."
 
         # Verify a message is available
         if messages:
@@ -105,30 +111,36 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log detailed error to stderr and raise generic exception
+                    print(f"N8N Error: {response.status_code} - {response.text}", file=sys.stderr)
+                    raise Exception("N8N workflow failed")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log actual error details to stderr
+                print(f"Error during N8N sequence execution: {str(e)}", file=sys.stderr)
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "Error during sequence execution",
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": "An internal error occurred. Please try again later."}
         # If no message is available alert user
         else:
+            error_msg = "No messages found in the request body"
             await self.emit_status(
                 __event_emitter__,
                 "error",
-                "No messages found in the request body",
+                error_msg,
                 True,
             )
+            n8n_response = error_msg
             body["messages"].append(
                 {
                     "role": "assistant",
-                    "content": "No messages found in the request body",
+                    "content": n8n_response,
                 }
             )
 
