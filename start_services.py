@@ -119,11 +119,53 @@ def start_local_ai(profile=None, environment=None):
     cmd.extend(["up", "-d"])
     run_command(cmd)
 
+def prepare_openclaw_config():
+    """Prepare the OpenClaw configuration file by injecting secrets."""
+    example_path = os.path.join("openclaw", "openclaw.json.example")
+    target_path = os.path.join("openclaw", "openclaw.json")
+    root_env_path = ".env"
 
+    if not os.path.exists(example_path):
+        print(f"Warning: {example_path} not found. Skipping OpenClaw config preparation.")
+        return
 
+    print("Preparing OpenClaw configuration...")
 
+    # Load environment variables from .env if it exists
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key.strip()] = value.split('#', 1)[0].strip()
 
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") or env_vars.get("TELEGRAM_BOT_TOKEN", "")
+    gateway_token = os.environ.get("OPENCLAW_GATEWAY_TOKEN") or env_vars.get("OPENCLAW_GATEWAY_TOKEN", "")
 
+    # Auto-generate gateway token if missing
+    if not gateway_token:
+        print("OPENCLAW_GATEWAY_TOKEN not found. Generating a new one...")
+        gateway_token = secrets.token_hex(24)
+        # Persist to .env
+        with open(root_env_path, 'a') as f:
+            f.write(f"\nOPENCLAW_GATEWAY_TOKEN={gateway_token}\n")
+        print(f"Generated and saved OPENCLAW_GATEWAY_TOKEN to {root_env_path}")
+
+    # Read template
+    with open(example_path, 'r') as f:
+        config_content = f.read()
+
+    # Inject secrets
+    config_content = config_content.replace("YOUR_TELEGRAM_BOT_TOKEN", telegram_token)
+    config_content = config_content.replace("YOUR_OPENCLAW_GATEWAY_TOKEN", gateway_token)
+
+    # Write target file
+    with open(target_path, 'w') as f:
+        f.write(config_content)
+
+    print(f"Successfully created {target_path}")
 
 def generate_searxng_secret_key():
     """Generate a secret key for SearXNG based on the current platform."""
@@ -284,7 +326,7 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
     
