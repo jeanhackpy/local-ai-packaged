@@ -1,0 +1,3 @@
+## 2025-05-15 - LLM Router Latency & Concurrency Optimization
+**Learning:** LLM-based query classification is powerful but expensive. For simple greetings or short queries (<15 chars), it adds ~200ms of unnecessary latency. Additionally, blocking the event loop with `requests` in an async pipe significantly degrades server throughput.
+**Action:** Always implement a fast-path heuristic (e.g., query length check) before calling an LLM for classification. Wrap blocking I/O calls (like `requests.post`) in `asyncio.to_thread` to preserve event loop responsiveness in Open WebUI pipes. Use `num_predict` to cap token generation for classification tasks.
