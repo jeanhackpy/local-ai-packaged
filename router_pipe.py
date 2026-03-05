@@ -1,7 +1,7 @@
 """
 title: LLM Router Pipe
-version: 1.0.0
-description: Routes queries between local and cloud models based on difficulty evaluation and privacy settings.
+version: 1.0.1
+description: Routes queries between local and cloud models based on difficulty evaluation and privacy settings. Optimized with non-blocking I/O and fast-path heuristics.
 """
 
 from typing import Optional, Callable, Awaitable
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
 
 class Pipe:
     class Valves(BaseModel):
@@ -60,6 +61,10 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < 15:
+            # Fast-path for short queries to reduce latency
+            selected_model = self.valves.easy_model
+            route_reason = "Short Query -> Fast-path Easy Model"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -89,9 +94,9 @@ class Pipe:
 
 
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await asyncio.to_thread(self.call_openrouter, selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            response = await asyncio.to_thread(self.call_ollama, selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
@@ -111,9 +116,18 @@ class Pipe:
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 5,  # Minimize latency for evaluation
+                }
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            # Use asyncio.to_thread to avoid blocking the event loop
+            response = await asyncio.to_thread(
+                requests.post,
+                f"{self.valves.ollama_url}/api/generate",
+                json=payload,
+                timeout=10
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
