@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import asyncio
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -96,7 +98,8 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+                response = await asyncio.to_thread(
+                    requests.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
@@ -105,18 +108,23 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    sys.stderr.write(f"n8n Error: Status {response.status_code}\n")
+                    raise Exception("Workflow execution failed")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                error_msg = str(e) if str(e) == "Workflow execution failed" else "An internal error occurred"
+                if str(e) != "Workflow execution failed":
+                    sys.stderr.write(f"Exception during n8n pipe execution: {str(e)}\n")
+
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    f"Error during sequence execution: {error_msg}",
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
             await self.emit_status(

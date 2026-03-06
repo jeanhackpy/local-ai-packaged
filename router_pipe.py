@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
+import sys
 
 class Pipe:
     class Valves(BaseModel):
@@ -89,9 +91,9 @@ class Pipe:
 
 
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await asyncio.to_thread(self.call_openrouter, selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            response = await asyncio.to_thread(self.call_ollama, selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
@@ -105,20 +107,24 @@ class Pipe:
         return response
 
     async def evaluate_difficulty(self, query: str) -> str:
+        if len(query) < 15:
+            return "Easy"
         prompt = f"Evaluate the difficulty of the following user query. Respond with only one word: 'Easy' or 'Hard'.\n\nQuery: {query}\n\nDifficulty:"
         try:
             payload = {
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {"temperature": 0, "num_predict": 5}
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            response = await asyncio.to_thread(
+                requests.post, f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
         except Exception as e:
-            print(f"Error evaluating difficulty: {e}")
+            sys.stderr.write(f"Error evaluating difficulty: {e}\n")
         return "Easy" # Default to Easy/Local on error
 
     def call_ollama(self, model: str, body: dict) -> str:
@@ -130,13 +136,15 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload, timeout=30)
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                sys.stderr.write(f"Ollama Error: Status {response.status_code}\n")
+                return "An error occurred while processing your request locally."
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            sys.stderr.write(f"Exception calling Ollama: {str(e)}\n")
+            return "Internal service error."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
@@ -150,12 +158,14 @@ class Pipe:
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=60)
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                sys.stderr.write(f"OpenRouter Error: Status {response.status_code}\n")
+                return "An error occurred while processing your request via cloud."
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            sys.stderr.write(f"Exception calling OpenRouter: {str(e)}\n")
+            return "External service error."
 
 
