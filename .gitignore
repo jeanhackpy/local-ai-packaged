@@ -6,3 +6,9 @@ neo4j/
 shared-backup/
 searxng/settings.yml
 searxng/uwsgi*
+openclaw/openclaw.json
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class

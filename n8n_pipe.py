@@ -8,6 +8,7 @@ This module defines a Pipe class that utilizes N8N for an Agent
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
+import sys
 import time
 import requests
 
@@ -105,18 +106,21 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    raise Exception(f"Error: {response.status_code}")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log technical details to stderr, but don't leak to user
+                print(f"n8n Pipe Error: {str(e)}", file=sys.stderr)
+                error_msg = "An error occurred while calling the n8n workflow."
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    error_msg,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
             await self.emit_status(
