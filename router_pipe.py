@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
 
 class Pipe:
     class Valves(BaseModel):
@@ -60,6 +61,10 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < 15:
+            # Fast-path: short queries are always Easy
+            selected_model = self.valves.easy_model
+            route_reason = "Short Query (Fast-path) -> Routing to Local"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -89,9 +94,10 @@ class Pipe:
 
 
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await asyncio.to_thread(self.call_openrouter, selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            # Offload blocking Ollama call to thread
+            response = await asyncio.to_thread(self.call_ollama, selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
@@ -111,15 +117,24 @@ class Pipe:
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {
+                    "temperature": 0,
+                    "num_predict": 5  # Limit output length to speed up evaluation
+                }
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            # Offload blocking request to a thread to keep the event loop responsive
+            response = await asyncio.to_thread(
+                requests.post,
+                f"{self.valves.ollama_url}/api/generate",
+                json=payload,
+                timeout=10
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
         except Exception as e:
             print(f"Error evaluating difficulty: {e}")
-        return "Easy" # Default to Easy/Local on error
+        return "Easy"  # Default to Easy/Local on error
 
     def call_ollama(self, model: str, body: dict) -> str:
         # Strip the provider prefix if present
