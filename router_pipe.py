@@ -130,32 +130,39 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = requests.post(
+                f"{self.valves.ollama_url}/api/chat", json=payload, timeout=30
+            )
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                return f"Error from Ollama: {response.status_code}"
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            return "An error occurred while calling the local model."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
         model_id = model.replace("openrouter/", "")
         headers = {
             "Authorization": f"Bearer {self.valves.openrouter_api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         payload = {
             "model": model_id,
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60,
+            )
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                return f"Error from OpenRouter: {response.status_code}"
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            return "An error occurred while calling the cloud model."
 
 
