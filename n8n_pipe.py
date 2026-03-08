@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import asyncio
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -84,6 +86,7 @@ class Pipe:
         )
         chat_id, _ = extract_event_info(__event_emitter__)
         messages = body.get("messages", [])
+        n8n_response = ""
 
         # Verify a message is available
         if messages:
@@ -96,16 +99,22 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+
+                response = await asyncio.to_thread(
+                    requests.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
                     timeout=30,
                 )
+
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log full error for internal debugging
+                    print(f"n8n error: {response.status_code} - {response.text}", file=sys.stderr)
+                    # Don't leak internal details to the user
+                    raise Exception(f"Error calling n8n workflow: HTTP {response.status_code}")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
