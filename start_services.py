@@ -268,6 +268,54 @@ def check_and_fix_docker_compose_for_searxng():
         print(f"Error checking/modifying docker-compose.yml for SearXNG: {e}")
 
 
+def prepare_openclaw_config():
+    """Generate openclaw/openclaw.json from example by injecting secrets from .env."""
+    example_path = "openclaw/openclaw.json.example"
+    target_path = "openclaw/openclaw.json"
+    root_env_path = ".env"
+
+    if not os.path.exists(example_path):
+        print(f"Warning: {example_path} not found. Skipping OpenClaw config preparation.")
+        return
+
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                if '=' in line and not line.lstrip().startswith('#'):
+                    k, v = line.split('=', 1)
+                    env_vars[k.strip()] = v.split('#')[0].strip() if '#' in v and v.find('#') > v.find('"') == -1 else v.strip()
+
+    gateway_token = env_vars.get("OPENCLAW_GATEWAY_TOKEN")
+    if not gateway_token:
+        print("OPENCLAW_GATEWAY_TOKEN not found in .env. Generating one...")
+        gateway_token = secrets.token_hex(24)
+        mode = 'a' if os.path.exists(root_env_path) else 'w'
+        with open(root_env_path, mode) as f:
+            if mode == 'a':
+                f.write("\n")
+            f.write(f"OPENCLAW_GATEWAY_TOKEN={gateway_token}\n")
+        print(f"Added generated OPENCLAW_GATEWAY_TOKEN to {root_env_path}")
+
+    bot_token = env_vars.get("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_BOT_TOKEN")
+    if bot_token == "YOUR_TELEGRAM_BOT_TOKEN" or not bot_token:
+        print("Warning: TELEGRAM_BOT_TOKEN not set in .env")
+        bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
+
+    workspace_path = os.path.abspath(os.path.join("openclaw", "workspace"))
+
+    with open(example_path, 'r') as f:
+        content = f.read()
+
+    content = content.replace("YOUR_OPENCLAW_GATEWAY_TOKEN", gateway_token)
+    content = content.replace("YOUR_TELEGRAM_BOT_TOKEN", bot_token)
+    content = content.replace("YOUR_WORKSPACE_PATH", workspace_path)
+
+    with open(target_path, 'w') as f:
+        f.write(content)
+
+    print(f"Successfully created {target_path} with secrets from .env")
+
 
 def main():
     parser = argparse.ArgumentParser(description='Start the local AI and Supabase services.')
@@ -284,7 +332,7 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
     
