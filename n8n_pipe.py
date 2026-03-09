@@ -1,8 +1,7 @@
 """
 title: n8n Pipe Function
-version: 0.1.0
-
-This module defines a Pipe class that utilizes N8N for an Agent
+version: 0.1.1
+description: Utilizes N8N for an Agent. Optimized with non-blocking I/O.
 """
 
 from typing import Optional, Callable, Awaitable
@@ -10,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import asyncio
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -96,18 +96,22 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+
+                # ⚡ BOLT: Offload blocking network call to keep the event loop responsive
+                response = await asyncio.to_thread(
+                    requests.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
                     timeout=30,
                 )
+
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
                     raise Exception(f"Error: {response.status_code} - {response.text}")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
                 await self.emit_status(
