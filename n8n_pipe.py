@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -105,18 +106,23 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log internal details but don't leak them to the user
+                    sys.stderr.write(f"N8N Error ({response.status_code}): {response.text}\n")
+                    raise Exception("N8N workflow failed")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log technical details for debugging
+                sys.stderr.write(f"Error in n8n_pipe: {str(e)}\n")
+                error_msg = "An error occurred during sequence execution. Please try again later."
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    error_msg,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
             await self.emit_status(
