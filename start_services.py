@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import json
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -120,9 +121,31 @@ def start_local_ai(profile=None, environment=None):
     run_command(cmd)
 
 
-
-
-
+def prepare_openclaw_config():
+    """Prepare openclaw/openclaw.json from template and root .env."""
+    example_path, target_path, root_env_path = os.path.join("openclaw", "openclaw.json.example"), os.path.join("openclaw", "openclaw.json"), ".env"
+    if not os.path.exists(example_path): return
+    print("Preparing OpenClaw configuration...")
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                if '=' in line and not line.strip().startswith('#'):
+                    k, v = line.split('=', 1)
+                    env_vars[k.strip()] = v.strip()
+    tg_token = env_vars.get("TELEGRAM_BOT_TOKEN", "")
+    gw_token = env_vars.get("OPENCLAW_GATEWAY_TOKEN", "")
+    if not gw_token:
+        gw_token = secrets.token_hex(24)
+        with open(root_env_path, 'a') as f:
+            f.write(f"\n# Auto-generated OpenClaw Gateway Token\nOPENCLAW_GATEWAY_TOKEN={gw_token}\n")
+    with open(example_path, 'r') as f:
+        content = f.read()
+    content = content.replace("YOUR_TELEGRAM_BOT_TOKEN", tg_token)
+    content = content.replace("YOUR_OPENCLAW_GATEWAY_TOKEN", gw_token)
+    content = content.replace("YOUR_WORKSPACE_PATH", os.path.abspath(os.path.join("openclaw", "workspace")))
+    with open(target_path, 'w') as f: f.write(content)
+    print(f"Successfully created {target_path}")
 
 
 def generate_searxng_secret_key():
@@ -284,12 +307,9 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
-    
-    # Check OpenClaw configuration
-    # check_openclaw_config()
 
     stop_existing_containers(args.profile)
 
