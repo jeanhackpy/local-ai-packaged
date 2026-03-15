@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
 
 class Pipe:
     class Valves(BaseModel):
@@ -36,6 +37,10 @@ class Pipe:
             default="",
             description="API Key for OpenRouter (if calling direct)"
         )
+        fast_path_threshold: int = Field(
+            default=15,
+            description="Queries shorter than this bypass LLM difficulty evaluation"
+        )
 
 
     def __init__(self):
@@ -60,6 +65,10 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < self.valves.fast_path_threshold:
+            # Fast-path for short queries
+            selected_model = self.valves.easy_model
+            route_reason = "Short Query (Fast-Path) -> Routing to Local"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -89,9 +98,9 @@ class Pipe:
 
 
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await self.call_openrouter(selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            response = await self.call_ollama(selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
@@ -111,9 +120,14 @@ class Pipe:
                 "model": self.valves.eval_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0}
+                "options": {"temperature": 0, "num_predict": 5}
             }
-            response = requests.post(f"{self.valves.ollama_url}/api/generate", json=payload, timeout=10)
+            response = await asyncio.to_thread(
+                requests.post,
+                f"{self.valves.ollama_url}/api/generate",
+                json=payload,
+                timeout=10
+            )
             if response.status_code == 200:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
@@ -121,7 +135,7 @@ class Pipe:
             print(f"Error evaluating difficulty: {e}")
         return "Easy" # Default to Easy/Local on error
 
-    def call_ollama(self, model: str, body: dict) -> str:
+    async def call_ollama(self, model: str, body: dict) -> str:
         # Strip the provider prefix if present
         model_id = model.split("/")[-1] if "/" in model else model
         payload = {
@@ -130,7 +144,11 @@ class Pipe:
             "stream": False
         }
         try:
-            response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
+            response = await asyncio.to_thread(
+                requests.post,
+                f"{self.valves.ollama_url}/api/chat",
+                json=payload
+            )
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
@@ -138,7 +156,7 @@ class Pipe:
         except Exception as e:
             return f"Error calling Ollama: {str(e)}"
 
-    def call_openrouter(self, model: str, body: dict) -> str:
+    async def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
         model_id = model.replace("openrouter/", "")
         headers = {
@@ -150,7 +168,12 @@ class Pipe:
             "messages": body.get("messages", []),
         }
         try:
-            response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            response = await asyncio.to_thread(
+                requests.post,
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
