@@ -7,9 +7,10 @@ This module defines a Pipe class that utilizes N8N for an Agent
 
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
-import os
 import time
 import requests
+import asyncio
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -79,6 +80,7 @@ class Pipe:
         __event_emitter__: Callable[[dict], Awaitable[None]] = None,
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
+        n8n_response = ""
         await self.emit_status(
             __event_emitter__, "info", "/Calling N8N Workflow...", False
         )
@@ -96,27 +98,31 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+                response = await asyncio.to_thread(
+                    requests.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
-                    timeout=30,
+                    timeout=60,
                 )
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
                     raise Exception(f"Error: {response.status_code} - {response.text}")
 
-                # Set assitant message with chain reply
+                # Set assistant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
+                await self.emit_status(__event_emitter__, "info", "Complete", True)
+                return n8n_response
             except Exception as e:
+                sys.stderr.write(f"Error during n8n sequence execution: {str(e)}\n")
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "Communication failed",
                     True,
                 )
-                return {"error": str(e)}
+                return "Communication failed"
         # If no message is available alert user
         else:
             await self.emit_status(
@@ -125,12 +131,4 @@ class Pipe:
                 "No messages found in the request body",
                 True,
             )
-            body["messages"].append(
-                {
-                    "role": "assistant",
-                    "content": "No messages found in the request body",
-                }
-            )
-
-        await self.emit_status(__event_emitter__, "info", "Complete", True)
-        return n8n_response
+            return "No messages found in the request body"
