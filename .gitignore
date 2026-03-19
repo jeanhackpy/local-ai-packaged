@@ -1,0 +1,38 @@
+# macOS
+.DS_Store
+**/.DS_Store
+*.localized
+
+# Secrets — never commit
+.env
+.env.local
+.env*.local
+00_System/Secrets/
+
+# Node.js projects inside vault
+**/node_modules/
+**/.next/
+**/dist/
+**/.turbo/
+**/.vercel/
+**/out/
+**/*.log
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+
+# Obsidian workspace state (machine-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/graph.json
+
+# Large binaries
+**/*.node
+**/*.dylib
+**/*.so
+
+# Embedded git repos (have their own repos)
+20_Projects/Active/websites redesign/recall-agency.com/code/
