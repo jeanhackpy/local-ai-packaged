@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import json
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -119,11 +120,63 @@ def start_local_ai(profile=None, environment=None):
     cmd.extend(["up", "-d"])
     run_command(cmd)
 
+def prepare_openclaw_config():
+    """Prepare openclaw.json from openclaw.json.example by injecting secrets from .env."""
+    config_path = os.path.join("openclaw", "openclaw.json")
+    example_path = os.path.join("openclaw", "openclaw.json.example")
+    root_env_path = ".env"
 
+    if not os.path.exists(example_path):
+        print(f"Warning: {example_path} not found. Skipping OpenClaw config preparation.")
+        return
 
+    print(f"Preparing {config_path} from {example_path}...")
 
+    # Load .env variables
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key.strip()] = value.strip()
 
+    # Generate gateway token if missing
+    if not env_vars.get("OPENCLAW_GATEWAY_TOKEN"):
+        print("Generating new OPENCLAW_GATEWAY_TOKEN...")
+        token = secrets.token_hex(24)
+        env_vars["OPENCLAW_GATEWAY_TOKEN"] = token
+        # Also append to root .env for persistence
+        with open(root_env_path, 'a') as f:
+            f.write(f"\nOPENCLAW_GATEWAY_TOKEN={token}\n")
 
+    # Load template
+    with open(example_path, 'r') as f:
+        config = json.load(f)
+
+    # Inject values
+    if "gateway" in config and "auth" in config["gateway"]:
+        config["gateway"]["auth"]["token"] = env_vars.get("OPENCLAW_GATEWAY_TOKEN", "your-gateway-token")
+
+    if "channels" in config and "telegram" in config["channels"]:
+        telegram_token = env_vars.get("TELEGRAM_BOT_TOKEN")
+        if telegram_token:
+            config["channels"]["telegram"]["botToken"] = telegram_token
+        else:
+            print("Warning: TELEGRAM_BOT_TOKEN not found in .env. Telegram integration may not work.")
+            config["channels"]["telegram"]["enabled"] = False
+
+    # Set workspace path to a generic one inside the project or based on env
+    workspace_path = os.path.abspath(os.path.join("openclaw", "workspace"))
+    if "agents" in config and "defaults" in config["agents"]:
+        config["agents"]["defaults"]["workspace"] = workspace_path
+
+    # Write final config
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    print(f"Successfully created {config_path}")
 
 def generate_searxng_secret_key():
     """Generate a secret key for SearXNG based on the current platform."""
@@ -295,6 +348,9 @@ def main():
 
     # Start Supabase first
     start_supabase(args.environment)
+
+    # Prepare OpenClaw configuration
+    prepare_openclaw_config()
 
     # Give Supabase some time to initialize
     print("Waiting for Supabase to initialize...")
