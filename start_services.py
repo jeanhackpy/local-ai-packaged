@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import json
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -120,9 +121,69 @@ def start_local_ai(profile=None, environment=None):
     run_command(cmd)
 
 
+def prepare_openclaw_config():
+    """Prepare OpenClaw configuration by replacing placeholders with env variables."""
+    root_env_path = ".env"
+    config_example_path = os.path.join("openclaw", "openclaw.json.example")
+    config_path = os.path.join("openclaw", "openclaw.json")
 
+    if not os.path.exists(config_example_path):
+        print(f"Warning: {config_example_path} not found. Skipping OpenClaw config.")
+        return
 
+    print("Preparing OpenClaw configuration...")
 
+    # Load root .env
+    env_vars = {}
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key] = value
+
+    # Gateway Token handling
+    gateway_token = env_vars.get("OPENCLAW_GATEWAY_TOKEN", "").strip()
+    if not gateway_token:
+        gateway_token = secrets.token_hex(24)
+        print(f"Generated new OPENCLAW_GATEWAY_TOKEN: {gateway_token}")
+        try:
+            with open(root_env_path, 'a') as f:
+                f.write(f"\nOPENCLAW_GATEWAY_TOKEN={gateway_token}\n")
+        except Exception as e:
+            print(f"Error updating .env with gateway token: {e}")
+
+    try:
+        # If the config file already exists, we load it.
+        # Otherwise, we load the example as a base.
+        if os.path.exists(config_path):
+            print(f"Loading existing {config_path} to preserve settings...")
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+        else:
+            print(f"No existing config found. Creating {config_path} from template...")
+            with open(config_example_path, 'r') as f:
+                config = json.load(f)
+
+        # Inject values from .env or keep defaults
+        if "channels" in config and "telegram" in config["channels"]:
+            if "TELEGRAM_BOT_TOKEN" in env_vars:
+                config["channels"]["telegram"]["botToken"] = env_vars["TELEGRAM_BOT_TOKEN"]
+
+        if "gateway" in config and "auth" in config["gateway"]:
+            config["gateway"]["auth"]["token"] = gateway_token
+
+        if "agents" in config and "defaults" in config["agents"]:
+            if "OPENCLAW_WORKSPACE_PATH" in env_vars:
+                config["agents"]["defaults"]["workspace"] = env_vars["OPENCLAW_WORKSPACE_PATH"]
+
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        print(f"Successfully updated {config_path}")
+    except Exception as e:
+        print(f"Error preparing OpenClaw config: {e}")
 
 
 def generate_searxng_secret_key():
@@ -284,7 +345,7 @@ def main():
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
-    # prepare_openclaw_env()
+    prepare_openclaw_config()
     prepare_supabase_env()
     check_and_fix_docker_compose_for_searxng()
     
