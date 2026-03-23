@@ -11,6 +11,7 @@ volumes:
   valkey-data:
   minio_storage:
 
+
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
   environment:
@@ -88,16 +89,16 @@ services:
     image: neo4j:latest
     container_name: neo4j
     volumes:
-        - ./neo4j/logs:/logs
-        - ./neo4j/config:/config
-        - ./neo4j/data:/data
-        - ./neo4j/plugins:/plugins
+      - ./neo4j/logs:/logs
+      - ./neo4j/config:/config
+      - ./neo4j/data:/data
+      - ./neo4j/plugins:/plugins
     expose:
       - 7473/tcp
       - 7474/tcp
       - 7687/tcp
     environment:
-        - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
+      - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
     restart: always
 
   caddy:
@@ -126,6 +127,9 @@ services:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
+    networks:
+      - default
+      - localai_net
 
   minio:
     image: minio/minio:latest
@@ -141,7 +145,7 @@ services:
     volumes:
       - minio_storage:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -156,7 +160,7 @@ services:
     volumes:
       - valkey-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 3s
       timeout: 5s
       retries: 10
@@ -179,11 +183,18 @@ services:
       - SETUID
 
   ollama-cpu:
-    profiles: ["cpu"]
+    profiles: [ "cpu" ]
     <<: *service-ollama
 
   ollama-pull-llama-cpu:
-    profiles: ["cpu"]
+    profiles: [ "cpu" ]
     <<: *init-ollama
     depends_on:
       - ollama-cpu
+
+networks:
+  default:
+    name: local-ai-packaged_default
+  localai_net:
+    name: localai_default
+    external: true
