@@ -1,0 +1,5 @@
+7e57431f527462ac8f8ba98c9930876d91830c4a8bd779d572dbb69fb40a21f2  /home/phil/local-ai-packaged/Caddyfile
+391d3237d8cebd5317816c45bbe0e416047b59325d57d776831dc34c29978004  /home/phil/local-ai-packaged/docker-compose.yml
+553411643e832e95980f76c2689a73f6191b7948f438b2da6009fdb554d300a1  /home/phil/local-ai-packaged/docker-compose.override.public.yml
+cf74774968a47db87fdfb28afff93e3b6ec0f980056cd2bc80f352ef5b20b307  /home/phil/local-ai-packaged/docker-compose.override.public.supabase.yml
+4aab0fc99044ce7d9a3f54fbcfc32e4daa32a38ef9b23158f01e2322dceb4668  /home/phil/local-ai-packaged/supabase/docker/volumes/api/kong.yml
