@@ -7,9 +7,10 @@ This module defines a Pipe class that utilizes N8N for an Agent
 
 from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
-import os
 import time
 import requests
+import asyncio
+
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -20,6 +21,7 @@ def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
             message_id = request_info.get("message_id")
             return chat_id, message_id
     return None, None
+
 
 class Pipe:
     class Valves(BaseModel):
@@ -96,7 +98,8 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+                response = await asyncio.to_thread(
+                    requests.post,
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
