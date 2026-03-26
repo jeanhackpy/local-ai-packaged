@@ -1,78 +1,128 @@
-# Open Source Agentic System
+# Palanthai — Local AI Stack
 
-An advanced, self-hosted foundation for creating autonomous agentic systems. This package combines state-of-the-art AI modules, robust databases, and powerful orchestration tools into a single, easy-to-deploy stack.
+Self-hosted AI infrastructure for Thai real estate intelligence.
+Forked from [coleam00/local-ai-packaged](https://github.com/coleam00/local-ai-packaged).
 
-## 🚀 Core Tech Stack
+**Last updated:** 2026-03-26
 
-- **AI & Models**:
-  - **Ollama**: Local LLM inference engine.
-  - **OpenClaw**: Advanced AI agent gateway with MCP (Model Context Protocol) support.
-  - **Open WebUI**: User-friendly interface for interacting with models and agents.
-- **Orchestration**:
-  - **n8n**: Low-code workflow automation with over 400 integrations.
-  - **LLM Router**: Intelligent routing between local and cloud models based on query difficulty.
-- **Data & Extraction**:
-  - **Crawl4ai**: Automated, NLP-powered data extraction from any website.
-  - **SearXNG**: Privacy-respecting metasearch engine.
-- **Databases**:
-  - **Supabase (PostgreSQL)**: Main relational database and authentication.
-  - **Qdrant**: High-performance vector store for RAG (Retrieval-Augmented Generation).
-  - **Neo4j**: Graph database for complex relationship mapping.
+## Active Services
 
-## ✨ Key Features
+| Service | Container | Port | Purpose |
+|---------|-----------|------|---------|
+| **Caddy** | caddy | 80, 443 | TLS reverse proxy (Let's Encrypt) |
+| **n8n** | n8n | 5678 | Workflow automation |
+| **Ollama** | ollama | 11434 | Local LLM inference (CPU) |
+| **Qdrant** | qdrant | 6333, 6334 | Vector search |
+| **Neo4j** | neo4j | 7474, 7687 | Graph database |
+| **Redis** | redis (Valkey) | 6379 | Cache / queue (LRU, no persistence) |
+| **MinIO** | minio | 9000, 9001 | S3-compatible object storage |
+| **SearXNG** | searxng | 8081 | Meta search engine |
+| **Supabase** | supabase-* | 5432, 6543, 8000 | PostgreSQL + Auth + Storage + API |
 
-- 🔒 **Private & Secure**: Run everything locally on your own hardware or VPS.
-- 🛠️ **MCP Support**: Use the Model Context Protocol to give your agents standard access to tools and data.
-- 🏪 **Skills Marketplace**: Personalize your bot using the OpenClaw skills marketplace.
-- 🔌 **Plug & Play Connectivity**: Easily integrate with Telegram, Discord, WhatsApp, and more.
-- 🧠 **Intelligent Routing**: Automatically switch between local models (for simple tasks/privacy) and cloud models (for complex reasoning).
+### External Services (not in Docker)
+| Service | Port | Notes |
+|---------|------|-------|
+| OpenClaw Gateway | 18789 | MCP gateway (loopback only) |
+| palanthai_api.py | 8765 | Custom FastAPI (systemd/cron) |
+| Langfuse | — | Cloud-hosted at us.cloud.langfuse.com |
 
-## 🛠️ Installation
+### Removed Services
+| Service | Date | Reason |
+|---------|------|--------|
+| OpenWebUI | 2026-03-26 | High RAM (1GB), unused |
+| Flowise | — | Never deployed in this fork |
 
-### Prerequisites
+## Commands
 
-- **Python 3.10+**
-- **Docker & Docker Desktop** (with WSL2 if on Windows)
-- **Git**
+```bash
+# SSH to VPS
+ssh phil@31.97.67.145
+cd /home/phil/local-ai-packaged
 
-### Quick Start
+# ── Stack lifecycle ──────────────────────────────────────
 
-1. **Clone the repository**:
-   ```bash
-   git clone [your-repo-url]
-   cd local-ai-packaged
-   ```
+# Stop all services
+docker compose -p localai -f docker-compose.yml --profile cpu down
 
-2. **Set up environment variables**:
-   Copy `.env.example` to `.env` and fill in the required secrets.
-   ```bash
-   cp .env.example .env
-   ```
+# Pull latest images
+docker compose -p localai -f docker-compose.yml --profile cpu pull
 
-3. **Start the services**:
-   Run the included startup script which handles database initialization and service orchestration.
-   ```bash
-   python start_services.py --profile gpu-nvidia  # Or --profile cpu
-   ```
+# Start all services (Supabase first, then AI stack)
+python3 start_services.py --profile cpu
 
-## 🤖 Using the LLM Router
+# Start Caddy (scaled to 0 by start_services.py)
+docker compose -p localai --profile cpu \
+  -f docker-compose.yml \
+  -f docker-compose.override.private.yml \
+  up -d caddy
 
-The project includes a custom `router_pipe.py` for Open WebUI. This allows you to:
-- **Save Costs**: Use local models (via Ollama) for simple requests and only call expensive APIs for complex ones.
-- **Privacy Mode**: Toggle a switch to ensure no data ever leaves your local environment.
-- **Difficulty Evaluation**: A small, fast local model (like Granite or Qwen) evaluates every query before routing.
+# ── Ollama model management ─────────────────────────────
+# Auto-pull DISABLED — manage models manually:
+docker exec ollama ollama list           # List installed models
+docker exec ollama ollama pull <model>   # Download a model
+docker exec ollama ollama rm <model>     # Remove a model
 
-## 🕸️ Crawl4ai Integration
+# Current models: nomic-embed-text (embeddings)
 
-Automated data extraction is handled by Crawl4ai. You can use it as a standalone service or integrate it into your n8n workflows and OpenClaw skills for real-time web intelligence.
+# ── Monitoring ───────────────────────────────────────────
+docker stats --no-stream                 # CPU/RAM per container
+docker logs -f <container>               # Follow logs
+docker ps -a                             # Container statuses
 
-## 📚 Documentation
+# ── Caddy ────────────────────────────────────────────────
+docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+```
 
-For more detailed guides, check the `docs/` folder:
-- **[OpenClaw & Caddy Guide](docs/OPENCLAW_CADDY_GUIDE.md)**
-- **[VPS Maintenance](docs/VPS_MAINTENANCE.md)**
-- **[Git Workflow](docs/GIT_WORKFLOW.md)**
+## Architecture
 
-## 📜 License
+### Proxy Chain
+```
+Internet ─→ Caddy (TLS on 80/443)
+               ├─→ n8n.recall-agency.com      → n8n:5678
+               ├─→ {SUPABASE_HOSTNAME}        → kong:8000 → Supabase services
+               └─→ {NEO4J_HOSTNAME}           → neo4j:7474
+```
 
-This project is licensed under the Apache License 2.0.
+### Kong (Supabase API Gateway)
+Kong routes all Supabase sub-services internally:
+```
+/rest/v1/*      → PostgREST (supabase-rest:3000)
+/auth/v1/*      → GoTrue (supabase-auth:9999)
+/storage/v1/*   → Storage (supabase-storage:5000)
+/realtime/v1/*  → Realtime (supabase-realtime:4000)
+/functions/v1/* → Edge Functions (supabase-edge-functions:9000)
+/pg/*           → pg-meta (supabase-meta:8080) [admin only]
+/               → Studio (supabase-studio:3000) [basic-auth]
+```
+
+### Network
+All containers run on the unified `localai_default` Docker bridge network.
+Project name: `localai`.
+
+### Memory Allocations
+| Service | Limit | Notes |
+|---------|-------|-------|
+| Ollama | 2.5 GB | CPU capped at 1.5 cores |
+| Neo4j | 1 GB | heap 256m + pagecache 64m |
+| n8n | 700 MB | |
+| Qdrant | 512 MB | |
+| Redis | 300 MB | maxmemory 256MB LRU |
+| SearXNG | 256 MB | |
+| MinIO | 256 MB | |
+| Caddy | 128 MB | actual ~16MB |
+
+### DNS / Domains
+| Domain | Target |
+|--------|--------|
+| n8n.recall-agency.com | n8n:5678 via Caddy |
+
+## Configuration Files
+```
+docker-compose.yml                   # Main service definitions
+docker-compose.override.private.yml  # Memory limits, ports, CPU caps
+.env                                 # Secrets, domain config
+Caddyfile                            # Reverse proxy routes
+neo4j/config/neo4j.conf              # Neo4j memory settings
+supabase/docker/docker-compose.yml   # Supabase sub-services
+supabase/docker/volumes/api/kong.yml # Kong API gateway config
+```

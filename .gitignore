@@ -18,3 +18,22 @@ openclaw/telegram/
 openclaw/exec-approvals.json
 openclaw/update-check.json
 
+
+# Backup files
+*.bak.*
+*.backup
+ARCHITECTURE_LOG.md
+
+# n8n workflow backups
+n8n/backup/
+
+# Logs
+logs/
+*.log
+
+# Supabase sensitive generated files
+supabase/docker/.env
+supabase/docker/volumes/db/data/
+
+# Weekly update scripts output
+scripts/

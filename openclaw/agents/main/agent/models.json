@@ -1,7 +1,7 @@
 {
   "providers": {
     "zai": {
-      "baseUrl": "https://api.z.ai/api/paas/v4",
+      "baseUrl": "https://integrate.api.nvidia.com/v1",
       "api": "openai-completions",
       "models": [
         {

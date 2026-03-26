@@ -1,48 +1,96 @@
-services:
-  open-webui:
-    ports:
-      - 8080:8080
+# Memory-optimized override — Updated 2026-03-26
+# Stack hardened: removed OpenWebUI, unified network, disabled auto model pull
 
+services:
+
+  # ── n8n ─── 700MB (usage réel 400MB + headroom workflows)
   n8n:
     ports:
       - 5678:5678
+    deploy:
+      resources:
+        limits:
+          memory: 700m
 
+  # ── Qdrant ─── 512MB (idle 38MB, burst upsert 35k vectors)
   qdrant:
     ports:
       - 6333:6333
       - 6334:6334
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
+  # ── Neo4j ─── 512MB (re-enabled for scraping pipeline)
   neo4j:
+    restart: unless-stopped
     ports:
       - 7473:7473
       - 7474:7474
       - 7687:7687
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
+  # ── Redis / Valkey ─── 256MB max + LRU eviction (no disk persistence)
   redis:
     ports:
       - 6379:6379
+    command: >
+      valkey-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    deploy:
+      resources:
+        limits:
+          memory: 300m
 
+  # ── SearXNG ─── 256MB
   searxng:
     ports:
       - 8081:8080
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
+  # ── Ollama ─── 2.5GB (nomic-embed-text ~700MB chargé + batch overhead)
   ollama-cpu:
     ports:
       - 11434:11434
+    deploy:
+      resources:
+        limits:
+          memory: 2500m
+          cpus: "1.5"
 
+  # ── Caddy ─── 128MB (usage réel 16MB)
   caddy:
     ports:
       - 80:80
       - 443:443
-    networks:
-      - default
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+    deploy:
+      resources:
+        limits:
+          memory: 128m
 
-networks:
-  default:
-    name: localai_default
-    external: true
+  # ── MinIO ─── 256MB (usage réel 63MB)
+  minio:
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+# NOTES:
+# - Redis: maxmemory 256MB LRU, pas de persistance (pure cache/queue)
+# - Ollama: 2.5GB, CPU limited to 1.5 cores to prevent system saturation
+#   Manage models: docker exec ollama ollama list / pull / rm
+# - Neo4j: re-enabled for scraping pipeline (was disabled to save RAM)
+# - Langfuse: cloud-hosted at us.cloud.langfuse.com (not on-premise)
+# - Removed: OpenWebUI (2026-03-26), Flowise (never deployed)
+# - Network: all services on localai_default (unified)

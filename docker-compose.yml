@@ -5,7 +5,6 @@ volumes:
   n8n_storage:
   ollama_storage:
   qdrant_storage:
-  open-webui:
   caddy-data:
   caddy-config:
   valkey-data:
@@ -39,31 +38,26 @@ x-ollama: &service-ollama
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
+    - OLLAMA_MAX_QUEUE=4
+    - OLLAMA_NUM_PARALLEL=1
   volumes:
     - ollama_storage:/root/.ollama
 
-x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
-  container_name: ollama-pull-llama
-  volumes:
-    - ollama_storage:/root/.ollama
-  entrypoint: /bin/sh
-  command:
-    - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+# Model pull DISABLED — manage models manually:
+#   docker exec ollama ollama pull <model>
+#   docker exec ollama ollama list
+#   docker exec ollama ollama rm <model>
+# x-init-ollama: &init-ollama
+#   image: ollama/ollama:latest
+#   container_name: ollama-pull-llama
+#   volumes:
+#     - ollama_storage:/root/.ollama
+#   entrypoint: /bin/sh
+#   command:
+#     - "-c"
+#     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    restart: unless-stopped
-    container_name: open-webui
-    expose:
-      - 8080/tcp
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - open-webui:/app/backend/data
-
   n8n:
     <<: *service-n8n
     container_name: n8n
@@ -117,19 +111,13 @@ services:
       - caddy-config:/config:rw
     environment:
       - N8N_HOSTNAME=${N8N_HOSTNAME:-":8001"}
-      - WEBUI_HOSTNAME=${WEBUI_HOSTNAME:-":8002"}
-      - OLLAMA_HOSTNAME=${OLLAMA_HOSTNAME:-":8004"}
       - SUPABASE_HOSTNAME=${SUPABASE_HOSTNAME:-":8005"}
-      - SEARXNG_HOSTNAME=${SEARXNG_HOSTNAME:-":8006"}
       - NEO4J_HOSTNAME=${NEO4J_HOSTNAME:-":8008"}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
     cap_drop:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
-    networks:
-      - default
-      - localai_net
 
   minio:
     image: minio/minio:latest
@@ -186,15 +174,13 @@ services:
     profiles: [ "cpu" ]
     <<: *service-ollama
 
-  ollama-pull-llama-cpu:
-    profiles: [ "cpu" ]
-    <<: *init-ollama
-    depends_on:
-      - ollama-cpu
+  # Model auto-pull disabled — use: docker exec ollama ollama pull <model>
+  # ollama-pull-llama-cpu:
+  #   profiles: [ "cpu" ]
+  #   <<: *init-ollama
+  #   depends_on:
+  #     - ollama-cpu
 
 networks:
   default:
-    name: local-ai-packaged_default
-  localai_net:
     name: localai_default
-    external: true
