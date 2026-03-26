@@ -1,0 +1,343 @@
+/*
+Theme Name:   REcall Agency Child Theme
+Template:     astra
+Version:      2.0.0
+Description:  Recall Agency — Agentic AI Services
+Author:       Recall Agency
+*/
+
+/* ═══════════════════════════════════════════════
+   0. DESIGN TOKENS
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg:       #09090B;
+  --surface:  rgba(255,255,255,0.035);
+  --border:   rgba(255,255,255,0.08);
+  --accent:   #00FFD1;
+  --accent-dim: rgba(0,255,209,0.15);
+  --text-1:   #F8FAFC;
+  --text-2:   rgba(255,255,255,0.55);
+  --radius-sm: 1rem;
+  --radius-lg: 1.75rem;
+  --ease:     cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display: 'Fraunces', serif;
+  --font-body:    'Space Grotesk', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════
+   1. RESET & BASE
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg) !important;
+  color: var(--text-1);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Global grain texture */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.025;
+  background: url('data:image/svg+xml,<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>');
+  background-size: 180px;
+}
+
+a { color: var(--accent); text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+/* Kill Astra defaults */
+.ast-container, #page, .site-content,
+.main-header-bar { background: transparent !important; }
+.site-header { border: none !important; }
+
+/* ═══════════════════════════════════════════════
+   2. FLOATING ISLAND HEADER
+   ═══════════════════════════════════════════════ */
+.site-header {
+  background: transparent !important;
+  position: absolute;
+  width: 100%;
+  z-index: 1000;
+  padding: 1.5rem 0;
+  transition: all 0.6s var(--ease);
+}
+
+.site-header.is-sticky {
+  position: fixed !important;
+  top: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 92% !important;
+  max-width: 1100px;
+  padding: 0 !important;
+}
+
+.site-header.is-sticky .main-header-bar {
+  background: rgba(9,9,11,0.7) !important;
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.4rem 2rem;
+  box-shadow: 0 16px 48px -12px rgba(0,0,0,0.6),
+              inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ═══════════════════════════════════════════════
+   3. TYPOGRAPHY
+   ═══════════════════════════════════════════════ */
+.rc-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--text-1);
+  text-wrap: balance;
+}
+
+.rc-subtitle {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  line-height: 1.5;
+  color: var(--text-2);
+  max-width: 55ch;
+  text-wrap: pretty;
+}
+
+.rc-label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════
+   4. BUTTONS
+   ═══════════════════════════════════════════════ */
+.rc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1.1rem 2.8rem;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s var(--ease);
+  box-shadow: 0 0 24px var(--accent-dim);
+  text-decoration: none;
+}
+
+.rc-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 48px rgba(0,255,209,0.35);
+}
+
+.rc-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.rc-btn-ghost {
+  background: transparent;
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.rc-btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════
+   5. HERO
+   ═══════════════════════════════════════════════ */
+.rc-hero {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8rem 6% 6rem;
+  z-index: 10;
+}
+
+.rc-hero .rc-display { margin-bottom: 1.5rem; }
+.rc-hero .rc-subtitle { margin-bottom: 3rem; }
+.rc-hero .rc-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════
+   6. GLASS CARDS
+   ═══════════════════════════════════════════════ */
+.rc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s var(--ease);
+}
+
+/* Top edge refraction line */
+.rc-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+.rc-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 32px 64px -16px rgba(0,0,0,0.5);
+}
+
+.rc-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.rc-card p {
+  color: var(--text-2);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   7. BENTO GRID (Services)
+   ═══════════════════════════════════════════════ */
+.rc-section {
+  padding: 6rem 6%;
+  position: relative;
+  z-index: 10;
+}
+
+.rc-section-header {
+  margin-bottom: 4rem;
+}
+
+.rc-bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.25rem;
+}
+
+.rc-bento .rc-card:nth-child(1) { grid-column: span 7; }
+.rc-bento .rc-card:nth-child(2) { grid-column: span 5; }
+.rc-bento .rc-card:nth-child(3) { grid-column: span 4; }
+.rc-bento .rc-card:nth-child(4) { grid-column: span 8; }
+
+@media (max-width: 768px) {
+  .rc-bento { grid-template-columns: 1fr; }
+  .rc-bento .rc-card { grid-column: span 1 !important; }
+  .rc-hero { padding: 6rem 5% 4rem; }
+}
+
+/* ═══════════════════════════════════════════════
+   8. INDUSTRY CARDS (Horizontal)
+   ═══════════════════════════════════════════════ */
+.rc-industries {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.rc-industries .rc-card {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.rc-industries .rc-card .rc-label { margin-bottom: 0.75rem; }
+
+@media (max-width: 768px) {
+  .rc-industries { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════
+   9. CTA SECTION
+   ═══════════════════════════════════════════════ */
+.rc-cta {
+  text-align: center;
+  padding: 8rem 6%;
+  position: relative;
+  z-index: 10;
+}
+
+.rc-cta .rc-display {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin-bottom: 1.5rem;
+}
+
+/* ═══════════════════════════════════════════════
+   10. FOOTER
+   ═══════════════════════════════════════════════ */
+.site-footer {
+  background: var(--bg) !important;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════════
+   11. GSAP REVEAL HELPERS
+   ═══════════════════════════════════════════════ */
+/* Reveal handled by GSAP in three-app.js */
+/* No CSS opacity:0 — elements are visible by default as fallback */
+
+/* Force our 3D canvas above any Elementor remnants */
+#rc-three-bg {
+  position: fixed !important;
+  inset: 0;
+  z-index: 0 !important;
+  pointer-events: none;
+}
+
+/* Hide ALL canvases except the one inside our wrapper */
+body > canvas,
+.site-header canvas,
+.site-footer canvas,
+.elementor canvas,
+#page > canvas {
+  display: none !important;
+}
+
+/* Ensure Elementor's old background elements are hidden */
+.elementor-section-wrap,
+.elementor-element[data-element_type="section"],
+.eael-particles-wrap,
+#tsparticles,
+.elementor-widget-container canvas,
+.e-con canvas,
+[data-elementor-type] canvas {
+  display: none !important;
+}
+
+/* If Elementor adds a global overlay container for 3D effects */
+.elementor-background-overlay canvas,
+.elementor-shape canvas {
+  display: none !important;
+}
