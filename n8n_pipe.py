@@ -5,11 +5,12 @@ version: 0.1.0
 This module defines a Pipe class that utilizes N8N for an Agent
 """
 
-from typing import Optional, Callable, Awaitable
-from pydantic import BaseModel, Field
+import sys
 import os
 import time
-import requests
+import httpx
+from typing import Optional, Callable, Awaitable
+from pydantic import BaseModel, Field
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -42,7 +43,7 @@ class Pipe:
         self.name = "N8N Pipe"
         self.valves = self.Valves()
         self.last_emit_time = 0
-        pass
+        self.client = httpx.AsyncClient()
 
     async def emit_status(
         self,
@@ -80,10 +81,12 @@ class Pipe:
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
         await self.emit_status(
-            __event_emitter__, "info", "/Calling N8N Workflow...", False
+            __event_emitter__, "info", "Calling N8N Workflow...", False
         )
+
         chat_id, _ = extract_event_info(__event_emitter__)
         messages = body.get("messages", [])
+        n8n_response = ""
 
         # Verify a message is available
         if messages:
@@ -96,39 +99,48 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+
+                response = await self.client.post(
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
-                    timeout=30,
+                    timeout=30.0,
                 )
+
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log detail to stderr, but don't leak to user
+                    print(f"n8n error: {response.status_code} - {response.text}", file=sys.stderr)
+                    raise Exception(f"n8n workflow returned status code {response.status_code}")
 
-                # Set assitant message with chain reply
+                # Set assistant message
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log full error to stderr
+                print(f"Error in n8n_pipe: {str(e)}", file=sys.stderr)
+
+                error_msg = "An error occurred while processing your request with n8n."
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    error_msg,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
+            n8n_response = "No messages found in the request body"
             await self.emit_status(
                 __event_emitter__,
                 "error",
-                "No messages found in the request body",
+                n8n_response,
                 True,
             )
             body["messages"].append(
                 {
                     "role": "assistant",
-                    "content": "No messages found in the request body",
+                    "content": n8n_response,
                 }
             )
 
