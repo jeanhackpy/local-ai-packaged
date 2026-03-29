@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 import os
 import time
 import requests
+import sys
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -79,6 +80,7 @@ class Pipe:
         __event_emitter__: Callable[[dict], Awaitable[None]] = None,
         __event_call__: Callable[[dict], Awaitable[dict]] = None,
     ) -> Optional[dict]:
+        n8n_response = ""
         await self.emit_status(
             __event_emitter__, "info", "/Calling N8N Workflow...", False
         )
@@ -100,23 +102,26 @@ class Pipe:
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
-                    timeout=30,
+                    timeout=60,
                 )
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    print(f"n8n error response: {response.text}", file=sys.stderr)
+                    raise Exception(f"Error: {response.status_code}")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                print(f"Error during sequence execution: {str(e)}", file=sys.stderr)
+                error_msg = "Communication failed with n8n workflow"
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    error_msg,
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": error_msg}
         # If no message is available alert user
         else:
             await self.emit_status(
