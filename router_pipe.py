@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import asyncio
 
 class Pipe:
     class Valves(BaseModel):
@@ -60,6 +61,11 @@ class Pipe:
         if self.valves.privacy_mode:
             selected_model = self.valves.easy_model
             route_reason = "Privacy Mode Enabled"
+        elif len(user_query) < 15:
+            # BOLT OPTIMIZATION: Fast-path for short queries.
+            # Bypasses LLM-based difficulty evaluation to save ~200ms of latency.
+            selected_model = self.valves.easy_model
+            route_reason = "Short Query Fast-Path -> Local"
         else:
             # Evaluate difficulty
             difficulty = await self.evaluate_difficulty(user_query)
@@ -87,11 +93,12 @@ class Pipe:
         # Simplest approach: delegate back to Open WebUI's internal call if possible,
         # but Pipes usually handle the full cycle.
 
-
+        # BOLT OPTIMIZATION: Use asyncio.to_thread for blocking requests.post calls
+        # to prevent blocking the Open WebUI event loop and improve responsiveness.
         if selected_model.startswith("openrouter/"):
-            response = self.call_openrouter(selected_model, body)
+            response = await asyncio.to_thread(self.call_openrouter, selected_model, body)
         else:
-            response = self.call_ollama(selected_model, body)
+            response = await asyncio.to_thread(self.call_ollama, selected_model, body)
 
         if __event_emitter__:
             await __event_emitter__({
