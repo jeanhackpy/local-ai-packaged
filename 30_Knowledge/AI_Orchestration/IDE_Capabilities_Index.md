@@ -2,6 +2,11 @@
 
 *Ce document répertorie les extensions, plugins et configurations pour maximiser les capacités de vos outils d'IA selon votre stack (Hostinger, n8n, Supabase).*
 
+## 🧠 Multi-Model Orchestration (MiniMax M2.7)
+**Usage :** Modèle alternatif haute performance pour Claude Code, Codex, Cursor et Kilo Code.
+- **Détails de configuration :** [[MiniMax_Setup|Guide de configuration MiniMax]]
+- **Points Forts :** Raisonnement avancé, multi-turn dialogue, et fallback stratégique.
+
 ## 🤖 Claude Code (CLI Agent)
 **Usage :** Orchestration terminal, maintenance VPS, debug rapide.
 - **Extensions (MCP Servers) :**

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visionneuse d'Images - Listings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            display: none;
+            font-size: 14px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .gallery-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .unit-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f9f9f9;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .unit-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .unit-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            background: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .unit-info {
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .unit-id {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .unit-images-count {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .unit-source {
+            color: #666;
+            font-size: 11px;
+            margin-top: 6px;
+            word-break: break-word;
+        }
+
+        .unit-source a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .unit-source a:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .page-info {
+            color: #666;
+            font-size: 14px;
+            padding: 8px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            position: relative;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ Visionneuse d'Images - Listings</h1>
+            <p>Parcourez toutes les images de vos 44,988 listings (899,760 photos au total)</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="apiUrl">API URL</label>
+                <input 
+                    type="text" 
+                    id="apiUrl" 
+                    value="http://localhost:3000"
+                    placeholder="http://localhost:3000"
+                >
+            </div>
+            <div class="control-group">
+                <label for="limit">Listings par page</label>
+                <input 
+                    type="number" 
+                    id="limit" 
+                    value="20" 
+                    min="1" 
+                    max="100"
+                >
+            </div>
+            <div class="control-group">
+                <label for="offset">Décalage (offset)</label>
+                <input 
+                    type="number" 
+                    id="offset" 
+                    value="0" 
+                    min="0"
+                >
+            </div>
+            <button onclick="loadUnits()">⚡ Charger</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="gallery-container">
+            <div id="gallery" class="gallery">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>Cliquez sur "Charger" pour voir les images</div>
+                </div>
+            </div>
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <img id="modalImage" class="modal-image" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let currentLimit = 20;
+        let currentOffset = 0;
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status show ${type}`;
+        }
+
+        function hideStatus() {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status';
+        }
+
+        async function loadUnits() {
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const limit = parseInt(document.getElementById('limit').value);
+            const offset = parseInt(document.getElementById('offset').value);
+
+            currentLimit = limit;
+            currentOffset = offset;
+
+            if (!apiUrl) {
+                showStatus('❌ Veuillez entrer une URL API', 'error');
+                return;
+            }
+
+            showStatus('⏳ Chargement des images...', 'loading');
+
+            try {
+                const url = `${apiUrl}/units?select=id,primary_image_url,images,source_url&order=created_at.desc&limit=${limit}&offset=${offset}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                currentData = await response.json();
+                
+                if (currentData.length === 0) {
+                    showStatus('✓ Chargement terminé - Aucun résultat', 'success');
+                    document.getElementById('gallery').innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <div class="empty-state-icon">📭</div>
+                            <div>Aucun listing trouvé pour ce décalage</div>
+                        </div>
+                    `;
+                    document.getElementById('pagination').innerHTML = '';
+                } else {
+                    renderGallery();
+                    renderPagination();
+                    showStatus(`✓ ${currentData.length} listings chargés (Décalage: ${offset})`, 'success');
+                }
+            } catch (error) {
+                showStatus(`❌ Erreur: ${error.message}. Assurez-vous que le tunnel SSH est actif: ssh -L 3000:127.0.0.1:3000 phil@31.97.67.145 "sleep 600" &`, 'error');
+                document.getElementById('gallery').innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div>${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = currentData.map(unit => `
+                <div class="unit-card">
+                    <img 
+                        class="unit-image" 
+                        src="${unit.primary_image_url}" 
+                        alt="Unit ${unit.id}"
+                        onclick="openModal('${unit.primary_image_url}')"
+                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22250%22 height=%22188%22 viewBox=%220 0 250 188%22%3E%3Crect fill=%22%23e0e0e0%22 width=%22250%22 height=%22188%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage non disponible%3C/text%3E%3C/svg%3E'"
+                    >
+                    <div class="unit-info">
+                        <div class="unit-id">${unit.id.substring(0, 20)}...</div>
+                        <div class="unit-images-count">📸 ${unit.images ? unit.images.length : 0} photos</div>
+                        ${unit.source_url ? `<div class="unit-source"><a href="${unit.source_url}" target="_blank">🔗 Source</a></div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            const prevOffset = Math.max(0, currentOffset - currentLimit);
+            const nextOffset = currentOffset + currentLimit;
+
+            pagination.innerHTML = `
+                <button onclick="changePage(${prevOffset})" ${currentOffset === 0 ? 'disabled' : ''}>⬅️ Précédent</button>
+                <span class="page-info">Offset: ${currentOffset} / Limite: ${currentLimit}</span>
+                <button onclick="changePage(${nextOffset})" ${currentData.length < currentLimit ? 'disabled' : ''}>Suivant ➡️</button>
+            `;
+        }
+
+        function changePage(offset) {
+            document.getElementById('offset').value = offset;
+            loadUnits();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        // Close modal on background click
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

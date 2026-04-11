@@ -1,0 +1,426 @@
+{
+  "name": "WF-021-CONTENT-PIPELINE-V2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf021-trigger",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson"
+      },
+      "id": "node-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Receives: {brand, keyword, pipeline_run_id, brief?}. Called by WF-001 or manually."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── INIT PIPELINE STATE ──────────────────────────────────\n// Validate input and initialise state object passed through the pipeline.\n\nconst body = $input.first().json.body || $input.first().json;\n\nconst brand = body.brand || 'reflexion';\nconst keyword = body.keyword;\nconst pipeline_run_id = body.pipeline_run_id || crypto.randomUUID();\nconst brief = body.brief || {};\nconst max_words = body.max_words || 1500;\n\nif (!keyword) throw new Error('keyword is required');\n\n// State object travels through all nodes\nreturn [{\n  json: {\n    brand,\n    keyword,\n    pipeline_run_id,\n    brief,\n    max_words,\n    revision_count: 0,\n    max_revisions: 2,\n    stage: 'init',\n    started_at: new Date().toISOString(),\n  }\n}];"
+      },
+      "id": "node-init",
+      "name": "Init State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/rag/query",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "query": "={{ $json.keyword }}",
+          "brand": "={{ $json.brand }}",
+          "collection": "obsidian_knowledge",
+          "limit": 5,
+          "score_threshold": 0.45,
+          "rewrite_query": true,
+          "recency_boost_days": 90
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "node-rag-obsidian",
+      "name": "RAG — Obsidian Vault",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [640, 220],
+      "notes": "Fetch relevant vault context for Writer Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/rag/query",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "query": "={{ $('Init State').first().json.keyword }}",
+          "collection": "faq_knowledge",
+          "limit": 3,
+          "score_threshold": 0.50,
+          "rewrite_query": false
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-rag-faq",
+      "name": "RAG — FAQ Knowledge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [640, 380],
+      "notes": "Fetch FAQ knowledge (existing articles) to avoid duplication"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── MERGE RAG CONTEXT ────────────────────────────────────\n// Combine obsidian + faq results into a single context string for Writer.\n\nconst state = $('Init State').first().json;\nconst obsidianResults = $('RAG — Obsidian Vault').first().json.results || [];\nconst faqResults = $('RAG — FAQ Knowledge').first().json.results || [];\n\nconst formatChunks = (items, label) =>\n  items.map((r, i) =>\n    `[${label} ${i+1} | score:${r.score} | ${r.payload?.file_path || r.payload?.source || 'vault'}]\\n${r.text}`\n  ).join('\\n\\n');\n\nconst rag_context = [\n  obsidianResults.length ? `## Obsidian Vault Context\\n${formatChunks(obsidianResults, 'VAULT')}` : '',\n  faqResults.length ? `## Published Articles (avoid duplication)\\n${formatChunks(faqResults, 'PUBLISHED')}` : '',\n].filter(Boolean).join('\\n\\n');\n\nreturn [{\n  json: {\n    ...state,\n    rag_context,\n    rag_obsidian_count: obsidianResults.length,\n    rag_faq_count: faqResults.length,\n    stage: 'rag_ready',\n  }\n}];"
+      },
+      "id": "node-merge-rag",
+      "name": "Merge RAG Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/content/write",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "brand": "={{ $json.brand }}",
+          "keyword": "={{ $json.keyword }}",
+          "brief": "={{ $json.brief }}",
+          "rag_context": "={{ $json.rag_context }}",
+          "max_words": "={{ $json.max_words }}",
+          "previous_revision_feedback": "={{ $json.revision_feedback || null }}",
+          "pipeline_run_id": "={{ $json.pipeline_run_id }}"
+        },
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "node-writer",
+      "name": "Writer Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1080, 300],
+      "notes": "NVIDIA/Gemini tier. Returns full article draft in Markdown."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── PASS DRAFT TO NEXT STAGE ────────────────────────────\nconst state = $('Merge RAG Context').first().json;\nconst writer = $input.first().json;\n\nif (!writer.content) throw new Error('Writer returned empty content');\n\nreturn [{\n  json: {\n    ...state,\n    draft: writer.content,\n    title: writer.title,\n    meta_description: writer.meta_description,\n    slug: writer.slug,\n    schema_markup: writer.schema_markup,\n    internal_links_used: writer.internal_links_used,\n    word_count: writer.word_count,\n    writer_model: writer.model_used,\n    prompt_hash: writer.prompt_hash,\n    stage: 'written',\n  }\n}];"
+      },
+      "id": "node-after-writer",
+      "name": "After Writer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/content/humanize",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "brand": "={{ $json.brand }}",
+          "keyword": "={{ $json.keyword }}",
+          "draft": "={{ $json.draft }}",
+          "pipeline_run_id": "={{ $json.pipeline_run_id }}"
+        },
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "node-humanizer",
+      "name": "Humanizer Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1520, 300],
+      "notes": "Groq tier (fast). Eliminates AI patterns without touching SEO signals."
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $('After Writer').first().json;\nconst human = $input.first().json;\n\nreturn [{\n  json: {\n    ...state,\n    draft: human.humanized || state.draft,\n    humanizer_changes: human.changes_count,\n    humanizer_patterns: human.patterns_eliminated,\n    stage: 'humanized',\n  }\n}];"
+      },
+      "id": "node-after-humanizer",
+      "name": "After Humanizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/content/critique",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "brand": "={{ $json.brand }}",
+          "keyword": "={{ $json.keyword }}",
+          "draft": "={{ $json.draft }}",
+          "brief": "={{ $json.brief }}",
+          "pipeline_run_id": "={{ $json.pipeline_run_id }}"
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "node-critic",
+      "name": "Critic Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1960, 300],
+      "notes": "Groq tier. Debates article — HIGH severity findings route back to Writer."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── CRITIC ROUTING ────────────────────────────────────────\n// HIGH severity findings → route to revision loop\n// approved_for_next_stage → proceed to QC\n\nconst state = $('After Humanizer').first().json;\nconst critic = $input.first().json;\n\nconst high_count = critic.high_severity_count || 0;\nconst approved = critic.approved_for_next_stage !== false;\n\n// Build revision feedback from high-severity findings\nlet revision_feedback = null;\nif (high_count > 0) {\n  const high_findings = (critic.findings || []).filter(f => f.severity === 'high');\n  revision_feedback = high_findings.map(f =>\n    `[${f.type.toUpperCase()}] ${f.critique}\\n→ Fix: ${f.fix_suggestion}`\n  ).join('\\n\\n');\n}\n\nreturn [{\n  json: {\n    ...state,\n    critic_verdict: critic.overall_verdict,\n    critic_high_count: high_count,\n    critic_approved: approved,\n    critic_summary: critic.debate_summary,\n    revision_feedback: revision_feedback || state.revision_feedback,\n    stage: approved ? 'critic_approved' : 'critic_revision_needed',\n  }\n}];"
+      },
+      "id": "node-critic-route",
+      "name": "Critic Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2180, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false},
+          "conditions": [
+            {
+              "leftValue": "={{ $json.critic_approved }}",
+              "rightValue": true,
+              "operator": {"type": "boolean", "operation": "equals"}
+            }
+          ]
+        }
+      },
+      "id": "node-critic-gate",
+      "name": "Critic Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2400, 300],
+      "notes": "TRUE → proceed to QC | FALSE → check revision count then loop back to Writer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.revision_count }}",
+              "rightValue": 2,
+              "operator": {"type": "number", "operation": "lt"}
+            }
+          ]
+        }
+      },
+      "id": "node-revision-gate",
+      "name": "Revision Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2620, 440],
+      "notes": "< 2 revisions → loop back to Writer | >= 2 → escalate to human"
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $json;\nreturn [{\n  json: {\n    ...state,\n    revision_count: (state.revision_count || 0) + 1,\n    stage: 'revision_loop',\n  }\n}];"
+      },
+      "id": "node-increment-revision",
+      "name": "Increment Revision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2840, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/content/qc",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "brand": "={{ $json.brand }}",
+          "keyword": "={{ $json.keyword }}",
+          "draft": "={{ $json.draft }}",
+          "brief": "={{ $json.brief }}",
+          "rag_context": "={{ $json.rag_context }}",
+          "revision_number": "={{ $json.revision_count }}",
+          "pipeline_run_id": "={{ $json.pipeline_run_id }}"
+        },
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "node-qc",
+      "name": "QC Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2400, 160],
+      "notes": "Claude Sonnet via OpenRouter. 9 dimensions. Low temperature (0.15)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── QC DECISION ROUTING ─────────────────────────────────\nconst state = $('Critic Router').first().json;\nconst qc = $input.first().json;\n\nreturn [{\n  json: {\n    ...state,\n    qc_decision:        qc.decision,\n    qc_weighted_score:  qc.weighted_score,\n    qc_min_score:       qc.min_score,\n    qc_scores:          qc.scores,\n    qc_revision_instr:  qc.revision_instructions,\n    qc_escalation_rsn:  qc.escalation_reason,\n    qc_strengths:       qc.strengths,\n    revision_feedback:  qc.revision_instructions || state.revision_feedback,\n    stage: `qc_${qc.decision.toLowerCase()}`,\n  }\n}];"
+      },
+      "id": "node-after-qc",
+      "name": "After QC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2620, 160]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {"value": "APPROVED"},
+            {"value": "NEEDS_REVISION"},
+            {"value": "ESCALATE_TO_HUMAN"}
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "node-qc-switch",
+      "name": "QC Decision Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2840, 160],
+      "notes": "Routes to: Publish | Writer revision loop | Slack urgent escalation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── BUILD SLACK APPROVAL MESSAGE ────────────────────────\n// APPROVED: fast-track Approve+Publish button\n// Shows QC scores bar chart in ASCII for quick visual scan\n\nconst s = $json;\nconst scores = s.qc_scores || {};\n\nconst scoreBar = (score) => {\n  const filled = Math.round(score);\n  return '█'.repeat(filled) + '░'.repeat(10 - filled) + ` ${score.toFixed(1)}`;\n};\n\nconst dimEmoji = (score) => score >= 8.5 ? '✅' : score >= 7 ? '🟡' : '❌';\n\nconst scoreLines = Object.entries(scores).map(([dim, s]) =>\n  `${dimEmoji(s.score)} *${dim.replace(/_/g,' ')}* ${scoreBar(s.score)}`\n).join('\\n');\n\nconst message = {\n  channel: 'C023FGKE9AP',\n  text: `🟢 QC APPROVED — ${s.brand.toUpperCase()} | ${s.keyword}`,\n  blocks: [\n    {\n      type: 'header',\n      text: { type: 'plain_text', text: `✅ Article Ready: ${s.title || s.keyword}` }\n    },\n    {\n      type: 'section',\n      fields: [\n        { type: 'mrkdwn', text: `*Brand:* ${s.brand}` },\n        { type: 'mrkdwn', text: `*Keyword:* ${s.keyword}` },\n        { type: 'mrkdwn', text: `*QC Score:* ${s.qc_weighted_score}/10` },\n        { type: 'mrkdwn', text: `*Words:* ${s.word_count || '—'}` },\n        { type: 'mrkdwn', text: `*Revisions:* ${s.revision_count}` },\n        { type: 'mrkdwn', text: `*Critic:* ${s.critic_verdict || '—'}` },\n      ]\n    },\n    {\n      type: 'section',\n      text: { type: 'mrkdwn', text: `*QC Scores:*\\n\\`\\`\\`\\n${scoreLines}\\n\\`\\`\\`` }\n    },\n    {\n      type: 'section',\n      text: { type: 'mrkdwn', text: `*Strengths:* ${(s.qc_strengths || []).join(' · ')}` }\n    },\n    {\n      type: 'actions',\n      elements: [\n        {\n          type: 'button', style: 'primary',\n          text: { type: 'plain_text', text: '🚀 Approve + Publish' },\n          value: JSON.stringify({ action: 'approve_publish', pipeline_run_id: s.pipeline_run_id, brand: s.brand }),\n          action_id: 'approve_publish'\n        },\n        {\n          type: 'button',\n          text: { type: 'plain_text', text: '✏️ Edit Draft' },\n          url: `https://n8n.recall-agency.com/workflow/wf021-edit?run=${s.pipeline_run_id}`,\n          action_id: 'edit_draft'\n        },\n        {\n          type: 'button', style: 'danger',\n          text: { type: 'plain_text', text: '🗑️ Reject' },\n          value: JSON.stringify({ action: 'reject', pipeline_run_id: s.pipeline_run_id }),\n          action_id: 'reject'\n        }\n      ]\n    }\n  ]\n};\n\nreturn [{ json: { ...s, slack_payload: message, stage: 'awaiting_human_approval' } }];"
+      },
+      "id": "node-build-slack-approved",
+      "name": "Build Slack — Approved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3060, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json.slack_payload }}",
+        "options": {"timeout": 10000}
+      },
+      "id": "node-slack-approved",
+      "name": "Slack — Human Gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3280, 80],
+      "credentials": {"httpHeaderAuth": {"id": "slack-bot-token", "name": "Slack Bot Token"}},
+      "notes": "Posts to #marketing-content C023FGKE9AP with Approve+Publish / Edit / Reject buttons"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── NEEDS REVISION — check retry count ──────────────────\nconst s = $json;\nconst can_retry = (s.revision_count || 0) < (s.max_revisions || 2);\nreturn [{ json: { ...s, can_retry, stage: can_retry ? 'revision_loop' : 'max_revisions_reached' } }];"
+      },
+      "id": "node-check-revision",
+      "name": "Check Revision Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3060, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── ESCALATE SLACK MESSAGE ──────────────────────────────\nconst s = $json;\n\nconst low_scores = Object.entries(s.qc_scores || {})\n  .filter(([_, sc]) => sc.score < 7.0)\n  .map(([dim, sc]) => `• *${dim}*: ${sc.score}/10 — ${sc.issues?.join(', ') || sc.justification?.slice(0,80)}`)\n  .join('\\n');\n\nconst message = {\n  channel: 'C023FGKE9AP',\n  text: `🔴 ESCALATION REQUIRED — ${s.brand.toUpperCase()} | ${s.keyword}`,\n  blocks: [\n    { type: 'header', text: { type: 'plain_text', text: '🚨 QC Escalation — Human Review Required' } },\n    {\n      type: 'section',\n      fields: [\n        { type: 'mrkdwn', text: `*Brand:* ${s.brand}` },\n        { type: 'mrkdwn', text: `*Keyword:* ${s.keyword}` },\n        { type: 'mrkdwn', text: `*QC Score:* ${s.qc_weighted_score}/10 ❌` },\n        { type: 'mrkdwn', text: `*Revisions:* ${s.revision_count}/${s.max_revisions}` },\n      ]\n    },\n    {\n      type: 'section',\n      text: { type: 'mrkdwn', text: `*Reason:* ${s.qc_escalation_rsn || s.qc_revision_instr || 'Score below threshold'}\\n\\n*Failing Dimensions:*\\n${low_scores}` }\n    },\n    {\n      type: 'actions',\n      elements: [\n        {\n          type: 'button', style: 'danger',\n          text: { type: 'plain_text', text: '👁️ Review Full Draft' },\n          value: JSON.stringify({ action: 'review', pipeline_run_id: s.pipeline_run_id }),\n          action_id: 'review_escalated'\n        }\n      ]\n    }\n  ]\n};\n\nreturn [{ json: { ...s, slack_payload: message, stage: 'escalated' } }];"
+      },
+      "id": "node-build-slack-escalate",
+      "name": "Build Slack — Escalation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3060, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json.slack_payload }}",
+        "options": {"timeout": 10000}
+      },
+      "id": "node-slack-escalate",
+      "name": "Slack — Escalation Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3280, 400],
+      "credentials": {"httpHeaderAuth": {"id": "slack-bot-token", "name": "Slack Bot Token"}}
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_pipeline_log SET status='escalated', updated_at=now() WHERE id='{{ $json.pipeline_run_id }}';"
+      },
+      "id": "node-db-escalate",
+      "name": "DB — Mark Escalated",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3500, 400],
+      "credentials": {"postgres": {"id": "supabase-local", "name": "Supabase Local PG"}}
+    }
+  ],
+  "connections": {
+    "Webhook Trigger":       {"main": [[{"node": "Init State",           "type": "main", "index": 0}]]},
+    "Init State":            {"main": [[{"node": "RAG — Obsidian Vault", "type": "main", "index": 0}, {"node": "RAG — FAQ Knowledge", "type": "main", "index": 0}]]},
+    "RAG — Obsidian Vault":  {"main": [[{"node": "Merge RAG Context",    "type": "main", "index": 0}]]},
+    "RAG — FAQ Knowledge":   {"main": [[{"node": "Merge RAG Context",    "type": "main", "index": 0}]]},
+    "Merge RAG Context":     {"main": [[{"node": "Writer Agent",         "type": "main", "index": 0}]]},
+    "Writer Agent":          {"main": [[{"node": "After Writer",         "type": "main", "index": 0}]]},
+    "After Writer":          {"main": [[{"node": "Humanizer Agent",      "type": "main", "index": 0}]]},
+    "Humanizer Agent":       {"main": [[{"node": "After Humanizer",      "type": "main", "index": 0}]]},
+    "After Humanizer":       {"main": [[{"node": "Critic Agent",         "type": "main", "index": 0}]]},
+    "Critic Agent":          {"main": [[{"node": "Critic Router",        "type": "main", "index": 0}]]},
+    "Critic Router":         {"main": [[{"node": "Critic Gate",          "type": "main", "index": 0}]]},
+    "Critic Gate": {
+      "main": [
+        [{"node": "QC Agent",          "type": "main", "index": 0}],
+        [{"node": "Revision Gate",     "type": "main", "index": 0}]
+      ]
+    },
+    "Revision Gate": {
+      "main": [
+        [{"node": "Increment Revision",       "type": "main", "index": 0}],
+        [{"node": "Build Slack — Escalation", "type": "main", "index": 0}]
+      ]
+    },
+    "Increment Revision":          {"main": [[{"node": "Writer Agent",             "type": "main", "index": 0}]]},
+    "QC Agent":                    {"main": [[{"node": "After QC",                 "type": "main", "index": 0}]]},
+    "After QC":                    {"main": [[{"node": "QC Decision Switch",       "type": "main", "index": 0}]]},
+    "QC Decision Switch": {
+      "main": [
+        [{"node": "Build Slack — Approved",    "type": "main", "index": 0}],
+        [{"node": "Check Revision Count",      "type": "main", "index": 0}],
+        [{"node": "Build Slack — Escalation",  "type": "main", "index": 0}]
+      ]
+    },
+    "Build Slack — Approved":    {"main": [[{"node": "Slack — Human Gate",       "type": "main", "index": 0}]]},
+    "Check Revision Count":      {"main": [[{"node": "Increment Revision",       "type": "main", "index": 0}]]},
+    "Build Slack — Escalation":  {"main": [[{"node": "Slack — Escalation Alert", "type": "main", "index": 0}]]},
+    "Slack — Escalation Alert":  {"main": [[{"node": "DB — Mark Escalated",      "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": ["content", "pipeline", "v2", "flywheel"],
+  "meta": {
+    "version": "2.0.0",
+    "description": "Full content pipeline: RAG → Writer → Humanizer → Critic → QC → Slack approval. Anti-fragile with retry loops and escalation.",
+    "created": "2026-04-08"
+  }
+}

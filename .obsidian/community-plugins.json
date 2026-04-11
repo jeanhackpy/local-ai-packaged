@@ -1,7 +1,6 @@
 [
   "obsidian-local-rest-api",
   "obsidian-excalidraw-plugin",
-  "gemini-scribe",
   "obsidian-kanban",
   "obsidian-git",
   "obsidian-minimal-settings",
@@ -11,5 +10,6 @@
   "obsidian-icon-folder",
   "obsidian-style-settings",
   "dataview",
-  "remotely-save"
+  "smart-connections",
+  "obsidian-mind-map"
 ]

@@ -1,5 +1,5 @@
 ---
-title: "MiniMax Agent: Minimize Effort, Maximize Intelligence"
+title: " Minimize Effort, Maximize Intelligence"
 source: "https://agent.minimax.io/chat?id=379672811671726"
 author:
   - "[[agent.minimax.io]]"

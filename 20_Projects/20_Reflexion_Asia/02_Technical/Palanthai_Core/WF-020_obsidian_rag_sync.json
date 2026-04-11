@@ -1,0 +1,262 @@
+{
+  "name": "WF-020-OBSIDIAN-RAG-SYNC",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 6}]},
+        "options": {}
+      },
+      "id": "node-schedule",
+      "name": "Schedule — Every 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "notes": "Runs every 6h. Manually triggerable for immediate re-index."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── VAULT CRAWL CONFIG ──────────────────────────────────\n// Define which vault directories to index and which to skip.\n// The vault is mounted at /data/obsidian-vault on the VPS via Syncthing.\n// Adjust VAULT_ROOT to match actual Syncthing destination.\n\nconst VAULT_ROOT = process.env.OBSIDIAN_VAULT_PATH || '/home/phil/SystemMac';\n\nconst INCLUDE_PATTERNS = [\n  `${VAULT_ROOT}/WIKI`,\n  `${VAULT_ROOT}/20_Projects/10_Recall_Agency`,\n  `${VAULT_ROOT}/20_Projects/20_Reflexion_Asia`,\n  `${VAULT_ROOT}/30_Knowledge/AI_Orchestration`,\n  `${VAULT_ROOT}/30_Knowledge/Business`,\n  `${VAULT_ROOT}/30_Knowledge/Real_Estate`,\n];\n\nconst EXCLUDE_PATTERNS = [\n  '.obsidian',\n  '.smart-env',\n  'Secrets',\n  '.git',\n  'node_modules',\n  '.trash',\n];\n\nreturn [{\n  json: {\n    vault_root: VAULT_ROOT,\n    include_patterns: INCLUDE_PATTERNS,\n    exclude_patterns: EXCLUDE_PATTERNS,\n    started_at: new Date().toISOString(),\n    collection: 'obsidian_knowledge',\n    chunk_size: 512,\n    chunk_overlap: 64,\n  }\n}];"
+      },
+      "id": "node-config",
+      "name": "Vault Crawl Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "command": "find {{ $json.include_patterns.map(p => `\"${p}\"`).join(' ') }} -name '*.md' -not -path '*/.obsidian/*' -not -path '*/.smart-env/*' -not -path '*/Secrets/*' -not -path '*/.git/*' -newer /tmp/obsidian_last_sync 2>/dev/null | head -200 && touch /tmp/obsidian_last_sync",
+        "options": {}
+      },
+      "id": "node-find-changed",
+      "name": "Find Changed Files",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [640, 300],
+      "notes": "Uses -newer flag to only process files modified since last run. Incremental sync."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── PARSE FILE LIST ─────────────────────────────────────\n// Split find output into array of file paths, deduplicate.\n\nconst stdout = $input.first().json.stdout || '';\nconst config = $('Vault Crawl Config').first().json;\n\nconst files = [...new Set(\n  stdout.split('\\n')\n    .map(f => f.trim())\n    .filter(f => f.endsWith('.md') && f.length > 0)\n)];\n\nif (files.length === 0) {\n  return [{ json: { ...config, files: [], total_files: 0, status: 'no_changes' } }];\n}\n\nreturn [{ json: { ...config, files, total_files: files.length, current_file_index: 0 } }];"
+      },
+      "id": "node-parse-files",
+      "name": "Parse File List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.total_files }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ]
+        }
+      },
+      "id": "node-has-files",
+      "name": "Has New Files?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "files",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "node-split-files",
+      "name": "Split Into Files",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1300, 220],
+      "notes": "Creates one item per file path — processes up to 200 files per run"
+    },
+    {
+      "parameters": {
+        "command": "cat \"{{ $json.files }}\" 2>/dev/null || echo '__FILE_NOT_FOUND__'",
+        "options": {}
+      },
+      "id": "node-read-file",
+      "name": "Read File Content",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1520, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── CHUNK FILE INTO RAG SEGMENTS ────────────────────────\n// Strategy:\n//   1. Parse YAML frontmatter\n//   2. Split on headings (#, ##, ###) as natural chunk boundaries\n//   3. Each heading section becomes one chunk\n//   4. Large sections are further split at 512-token target\n//   5. Preserve [[wiki-links]] as metadata.internal_links\n//   6. Skip files that returned __FILE_NOT_FOUND__\n\nconst raw_content = $input.first().json.stdout || '';\nif (raw_content.includes('__FILE_NOT_FOUND__') || raw_content.trim().length < 50) {\n  return [];\n}\n\nconst file_path = $json.files;\nconst CHUNK_WORDS = 400;  // ~512 tokens\nconst OVERLAP_WORDS = 50; // ~64 tokens\n\n// 1. Parse frontmatter\nconst fm_match = raw_content.match(/^---\\n([\\s\\S]*?)\\n---\\n/);\nlet frontmatter = {};\nif (fm_match) {\n  const fm_lines = fm_match[1].split('\\n');\n  fm_lines.forEach(line => {\n    const [key, ...vals] = line.split(':');\n    if (key && vals.length) {\n      const v = vals.join(':').trim().replace(/[\\[\\]'\"]/g, '');\n      frontmatter[key.trim()] = v;\n    }\n  });\n}\n\nconst body = fm_match ? raw_content.slice(fm_match[0].length) : raw_content;\n\n// 2. Extract internal links [[...]] before chunking\nconst wiki_links = [...body.matchAll(/\\[\\[([^\\]]+)\\]\\]/g)].map(m => m[1]);\n\n// 3. Detect brand from path or frontmatter\nconst detect_brand = (path) => {\n  if (path.includes('10_Recall_Agency') || path.includes('recall')) return 'recall';\n  if (path.includes('20_Reflexion_Asia') || path.includes('reflexion')) return 'reflexion';\n  if (path.includes('WIKI')) return 'wiki';\n  return frontmatter.brand || 'global';\n};\nconst brand = detect_brand(file_path);\n\n// 4. Split on headings\nconst sections = body.split(/^(#{1,3}\\s+.+)$/m).filter(s => s.trim().length > 20);\n\n// 5. Chunk each section\nconst chunks = [];\nlet current_heading = frontmatter.title || file_path.split('/').pop().replace('.md','');\n\nfor (const section of sections) {\n  if (section.match(/^#{1,3}\\s+/)) {\n    current_heading = section.replace(/^#{1,3}\\s+/, '').trim();\n    continue;\n  }\n  \n  const words = section.trim().split(/\\s+/);\n  let chunk_idx = 0;\n  \n  for (let i = 0; i < words.length; i += CHUNK_WORDS - OVERLAP_WORDS) {\n    const chunk_words = words.slice(i, i + CHUNK_WORDS);\n    if (chunk_words.length < 20) continue;\n    \n    const chunk_text = `# ${current_heading}\\n\\n${chunk_words.join(' ')}`;\n    \n    chunks.push({\n      text: chunk_text,\n      metadata: {\n        file_path: file_path,\n        vault_section: current_heading,\n        frontmatter_brand: brand,\n        tags: (frontmatter.tags || '').split(',').map(t => t.trim()).filter(Boolean),\n        project: frontmatter.project || brand,\n        heading_h1: current_heading,\n        chunk_index: chunk_idx,\n        internal_links: wiki_links.slice(0, 20),\n        word_count: chunk_words.length,\n        last_modified: frontmatter.updated || frontmatter.created || new Date().toISOString().split('T')[0],\n      }\n    });\n    chunk_idx++;\n  }\n}\n\nif (chunks.length === 0) return [];\n\n// Pass chunks with context for the ingest call\nreturn [{\n  json: {\n    file_path,\n    brand,\n    chunk_count: chunks.length,\n    chunks,\n    collection: $json.collection || 'obsidian_knowledge',\n  }\n}];"
+      },
+      "id": "node-chunk-file",
+      "name": "Chunk File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.chunk_count }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ]
+        }
+      },
+      "id": "node-has-chunks",
+      "name": "Has Chunks?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1960, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.18.0.1:8765/rag/ingest",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "collection": "={{ $json.collection }}",
+          "chunks": "={{ $json.chunks }}",
+          "deduplicate": true
+        },
+        "options": {"timeout": 30000}
+      },
+      "id": "node-ingest",
+      "name": "Ingest to Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2180, 140],
+      "notes": "POST /rag/ingest — deduplication via content hash. Idempotent."
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$input.first().json, ingested: $('Ingest to Qdrant').first().json, stage: 'ingested' } }];"
+      },
+      "id": "node-log-result",
+      "name": "Log Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 140]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "node-aggregate",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [2620, 220],
+      "notes": "Collects per-file results before building summary report"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── BUILD SYNC SUMMARY ──────────────────────────────────\nconst items = $input.all();\nconst data = items[0]?.json?.data || items.map(i => i.json);\n\nconst ingested_files = Array.isArray(data) ? data.filter(d => d.ingested) : [];\nconst total_chunks_ingested = ingested_files.reduce((acc, d) => acc + (d.ingested?.ingested_count || 0), 0);\nconst total_chunks_skipped  = ingested_files.reduce((acc, d) => acc + (d.ingested?.skipped_count || 0), 0);\n\nconst brands = {};\ningested_files.forEach(d => {\n  brands[d.brand || 'unknown'] = (brands[d.brand || 'unknown'] || 0) + (d.ingested?.ingested_count || 0);\n});\n\nconst summary = {\n  files_processed: ingested_files.length,\n  chunks_new: total_chunks_ingested,\n  chunks_skipped: total_chunks_skipped,\n  by_brand: brands,\n  completed_at: new Date().toISOString(),\n};\n\nreturn [{ json: { summary, stage: 'complete' } }];"
+      },
+      "id": "node-summary",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2840, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.summary.chunks_new }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ]
+        }
+      },
+      "id": "node-notify-gate",
+      "name": "Notify if New Chunks",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3060, 220],
+      "notes": "Only send Slack notification if new content was actually indexed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $json.summary;\nconst brandLines = Object.entries(s.by_brand || {}).map(([b, n]) => `• *${b}*: +${n} chunks`).join('\\n');\n\nreturn [{\n  json: {\n    channel: 'C023FGKE9AP',\n    text: `📚 Obsidian RAG Sync complete — ${s.chunks_new} new chunks indexed`,\n    blocks: [\n      { type: 'section', text: { type: 'mrkdwn',\n        text: `*📚 Obsidian Vault Re-indexed*\\n${s.files_processed} files | +${s.chunks_new} new chunks | ${s.chunks_skipped} unchanged\\n\\n${brandLines}` }\n      }\n    ]\n  }\n}];"
+      },
+      "id": "node-build-slack-sync",
+      "name": "Build Slack — Sync Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3280, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json }}",
+        "options": {"timeout": 10000}
+      },
+      "id": "node-slack-sync",
+      "name": "Slack — Sync Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3500, 140],
+      "credentials": {"httpHeaderAuth": {"id": "slack-bot-token", "name": "Slack Bot Token"}}
+    }
+  ],
+  "connections": {
+    "Schedule — Every 6h":       {"main": [[{"node": "Vault Crawl Config",    "type": "main", "index": 0}]]},
+    "Vault Crawl Config":        {"main": [[{"node": "Find Changed Files",    "type": "main", "index": 0}]]},
+    "Find Changed Files":        {"main": [[{"node": "Parse File List",       "type": "main", "index": 0}]]},
+    "Parse File List":           {"main": [[{"node": "Has New Files?",        "type": "main", "index": 0}]]},
+    "Has New Files?": {
+      "main": [
+        [{"node": "Split Into Files",  "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Split Into Files":          {"main": [[{"node": "Read File Content",     "type": "main", "index": 0}]]},
+    "Read File Content":         {"main": [[{"node": "Chunk File",            "type": "main", "index": 0}]]},
+    "Chunk File":                {"main": [[{"node": "Has Chunks?",           "type": "main", "index": 0}]]},
+    "Has Chunks?": {
+      "main": [
+        [{"node": "Ingest to Qdrant", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Ingest to Qdrant":          {"main": [[{"node": "Log Result",            "type": "main", "index": 0}]]},
+    "Log Result":                {"main": [[{"node": "Aggregate Results",     "type": "main", "index": 0}]]},
+    "Aggregate Results":         {"main": [[{"node": "Build Summary",         "type": "main", "index": 0}]]},
+    "Build Summary":             {"main": [[{"node": "Notify if New Chunks",  "type": "main", "index": 0}]]},
+    "Notify if New Chunks": {
+      "main": [
+        [{"node": "Build Slack — Sync Report", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Build Slack — Sync Report": {"main": [[{"node": "Slack — Sync Notification", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["rag", "obsidian", "sync", "flywheel"],
+  "meta": {
+    "version": "1.0.0",
+    "description": "Incremental Obsidian vault sync to Qdrant. Runs every 6h. Uses -newer flag for diff-only indexing. Chunks at heading boundaries with 512-word target. Brand-aware metadata.",
+    "created": "2026-04-08",
+    "env_vars_required": ["OBSIDIAN_VAULT_PATH (default: /home/phil/SystemMac)"]
+  }
+}

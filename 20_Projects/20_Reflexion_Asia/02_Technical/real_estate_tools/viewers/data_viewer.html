@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Data Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .status {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .pagination {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pagination button {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: 40px;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .row-count {
+            font-size: 12px;
+            color: #666;
+            margin: 0 20px;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .copy-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .cell-value {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cell-value.json {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f5f5f5;
+            padding: 4px 6px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Supabase Data Viewer</h1>
+            <p>View your data directly from PostgREST API (via SSH tunnel on port 3000)</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="table-select">Table</label>
+                    <select id="table-select">
+                        <option value="">-- Select a table --</option>
+                        <option value="projects">🏢 projects (5,387 rows)</option>
+                        <option value="developers">👨‍💼 developers (1,522 rows)</option>
+                        <option value="units">🏠 units (44,988 rows)</option>
+                        <option value="alerts">⚠️ alerts</option>
+                        <option value="execution_data">⚙️ execution_data (1,276 rows)</option>
+                        <option value="districts">📍 districts</option>
+                        <option value="provinces">📍 provinces</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="limit-input">Rows per page</label>
+                    <input type="number" id="limit-input" value="20" min="1" max="1000">
+                </div>
+
+                <div class="control-group">
+                    <label for="api-url">PostgREST URL</label>
+                    <input type="text" id="api-url" value="http://localhost:3000" placeholder="http://localhost:3000">
+                </div>
+
+                <button onclick="loadData()">🔄 Load Data</button>
+            </div>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div class="table-wrapper">
+            <table id="data-table">
+                <thead>
+                    <tr id="header-row"></tr>
+                </thead>
+                <tbody id="data-body">
+                    <tr>
+                        <td colspan="100" class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>Select a table and click "Load Data" to get started</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination" style="display: none;">
+                <button onclick="previousPage()" id="prev-btn">← Previous</button>
+                <span class="row-count" id="row-count"></span>
+                <button onclick="nextPage()" id="next-btn">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let currentPage = 0;
+        let totalRows = 0;
+        const pageSize = 20;
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'flex';
+
+            if (type === 'error') {
+                console.error(message);
+            }
+        }
+
+        async function loadData() {
+            const table = document.getElementById('table-select').value;
+            const limit = parseInt(document.getElementById('limit-input').value) || 20;
+            const apiUrl = document.getElementById('api-url').value;
+
+            if (!table) {
+                showStatus('❌ Please select a table', 'error');
+                return;
+            }
+
+            showStatus('⏳ Loading data...', 'loading');
+
+            try {
+                const url = `${apiUrl}/${table}?select=*&limit=${limit}`;
+                console.log('Fetching:', url);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                currentData = await response.json();
+                currentPage = 0;
+                totalRows = currentData.length;
+
+                if (currentData.length === 0) {
+                    showStatus('✅ Table loaded (0 rows)', 'success');
+                    renderEmptyTable();
+                } else {
+                    showStatus(`✅ Loaded ${totalRows} rows from "${table}" table`, 'success');
+                    renderTable();
+                }
+
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}. Make sure PostgREST tunnel is running: ssh -L 3000:127.0.0.1:3000 phil@31.97.67.145`, 'error');
+                renderEmptyTable();
+            }
+        }
+
+        function renderTable() {
+            if (currentData.length === 0) {
+                renderEmptyTable();
+                return;
+            }
+
+            const headers = Object.keys(currentData[0]);
+            const headerRow = document.getElementById('header-row');
+            headerRow.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+
+            const tbody = document.getElementById('data-body');
+            tbody.innerHTML = currentData.map(row => `
+                <tr>
+                    ${headers.map(h => {
+                        let value = row[h];
+                        let displayValue = value;
+                        let className = '';
+
+                        if (value === null) {
+                            displayValue = '<em>null</em>';
+                        } else if (typeof value === 'object') {
+                            displayValue = JSON.stringify(value).substring(0, 100);
+                            className = 'json';
+                        } else if (typeof value === 'string' && value.length > 50) {
+                            displayValue = value.substring(0, 50) + '...';
+                        }
+
+                        return `<td><div class="cell-value ${className}" title="${value}">${displayValue}</div></td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+
+            document.getElementById('pagination').style.display = 'flex';
+            document.getElementById('row-count').textContent = `Showing ${currentData.length} rows`;
+        }
+
+        function renderEmptyTable() {
+            const tbody = document.getElementById('data-body');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="100" class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No data to display</p>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('header-row').innerHTML = '';
+            document.getElementById('pagination').style.display = 'none';
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderTable();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function nextPage() {
+            if ((currentPage + 1) * pageSize < totalRows) {
+                currentPage++;
+                renderTable();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Allow Enter key to load data
+        document.getElementById('table-select').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadData();
+        });
+
+        document.getElementById('limit-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadData();
+        });
+
+        // Set up default URL based on common SSH tunnel
+        window.addEventListener('load', () => {
+            console.log('Data Viewer ready. Setup instructions:');
+            console.log('1. Run: ssh -L 3000:127.0.0.1:3000 phil@31.97.67.145 "sleep 600" &');
+            console.log('2. Select a table and click Load Data');
+        });
+    </script>
+</body>
+</html>

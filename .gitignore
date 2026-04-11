@@ -36,3 +36,9 @@
 
 # Embedded git repos (have their own repos)
 20_Projects/Active/websites redesign/recall-agency.com/code/
+
+
+
+
+# Ignore Smart Environment folder
+.smart-env
