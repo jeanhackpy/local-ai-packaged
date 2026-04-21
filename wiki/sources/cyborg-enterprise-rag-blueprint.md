@@ -1,108 +1,22 @@
 ---
 created: 2026-04-05
-tags:
-  - "rag"
-  - "enterprise"
-  - "security"
-  - "multimodal"
-  - "encryption"
-  - "nvidia-blueprint"
+updated: 2026-04-21
+tags: [nvidia, blueprint, rag, enterprise, security, multimodal, encryption]
+sources: [raw/cyborg-enterprise-rag-blueprint.md]
 ---
 
-# Cyborg Enterprise RAG Blueprint
+## Résumé
 
-Connect AI applications to multimodal enterprise data with a scalable RAG pipeline built on NVIDIA NIM microservices, enhanced with enterprise-grade vector database security through CyborgDB's encryption-in-use capabilities.
+Enterprise RAG with encryption-in-use (CyborgDB). 15x faster multimodal PDF extraction. 50% fewer incorrect answers. Zero plaintext vector data exposure. BYOK/HYOK key management. Multi-tenant isolation. 2×H100 or 3×A100.
 
-## Key Benefits
+## Points clés
 
-- **15x faster** multimodal PDF data extraction
-- **50% fewer** incorrect answers
-- **Zero plaintext exposure** of vector data
+- Encryption-in-use via CyborgDB; zero plaintext vector data exposure
+- 15x faster multimodal PDF extraction (text, tables, charts) with 50% fewer incorrect answers
+- BYOK/HYOK key management with multi-tenant isolation; 2×H100 or 3×A100 hardware
 
-## Key Features
+## Connexions
 
-### Data Ingestion
-- Multimodal PDF data extraction (text, tables, charts, infographics)
-- Audio file ingestion support
-- Custom metadata support
-- Multi-collection searchability
-
-### Vision & Language
-- Opt-in Vision Language Model (VLM) Support
-- Image captioning with VLMs
-- Document summarization
-
-### Search & Retrieval
-- Hybrid search with dense and sparse search
-- GPU-accelerated index creation and search
-- Reranking to improve accuracy
-
-### Security (CyborgDB)
-- Encryption-in-use for vector embeddings
-- Customer-controlled key management (BYOK/HYOK)
-- Zero plaintext exposure of vector data
-- Multi-tenant isolation and workload segregation
-
-### Additional Features
-- Multi-turn conversations
-- Multi-session support
-- Telemetry and observability
-- Reflection for accuracy improvement
-- Guardrailing conversations
-- OpenAI-compatible APIs
-- Sample user interface
-
-## NIM Microservices Used
-
-### Embedding & Reranking
-- NeMo Retriever Llama 3.2 embedding NIM
-- NeMo Retriever Llama 3.2 reranking NIM
-
-### Parsing & Extraction
-- NeMo Retriever page elements NIM
-- NeMo Retriever table structure NIM
-- NeMo Retriever graphic elements NIM
-- PaddleOCR NIM
-- NeMo Retriever parse NIM (optional)
-
-### Generation
-- Llama 3.3 Nemotron Super 49B v1 NIM
-- Mixtral 8x22B instruct 0.1 (optional)
-
-### Safety (Optional)
-- Llama 3.1 NemoGuard 8B content safety NIM
-- Llama 3.1 NemoGuard 8B topic control NIM
-
-### Vision (Optional)
-- Llama 3.2 11B vision instruct NIM
-
-## System Requirements
-
-### Docker Deployment
-| Component | Requirement |
-|-----------|-------------|
-| GPUs | 2× H100 or 3× A100 |
-| RAM | 32GB+ (additional overhead for encryption) |
-
-### Kubernetes Deployment
-| Component | Requirement |
-|-----------|-------------|
-| GPUs | 8× H100-80GB or 9× A100-80GB |
-| RAM | 64GB+ for production workloads |
-
-- OS: Ubuntu 22.04
-
-## Third-Party Software
-
-- [LangChain](
-- [CyborgDB]( (PostgreSQL with pgvector and transparent encryption proxy)
-- [Redis](
-
-## Related
-
-- [[rag-concept]]
-- [[rag-plus-reranker]]
-- [[ai-observability-for-data-flywheel-by-weights-biases]]
-
----
-*Source: [NVIDIA Build](
+- [[entities/nvidia]]
+- [[concepts/rag]]
+- [[concepts/security]]

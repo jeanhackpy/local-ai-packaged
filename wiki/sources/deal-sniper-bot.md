@@ -1,33 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [real-estate, bot, agentic, Thailand]
+updated: 2026-04-21
+tags: [thailand, real-estate, bot, deal-intelligence]
+sources: [raw/bot-sniper-immobilier.md]
 ---
 
 ## Résumé
 
-Concept DealSniper : bot "sniper" immobilier qui écoute en temps réel Telegram/Discord/WhatsApp, score les offres, connecte agents et investisseurs. Équivalent crypto trading bot pour immobilier.
+Concept de bot alimenté par IA pour surveiller simultanément plusieurs plateformes immobilières thaïlandaises et identifier les bonnes affaires en temps réel. Aggregation multi-sources avec alertes instantanées permet aux acheteurs de réagir avant le marché.
 
 ## Points clés
 
-### Architecture 3 couches
-1. **Intake** : Telegram/Discord/WhatsApp APIs + web scraping
-2. **Processing** : Real-time scoring, matching, feedback loops
-3. **Closing** : CRM automation, chatbot négociation, analytics
-
-### Features clés
-- Scoring des offres (prix, localisation, ROI, urgence)
-- Détection "snipe opportunities" (bien sous-évalué)
-- Matching agents ↔ investisseurs
-- Smart contracts pour sécuriser transactions
-
-### Monétisation
-- Abonnement agents/investisseurs
-- Commission deals fermés
-- Vente données anonymisées
+- Surveillance multi-plateforme en temps réel des propriétés thaïlandaises
+- Aggregation des données depuis FazWaz, DDProperty, Hipflat, Baania
+- Système d'alertes instantanées pour les nouvelles bonnes affaires
+- Identification de opportunités par analyse comparative de prix
 
 ## Connexions
 
-- [[concepts/immobilier-thailand]]
-- [[concepts/agentic-ai]]
-- [[concepts/real-estate-tech]]
+- [[entities/fazwaz]]
+- [[sources/extracteur-donnees-immobilieres-thailandaises]]
+- [[sources/rag-reranker-setup]]

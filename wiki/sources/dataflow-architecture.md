@@ -1,20 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [dataflow, architecture, streaming]
+updated: 2026-04-21
+tags: [data-pipeline, streaming, batch, dataflow, architecture]
+sources: [raw/dataflow-architecture.md]
 ---
 
 ## Résumé
 
-Architecture dataflow pour le traitement de données en streaming et batch.
+Architecture streaming + batch dataflow pour systèmes AI. Ingestion continue de données vs traitement batch périodique. Patterns Flink/Spark pour données property.
 
 ## Points clés
 
-- Stream processing
-- Batch processing
-- Data flow patterns
-- Real-time analytics
+- Streaming vs batch : continuous ingestion vs periodic processing
+- Flink/Spark patterns pour property data pipelines
+- Near-real-time price updates vs daily batch indexing
+- Architecture hybride pour balance latency/coût
 
 ## Connexions
 
-- [[concepts/data-pipeline]]
+- [[sources/data-pipeline-unit-recommendations]]
+- [[sources/data-processing]]
+- [[sources/rag-reranker-setup]]

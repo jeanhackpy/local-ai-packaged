@@ -55,8 +55,37 @@ grep -c "^## \[" wiki/log.md
 
 ---
 
-## Stats
+## [2026-04-21] merge-consolidation | Merged Clippings + WIKI, restructured, created syntheses
 
-- **Sources ingérées** : 35/51
+**Type** : restructure
+
+**Actions** :
+- Restructured WIKI/ to match Clippings WIKI_SCHEMA.md
+- Created WIKI/raw/ (65 raw sources moved from WIKI/sources/)
+- Created WIKI/synthesis/ with 2 cross-source analyses
+- Created WIKI/WIKI_SCHEMA.md (copied from Clippings/)
+- Created WIKI/overview.md (thesis and research axes)
+- Added 6 new concepts: voice-ai, security, urban-analysis, vlm, knowledge-extraction, data-pipeline
+- Updated WIKI/index.md with full catalogue
+
+**Stats post-merge** :
+- **raw/** : 65 sources
+- **sources/** : 0 summaries (in progress)
+- **concepts/** : 14 (8 original + 6 new)
+- **entities/** : 2
+- **synthesis/** : 2 (ai-factory-for-real-estate, thailand-property-intelligence)
+
+---
+
+## [2026-04-21] ingest-full | 55 sources summaries ingested
+
+**Type** : ingest
+
+**Actions** :
+- 22 NVIDIA blueprint source summaries created in sources/
+- 33 Thailand/AI-ML/Research source summaries created in sources/
+
+**Stats**:
+- **Sources ingérées** : 55/65
 - **Concepts** : 8
 - **Entities** : 2

@@ -1,20 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [YC, SPITCH, real-estate, startup]
+updated: 2026-04-21
+tags: [yc, startup, real-estate, thailand, market-fit]
+sources: [raw/yc-combinator-spitch.md]
 ---
 
 ## Résumé
 
-Startup SPITCH de la YC combinator dans le domaine immobilier. Patterns et learnings YC.
+Patterns YC startup SPITCH pour identifier le product-market fit, itération rapide, et contexte du marché immobilier thaïlandais. Leçons pour proptech startups entrant en Thaïlande.
 
 ## Points clés
 
-- YC startup playbook
-- Real estate market fit
-- Rapid iteration + customer development
+- Identification du market fit via validation client rapide
+- Itération accélérée sur MVP avec feedback loops courts
+- Contexte marché immobilier thaï : fragmentation, informalité, trust deficit
+- Stratégies d'entrée pour proptech en Thaïlande
 
 ## Connexions
 
-- [[concepts/immobilier-thailand]]
-- [[concepts/startup-patterns]]
+- [[sources/trust-infrastructure-data]]
+- [[sources/deloitte-agentic-ai-lessons]]
+- [[sources/from-transcripts-to-ai-agents]]

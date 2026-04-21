@@ -1,20 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [architecture, neuro-symbolic, GPT-4, design]
+updated: 2026-04-21
+tags: [research, neuro-symbolic, gpt-4, architecture, zero-shot]
+sources: [raw/zero-shot-neuro-symbolic-architecture.md]
 ---
 
 ## Résumé
 
-GPT-4 pour génération de designs architecturaux schématiques avec neuro-symbolic reasoning.
+Raisonnement neuro-symbolique zero-shot séquentiel pour design architectural schématique (GPT-4). Applicable à génération de layout propriété depuis spécifications.
 
 ## Points clés
 
-- Zero-shot architectural design generation
-- Neuro-symbolic reasoning pipeline
-- GPT-4 + domain knowledge
+- GPT-4 pour raisonnement neuro-symbolique zero-shot
+- Design schématique d'architecture depuis specifications
+- Application à generation layout propriété (unit specs → floor plan)
+- Réduit besoin de training data spécifique
 
 ## Connexions
 
-- [[concepts/neuro-symbolic]]
-- [[concepts/generative-AI]]
+- [[sources/gcn-floor-plan-valuation]]
+- [[sources/multi-modal-house-price-prediction]]
+- [[sources/digital-twins-tourism-heritage]]

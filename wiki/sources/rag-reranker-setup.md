@@ -1,32 +1,25 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [RAG, reranker, FazWaz, hybrid-search]
+updated: 2026-04-21
+tags: [rag, reranker, fazwaz, real-estate, hybrid-search, bge, n8n]
+sources: [raw/rag-reranker-setup.md]
 ---
 
 ## Résumé
 
-Guide complet pour setup RAG indexing de 60k URLs FazWaz. Architecture avec sitemap parsing → crawl → embedding → hybrid search → live refresh layer.
+Setup RAG indexing pour 60k URLs de propriétés FazWaz. BM25 + BGE-large embeddings dans Qdrant. Crawl4AI + BeautifulSoup + Pydantic-AI pour extraction. LlamaIndex RAG avec Jina AI live fetch.
 
 ## Points clés
 
-### Stack recommandé
-- **Crawl** : Crawl4AI + BeautifulSoup
-- **Schema** : Pydantic-AI → PropertyDoc
-- **Embed** : E5-large-v2 ou BGE-Large
-- **Vector DB** : Qdrant (HNSW)
-- **Search** : BM25 + vector → MMR re-rank
-- **Live** : r.jina.ai pour refresh données volatiles
-- **LLM** : Llama-3-70B local via LlamaIndex
-- **Orchestration** : Supabase + Grafana
-
-### Différenciateur
-- Static vs dynamic data separation
-- 30% boost pertinence vs vector-only
-- P95 latency < 2.5s
+- BM25 + BGE-large embeddings hybrid search dans Qdrant
+- Crawl4AI + BeautifulSoup pour parsing HTML robuste
+- Pydantic-AI pour extraction entitiesstructurées
+- 60k property URLs indexées pour search haute performance
+- Jina AI pour live fetch quand embeddings insuffisants
 
 ## Connexions
 
 - [[entities/fazwaz]]
-- [[concepts/rag]]
-- [[concepts/immobilier-thailand]]
+- [[entities/qdrant]]
+- [[sources/rag-plus-reranker]]
+- [[sources/palanthai-opensource-stack]]

@@ -1,20 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [real-estate, self-supervised, ViT, vision-transformer]
+updated: 2026-04-21
+tags: [research, property-valuation, vit, self-supervised, deep-learning]
+sources: [raw/self-supervised-vit-valuation.md]
 ---
 
 ## Résumé
 
-Property valuation avec Vision Transformers self-supervised (Yazdani & Raissi, arXiv 2023).
+Vision Transformers auto-supervisés pour valorisation immobilière (Yazdani & Raissi 2023). Pre-training sans labels évite le bottleneck des données labellisées. Adaptation rapide aux nouveaux marchés.
 
 ## Points clés
 
-- Self-supervised learning
-- Vision Transformers (ViT)
-- Property valuation
+- Pre-training ViT auto-supervisé sur données immobilières non-labellisées
+- Évite le besoin de grandes datasets labeled pour chaque marché
+- Fine-tuning rapide sur nouveaux marchés (Thailand, etc.)
+- Performance compétitive avec moins de données annotées
 
 ## Connexions
 
-- [[concepts/property-valuation]]
-- [[concepts/computer-vision]]
+- [[sources/multi-modal-house-price-prediction]]
+- [[sources/visual-modalities-missing-data]]
+- [[sources/thailand-satellite-valuation]]

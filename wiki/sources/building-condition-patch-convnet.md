@@ -1,20 +1,23 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [real-estate, building-condition, ConvNets, visual-estimation]
+updated: 2026-04-21
+tags: [research, computer-vision, building-condition, patch-convnet]
+sources: [raw/building-condition-patch-convnet.md]
 ---
 
 ## Résumé
 
-Estimation visuelle de l'état des bâtiments avec ConvNets patch-level (Koch et al., ICMR 2018).
+Patch ConvNets pour évaluation visuelle de condition bâtiment (Koch et al. 2018). Scoring de condition façade depuis images street-level. Input pour valorisation et automatisation d'inspection.
 
 ## Points clés
 
-- Patch-level ConvNets
-- Building condition assessment
-- Visual estimation
+- Scoring automatisé de condition façade depuis images street-view
+- Patch-based ConvNets pour analyse locale de dégradation
+- Input pour valuation models et inspection automatisée
+- Applicable aux condos thaïlandais pour qualité building assessment
 
 ## Connexions
 
-- [[concepts/property-valuation]]
-- [[concepts/computer-vision]]
+- [[sources/building-condition-patch-convnet]]
+- [[sources/gcn-floor-plan-valuation]]
+- [[sources/multi-modal-house-price-prediction]]

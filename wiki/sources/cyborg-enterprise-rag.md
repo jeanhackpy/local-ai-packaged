@@ -1,24 +1,21 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
-tags: [RAG, enterprise, security, multimodal]
+updated: 2026-04-21
+tags: [rag, enterprise, security, encryption]
+sources: [raw/cyborg-enterprise-rag.md]
 ---
 
 ## Résumé
 
-RAG enterprise sécurisé avec encryption-in-use pour vector embeddings. Extraction multimodale (text, tables, charts, PDFs) + hybrid search + reranking.
+Enterprise RAG with multimodal PDF extraction (text, tables, charts). GPU-accelerated indexing. Vision language model support (optional Llama 3.2 11B). Guardrailing for content safety. OpenAI-compatible APIs.
 
 ## Points clés
 
-- **15x faster** multimodal PDF extraction
-- **50% fewer incorrect answers**
-- **Zero plaintext exposure** of vector data
-- **Encryption-in-use** + BYOK/HYOK key management
-- **Multi-turn conversations** + multi-session support
-- **GPU-accelerated** index creation and search
+- Multimodal PDF extraction: text, tables, charts with GPU-accelerated indexing
+- Optional vision language model (Llama 3.2 11B) for visual document understanding
+- Guardrailing for content safety; OpenAI-compatible API surface
 
 ## Connexions
 
-- [[entities/nvidia]]
 - [[concepts/rag]]
 - [[concepts/security]]
