@@ -1,173 +1,90 @@
 # Technology Stack
 
-**Analysis Date:** 2026-04-13
+**Analysis Date:** 2026-04-21
 
 ## Languages
 
 **Primary:**
-- Python 3.12.7 - Main development language for Palanthai data pipeline, scraping, embeddings
-- TypeScript/JavaScript - n8n workflows, web development (Next.js mentioned for recall-agency)
-- Bash - Shell scripts, automation, VPS management
-- SQL - PostgreSQL queries, database operations
-- Cypher - Neo4j graph queries
-
-**Secondary:**
-- HTML/CSS - WordPress themes, static content
-- YAML - Configuration files (phase1_config.yaml)
-- JSON - Data exchange format (JSONL for crawl outputs)
+- Markdown - Vault documentation (concepts, sources, synthesis documents)
+- Python - Pipeline scripts (scraping, extraction, embedding, ETL)
+- JavaScript/TypeScript - n8n workflows, potential frontend components
 
 ## Runtime
 
 **Environment:**
-- macOS Darwin 24.6.0 (SystemMac host) - Primary development workstation
-- Ubuntu 24.04 LTS (VPS srv857744.hstgr.cloud 31.97.67.145) - Production server
+- Python venv at `/home/phil/venv` on VPS (31.97.67.145)
 
-**Package Managers:**
-- Homebrew - macOS package management
-- pyenv 2.6.17 - Python version management
-- uv 0.9.21 - Fast Python virtual environments
-- pipx 1.8.0 - Isolated CLI tools
-- npm - Node.js package management
+**Package Manager:**
+- pip (Python)
+- npm (Node.js for n8n)
 
-## Frameworks & Libraries
+## Frameworks
 
-**Core Web & API:**
-- FastAPI - Palanthai API (`palanthai_api.py`)
-- Next.js - Website redesign (recall-agency-v3-redesign)
-- WordPress/PHP - Shared hosting for reflexion.asia, recall-agency.com, patrimonasia.com
+**Core:**
+- Pydantic/Pydantic-AI - Structured data extraction from raw HTML
+- LlamaIndex - RAG framework for property queries
+- Crawl4AI - Web scraping with AI extraction capabilities
+- BeautifulSoup - HTML parsing fallback
 
-**Data Processing:**
-- Pydantic - Data validation (unit_schema.py, data_cleaner.py)
-- Pandas - Data manipulation
-- SQLAlchemy - Database ORM
-- LangChain - LLM orchestration and RAG
+**Data Storage:**
+- Qdrant - Vector embeddings storage (HNSW index)
+- Neo4j - Property relationship graph (project, building, unit hierarchy)
+- Supabase - PostgreSQL for structured data, auth, edge functions
 
-**Web Scraping:**
-- Crawl4AI 0.7.x (async) - Primary web scraper
-- Playwright - Browser automation for Crawl4AI
-- lxml - XML/HTML parsing
+**AI Inference:**
+- Ollama - Local LLM inference (privacy, cost reduction)
+- BGE-large - Text embeddings model
+- BGE-reranker - Cross-encoder reranking for retrieval precision
 
-**AI & ML:**
-- Ollama - Local LLM runtime (llama3.2)
-- Qdrant Client - Vector database client
-- neo4j-driver - Neo4j graph database driver
-- HuggingFace Transformers - Embeddings (all-MiniLM-L6-v2)
+**Workflow:**
+- n8n - Workflow automation and orchestration (sitemap monitoring, webhook triggers)
 
-**Workflow Automation:**
-- n8n - Workflow automation platform (VPS Docker container)
+**Observability:**
+- Weights & Biases (W&B) - Experiment tracking for data flywheel
+- MLRun - Pipeline orchestration for AI factory
 
-**UI & Visualization:**
-- Mapbox GL JS - Interactive maps (recommended for LANNA frontend)
-- MapLibre GL - Open-source map fallback
-- Apache Superset - Dashboarding
+## Key Dependencies
 
-## Infrastructure
+**Critical:**
+- `pydantic` - Data validation schemas (PropertyDoc model)
+- `llama-index` - RAG pipeline implementation
+- `crawl4ai` - AI-powered web crawler
+- `qdrant-client` - Vector DB client
 
-**VPS (Hostinger KVM 2):**
-- Location: Indonesia - Jakarta
-- IP: 31.97.67.145
-- Hostname: srv857744.hstgr.cloud
-- Specs: 2 vCPU / 8 GB RAM / 100 GB SSD
-- OS: Ubuntu 24.04 LTS
-- Provider: Hostinger VPS
+**Infrastructure:**
+- `neo4j` - Graph database driver
+- `supabase` / `postgresql` - Structured data store
+- `ollama` - Local model serving
 
-**Docker Stack (VPS):**
-Directory: `/home/phil/local-ai-packaged/`
+**Embeddings & Retrieval:**
+- `sentence-transformers` (BGE models) - Text vectorization
+- `Jina AI` - Live document fetching when embeddings insufficient
 
-| Container | Image | Ports | Purpose |
-|-----------|-------|-------|---------|
-| n8n | n8nio/n8n:latest | 5678 | Workflow automation |
-| n8n-worker | n8nio/n8n:latest | internal | Queue worker |
-| caddy | caddy:2-alpine | 80, 443 | Reverse proxy/TLS |
-| qdrant | qdrant/qdrant | 6333-6334 | Vector database |
-| neo4j | neo4j:latest | 7474, 7687 | Graph database |
-| ollama | ollama/ollama:latest | 11434 | Local LLM |
-| minio | minio/minio | 9000-9001 | Object storage |
-| redis | valkey/valkey | 6379 | Cache/Queue |
-| searxng | searxng/searxng | 8081 | Search engine |
-| supabase-kong | kong:2.8.1 | 8000, 8443 | API Gateway |
-| supabase-db | supabase/postgres | 5432 | PostgreSQL database |
-| supabase-auth | supabase/gotrue | - | Authentication |
-| supabase-rest | postgrest | 3000 | REST API |
-| supabase-studio | supabase/studio | 3000 | Dashboard |
-| supabase-storage | supabase/storage-api | 5000 | File storage |
-| supabase-realtime | supabase/realtime | - | Realtime subscriptions |
+## Configuration
 
-**Shared Hosting (WordPress):**
-- Host: 92.113.28.34 port 65002
-- Sites: reflexion.asia, recall-agency.com, patrimonasia.com
+**Environment:**
+- VPS environment variables at `/home/phil/palanthai/config/.env`
+- Supabase project credentials
+- Qdrant connection (VPS port 6333)
+- Neo4j connection credentials
 
-## Development Tools
-
-**IDEs:**
-- Cursor - Primary agentic coding assistant (`~/.cursor/`)
-- VS Code - General development
-- Antigravity - Google agentic IDE (`~/.gemini/antigravity/`)
-- OpenCode - Alternative AI IDE
-- Claude Code - Anthropic agentic CLI
-
-**AI Agents:**
-- Claude Code CLI - Anthropic agentic coding
-- Gemini CLI - Google agentic CLI
-- Antigravity - Google agentic IDE with skills
-
-**CLI Tools:**
-- Raycast - Primary launcher (macOS)
-- Warp - Terminal with voice input
-- SSH - Remote access
-- WP-CLI - WordPress command line
-
-## Configuration Files
-
-**Local Environment:**
-- `/Users/phil/Documents/Vaults/SystemMac/.env.local` - API keys (Stitch, Hostinger, Cloudflare)
-
-**VPS Environment:**
-- `/home/phil/palanthai/config/.env` - Database connections (PG, Qdrant, Neo4j, Ollama)
-- `/home/phil/local-ai-packaged/.env` - OpenRouter, Telegram, n8n, Supabase URLs
-
-**Project Configuration:**
-- `Palanthai/phase1_config.yaml` - Pipeline configuration
-- `Palanthai/requirements.txt` - Python dependencies
-
-## Key Dependencies (Python)
-
-**Scraping:**
-- crawl4ai>=0.7.0
-- playwright
-- lxml
-
-**Data:**
-- pydantic
-- pandas
-- sqlalchemy
-- python-dotenv
-
-**AI/RAG:**
-- qdrant-client
-- neo4j
-- langchain
-- langchain-community
-- httpx
-
-**Embedding:**
-- sentence-transformers (all-MiniLM-L6-v2)
-- nomic-embed-text (Ollama)
+**Build:**
+- No traditional build system (Obsidian vault)
+- Python scripts run directly via SSH on VPS
 
 ## Platform Requirements
 
 **Development:**
-- macOS (Darwin) with Homebrew
-- Python 3.12+ via pyenv
-- Node.js/npm for n8n extensions
-- SSH key authentication configured
+- Obsidian vault for documentation
+- SSH access to VPS for script execution
 
-**Production (VPS):**
-- Ubuntu 24.04 LTS
-- Docker and Docker Compose
-- 8GB RAM minimum
-- SSH access with key-based auth
+**Production:**
+- VPS (31.97.67.145) Ubuntu 24.04
+- Supabase cloud (PostgreSQL, Auth, Edge Functions)
+- Qdrant self-hosted on VPS
+- Neo4j self-hosted on VPS
+- Ollama local inference
 
 ---
 
-*Stack analysis: 2026-04-13*
+*Stack analysis: 2026-04-21*

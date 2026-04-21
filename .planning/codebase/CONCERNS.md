@@ -1,278 +1,189 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-04-13
+**Analysis Date:** 2026-04-21
 
-## Critical Security Issues
+## Tech Debt
 
-### RLS (Row-Level Security) Not Enabled on Supabase Database
+**Reflexion Asia WordPress (92.113.28.34:65002):**
+- Issue: jQuery is not defined - LiteSpeed JS Defer/Combine causing JS conflicts
+- Files: `00_System/Audits/reflexion.asia.md`
+- Impact: Broken JavaScript functionality, Lighthouse errors, potential UX failures
+- Fix approach: Disable "Load JS Deferred" in LiteSpeed Cache, disable SG Security plugin
 
-**Issue:** 83 PostgreSQL tables are exposed without Row-Level Security protection via PostgREST API.
-- **Files:** `10_Infrastructure/VPS_Hostinger/RLS_HARDENING_ACTION_PLAN.md`
-- **Impact:** Critical tables containing credentials, tokens, and workflow data are publicly accessible
-- **Risk:** API keys, OAuth tokens, refresh tokens, and session data exposed to anyone querying the API
-- **Tables at Risk:**
-  - `user_api_keys` - API credentials (1 row)
-  - `oauth_access_tokens` - OAuth tokens (7 rows)
-  - `refresh_tokens` - JWT tokens
-  - `sessions` - Session data
-  - `binary_data` - Unknown files (50 rows)
-  - 11 n8n workflow tables with 3,400+ rows of execution data
-- **Fix Approach:** Execute the 3 bulk RLS enable scripts documented in `RLS_HARDENING_ACTION_PLAN.md`
+**Supabase Database Security:**
+- Issue: RLS (Row-Level Security) coverage unknown - security audit tools created but not run
+- Files: `10_Infrastructure/VPS_Hostinger/rls_security_audit.py`, `10_Infrastructure/VPS_Hostinger/rls_redundancy_audit.py`
+- Impact: Tables exposed to PostgREST without RLS protection could allow unauthorized data access
+- Fix approach: Run RLS security audit against Supabase PostgreSQL to identify unprotected tables
 
-### Hardcoded Server IP Address
+**Reflexion Asia Disk Space:**
+- Issue: wp-content storage was 12GB, cleaned to 6.3GB but 5.4GB is still media uploads
+- Files: `00_System/Audits/reflexion.asia.md`
+- Impact: Continued growth will cause storage exhaustion
+- Fix approach: Convert to WebP format, implement media optimization pipeline
 
-**Issue:** VPS IP `31.97.67.145` appears in approximately 80+ locations across the codebase.
-- **Files:** `20_Projects/20_Reflexion_Asia/02_Technical/real_estate_tools/viewers/*.html`, `10_Infrastructure/VPS_Hostinger/*.md`, `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/SPRINT1_ACTION_PLAN.md`, and many more
-- **Impact:** If VPS IP changes, all references must be updated manually
-- **Risk:** Configuration drift, broken SSH tunnels, broken API endpoints
-- **Fix Approach:** Use environment variable `VPS_HOST` and reference `.env.local` for all IP-dependent code
+**VPS Monitoring Not Deployed:**
+- Issue: Monitoring system designed and planned but never deployed
+- Files: `10_Infrastructure/VPS_Hostinger/TODO.md`, `10_Infrastructure/VPS_Hostinger/Plan_Action_Monitoring.md`
+- Impact: No visibility into VPS health, services could fail unnoticed
+- Fix approach: Deploy the monitoring scripts that were already created with cron configuration
 
----
+**Multi-Agent Sync System:**
+- Issue: "Create system synchronisation multi-agents Obsidian" listed as high priority but not completed
+- Files: `10_Infrastructure/VPS_Hostinger/TODO.md`
+- Impact: Agents operate without shared context, potential coordination failures
+- Fix approach: Requires credentials and deployment steps documented in journal
 
-## Technical Debt
+## Known Bugs
 
-### Pipeline Monitoring Not Operational
+**jQuery not defined on reflexion.asia:**
+- Symptoms: Console error "jQuery is not defined", JS functionality broken
+- Files: `00_System/Audits/reflexion.asia.md`
+- Trigger: LiteSpeed Cache JS optimization + SG Security plugin conflict
+- Workaround: Disabled SG Security and JS optimizations temporarily
 
-**Issue:** The `master_runner.py` script has no execution tracking.
-- **File:** `10_Infrastructure/VPS_Hostinger/Pipeline_Dashboard.md`
-- **Status:** "Non suivi" (not tracked) for all pipeline scripts
-- **Impact:** No visibility into whether extraction scripts run, succeed, or fail
-- **Fix Approach:** Implement cron scheduling documented in `10_Infrastructure/VPS_Hostinger/TODO.md` (priority-high task)
+**403 Forbidden on guest.vary.php:**
+- Symptoms: Cloudflare/WAF blocking legitimate PHP file
+- Files: `00_System/Audits/reflexion.asia.md`
+- Trigger: WAF rule blocking guest.vary.php
+- Workaround: Need to create Cloudflare WAF rule to allow the file
 
-### Deprecated Crawl4AI API References
+**SG Security Core Checksum Failure:**
+- Symptoms: WordPress core file integrity checks failing
+- Files: `00_System/Audits/reflexion.asia.md`
+- Trigger: SG Security plugin blocking even legitimate core files
+- Workaround: Disabled SG Security
 
-**Issue:** Multiple deprecated API patterns in documentation and code.
-- **Files:** `30_Knowledge/Development/docs.crawl4ai.com/api/async-webcrawler/index.md` (lines 69, 79, 104, 148, 243, 332, 367)
-- **Status:** "Legacy", "deprecated", "backwards compatibility" mentioned throughout
-- **Impact:** Using deprecated patterns may break on library upgrade
-- **Risk:** Technical debt increases as deprecated code accumulates
-- **Fix Approach:** Update documentation to use current API patterns
+## Security Considerations
 
-### Legacy Patterns in Crawl4AI Documentation
+**API Keys Management:**
+- Risk: Keys stored in `.env.local` but documentation shows incomplete inventory
+- Files: `00_System/Secrets/API_KEYS_MANAGEMENT.md`
+- Current mitigation: .env.local ignored by git and Obsidian
+- Recommendations: Complete the inventory checklist, ensure all missing keys are documented and rotated if exposed
 
-**Issue:** Multiple references to outdated patterns:
-- `30_Knowledge/Development/docs.crawl4ai.com/core/cache-modes/index.md` - "Old Way (Deprecated)"
-- `30_Knowledge/Development/docs.crawl4ai.com/api/crawl-result/index.md` - "Legacy field", "Raw Markdown (legacy)"
-- `30_Knowledge/Development/docs.crawl4ai.com/core/installation/index.md` - "Local Server Mode (Legacy)"
-- `30_Knowledge/Development/docs.crawl4ai.com/api/async-webcrawler/index.md` - "Legacy parameters still accepted"
-- `30_Knowledge/AI_Orchestration/crawl4ai-deep-dive.md` - "Selenium – Legacy automation"
+**SSH Access to VPS (31.97.67.145):**
+- Risk: No backup SSH key documented, single point of failure
+- Files: `10_Infrastructure/VPS_Hostinger/TODO.md` (priority medium task)
+- Current mitigation: SSH key-based auth
+- Recommendations: Add backup SSH key as documented in TODO
 
-### jQuery Console Error on reflexion.asia
+**Cloudflare Monitoring:**
+- Risk: Zone ID documented but no formal log monitoring schedule
+- Files: `40_Context_Hub/CURRENT_CONTEXT.md`
+- Current mitigation: Zone ID 714417ac4b11ad4380ee0692e8c535ae for Cloudflare logs
+- Recommendations: Set up automated alerting for security events
 
-**Issue:** `jQuery is not defined` error persists on production site.
-- **File:** `00_System/Audits/reflexion.asia.md`
-- **Cause:** LiteSpeed Cache JS Defer/Combine conflicting with theme
-- **Impact:** JavaScript-dependent functionality broken on reflexion.asia
-- **Fix Approach:** Disable "Load JS Deferred" in LiteSpeed Cache temporarily
+**Supabase RLS Audit Not Run:**
+- Risk: Database tables may be exposed without Row-Level Security
+- Files: `10_Infrastructure/VPS_Hostinger/rls_security_audit.py`, `10_Infrastructure/VPS_Hostinger/rls_redundancy_audit.py`
+- Impact: Unauthorized data access via PostgREST API
+- Recommendations: Run security audits against production database
 
-### 403 Forbidden on guest.vary.php
+## Performance Bottlenecks
 
-**Issue:** Cloudflare WAF blocking `guest.vary.php` on reflexion.asia.
-- **File:** `00_System/Audits/reflexion.asia.md`
-- **Impact:** Certain PHP includes fail, potential functionality gaps
-- **Fix Approach:** Create Cloudflare WAF rule to allow `guest.vary.php`
+**RLS Policy Redundancy:**
+- Problem: Multiple permissive RLS policies on same table/action evaluated per query
+- Files: `10_Infrastructure/VPS_Hostinger/rls_redundancy_audit.py`
+- Cause: Multiple policies created for same role/action instead of consolidated
+- Improvement path: Run redundancy audit, consolidate policies with OR conditions
 
-### WordPress Core Checksum Validation Failure
+**WordPress Media Storage (5.4GB):**
+- Problem: Unoptimized images consuming storage and bandwidth
+- Files: `00_System/Audits/reflexion.asia.md`
+- Cause: No image optimization pipeline, PNG/JPG stored at original resolution
+- Improvement path: Implement WebP conversion, lazy loading, CDN caching
 
-**Issue:** WordPress core file checksums cannot be validated due to SG Security interference.
-- **File:** `00_System/Audits/reflexion.asia.md`
-- **Impact:** Cannot detect file tampering or malware injection
-- **Risk:** Potential compromise goes undetected
-- **Fix Approach:** Disable SG Security temporarily to run checksum verification, then re-enable
+**VPS Disk Space Management:**
+- Problem: No automated cleanup of Docker, logs, backups
+- Files: `10_Infrastructure/VPS_Hostinger/TODO.md`
+- Cause: Docker containers and logs grow unbounded, no retention policy
+- Improvement path: Configure Docker cleanup cron, log rotation, backup retention
 
----
+## Fragile Areas
 
-## Missing Components
+**Palanthai Pipeline Orchestrator:**
+- Files: `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/content_flywheel.py`
+- Why fragile: Single point of failure for multi-system data export (Supabase, Qdrant, Neo4j)
+- Safe modification: Test with mock connections before running against production
+- Test coverage: No tests detected in this repository
 
-### Social Media Integration Incomplete
+**VPS Monitoring Scripts:**
+- Files: `10_Infrastructure/VPS_Hostinger/rls_security_audit.py`, `rls_redundancy_audit.py`
+- Why fragile: Hardcoded connection parameters, docker exec assumptions
+- Safe modification: Test against non-production database first, validate docker container names
+- Test coverage: Unit tests mentioned in TODO but actual test files not found in this vault
 
-**Issue:** LinkedIn, X/Twitter, Facebook/Instagram API integration not completed.
-- **File:** `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/SPRINT1_ACTION_PLAN.md` (lines 70-100)
-- **Current Status:**
-  - LinkedIn: Requires OAuth2 setup with 60-day token expiry
-  - X/Twitter: Requires API key/secrets but n8n native node available
-  - Facebook/Instagram: Deferred to Phase 2
-- **Impact:** Cannot automatically publish to social platforms
-- **Fix Approach:** Use n8n native X/Twitter node (OAuth2 handled automatically), or use Phantombuster/Buffer alternatives
+**crawl_test.py Stub:**
+- Files: `00_System/Scripts/crawl_test.py`
+- Why fragile: Placeholder script with TODO comment, no actual implementation
+- Safe modification: Replace with real crawler implementation before use
+- Test coverage: N/A - stub only
 
-### Phase 1.5 Data Sources Not Implemented
+## Scaling Limits
 
-**Issue:** Financial and market data sources planned but not built.
-- **File:** `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/02_Pipeline_Status.md`
-- **Missing Sources:**
-  - SET Thailand (`set.or.th`) — PropCon sector financials
-  - Bank of Thailand — REIC housing index, construction permits
-  - CBRE Thailand — Quarterly market reports (PDF)
-  - EIA databases — Environmental impact assessments
-- **Impact:** Incomplete market intelligence for Thailand real estate analysis
+**WordPress (reflexion.asia / recall-agency.com):**
+- Current capacity: Shared hosting on Hostinger, estimated ~10K visitors/month based on storage
+- Limit: Shared resources (CPU, RAM) with no vertical scaling path
+- Scaling path: Migrate to VPS with dedicated resources, implement CDN for static assets
 
-### Phase 2 Multi-Marketplace Not Started
+**Supabase Database:**
+- Current capacity: Unknown - no monitoring deployed
+- Limit: Supabase free tier limits on storage and bandwidth
+- Scaling path: Enable monitoring, track usage, upgrade plan as needed
 
-**Issue:** DDProperty, Hipflat, PropertyHub, Thailand-Property, sitemap discovery engine not implemented.
-- **File:** `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/02_Pipeline_Status.md`
-- **Impact:** Limited to only LivePhuket and FazWaz data sources
+**VPS (31.97.67.145):**
+- Current capacity: Unknown - no metrics collected
+- Limit: VPS plan resource limits (likely 2-4GB RAM, 2 vCPU)
+- Scaling path: Upgrade Hostinger plan, optimize Docker container usage
 
-### Backup System Missing
+## Dependencies at Risk
 
-**Issue:** No backup configuration found in vault.
-- **Files:** Glob for `**/backup*` returns no results
-- **Impact:** No documented backup procedures for:
-  - Obsidian vault
-  - Supabase database
-  - Qdrant vector store
-  - Neo4j graph database
-- **Fix Approach:** Document backup procedures for all infrastructure components
+**Python Scripts (no requirements.txt):**
+- Risk: No dependency pinning in this vault, scripts may break with library updates
+- Impact: `rls_security_audit.py`, `rls_redundancy_audit.py`, `crawl_test.py` may fail
+- Migration plan: Create requirements.txt for each script directory with pinned versions
 
----
+**LiteSpeed Cache Plugin:**
+- Risk: JS optimization features conflict with theme/plugin JS loading order
+- Impact: JavaScript functionality breaks on reflexion.asia
+- Migration plan: Test alternative caching plugins or disable problematic features
 
-## Performance Concerns
+## Missing Critical Features
 
-### Large Media Upload on reflexion.asia
+**VPS Monitoring:**
+- Problem: No system monitoring, service health checks, or alerting
+- Blocks: Proactive problem resolution, SLA guarantees, capacity planning
 
-**Issue:** 5.4 GB of media files on reflexion.asia.
-- **File:** `00_System/Audits/reflexion.asia.md`
-- **Impact:** Slow page loads, high bandwidth costs
-- **Recommendation:** Convert to WebP format to reduce size by 30-50%
+**Database RLS Audit:**
+- Problem: Security audit never run, unknown exposure surface
+- Blocks: Security compliance, data access control verification
 
-### VPS Disk Space Management Not Implemented
+**Multi-Agent Obsidian Sync:**
+- Problem: Agents operate independently without shared context
+- Blocks: Coordinated agent workflows, consistent context across sessions
 
-**Issue:** No automatic cleanup of Docker images, logs, or old snapshots.
-- **File:** `10_Infrastructure/VPS_Hostinger/TODO.md` (priority-medium: "Optimisation disque")
-- **Impact:** Disk space will eventually fill up
-- **Fix Approach:** Configure log rotation and Docker prune cron jobs
+**Backup System:**
+- Problem: No documented backup strategy for vault content
+- Blocks: Disaster recovery, content preservation
 
-### SSH Tunnel Manual Management
+**Monitoring Dashboard:**
+- Problem: No unified view of pipeline status across all services (Supabase, Qdrant, Neo4j, Ollama, n8n)
+- Blocks: Quick status assessment, incident triage
 
-**Issue:** Multiple documentation references require manual SSH tunnel setup.
-- **Example:** `ssh -L 3000:127.0.0.1:8000 phil@31.97.67.145 "sleep 600" &`
-- **Files:** `20_Projects/20_Reflexion_Asia/02_Technical/real_estate_tools/viewers/data_viewer.html`, `20_Projects/20_Reflexion_Asia/02_Technical/real_estate_tools/viewers/image_viewer.html`
-- **Impact:** Fragile, timeout-prone, not resilient
-- **Fix Approach:** Use persistent SSH tunnels with systemd service or autossh
+## Test Coverage Gaps
 
----
+**Python Scripts:**
+- What's not tested: `rls_security_audit.py`, `rls_redundancy_audit.py` - no unit tests
+- Files: `10_Infrastructure/VPS_Hostinger/`
+- Risk: Security audit tools could miss vulnerabilities or produce false positives
+- Priority: Medium - tools are already written but untested
 
-## Architecture Issues
-
-### External Site Exposed Separately
-
-**Issue:** reflexion.asia (92.113.28.34:65002) is on different infrastructure than main VPS (31.97.67.145).
-- **Files:** `00_System/Audits/reflexion.asia.md`, `30_Knowledge/Development/VPS Hostinger & WordPress.md`
-- **Impact:** Separate security considerations, different monitoring required
-- **Risk:** Site-specific issues may not be visible in main pipeline dashboard
-
-### Symlink Outside Vault
-
-**Issue:** Main scraper lives outside vault at `/Users/phil/Documents/The_Lab/Pipeline/main_scraper`.
-- **File:** `20_Projects/Active/Pipeline_Main_Scraper.md`
-- **Impact:** Version control doesn't track the actual code, only a symlink reference
-- **Risk:** Code may become orphaned or out of sync
-
-### Obsidian Plugins Contain Minified Code
-
-**Issue:** Plugin JavaScript files in `.obsidian/plugins/` are minified, preventing security audit.
-- **Files:** `.obsidian/plugins/*/main.js` (multiple plugins)
-- **Impact:** Cannot review plugin behavior for security issues
-- **Risk:** Malicious or vulnerable plugins could be present
-- **Fix Approach:** Document which plugins are trusted, consider removing unneeded plugins
-
----
-
-## Known Bugs and Limitations
-
-### Syncthing Conflicts
-
-**Issue:** Syncthing creates conflicts when syncing bidirectional between VPS and Mac.
-- **File:** `20_Projects/20_Reflexion_Asia/02_Technical/Palanthai_Core/SPRINT1_ACTION_PLAN.md`
-- **Resolution:** Work directly on VPS via SSH, Syncthing only for read-only Mac access
-
-### Google MCP Restart Required
-
-**Issue:** Google Analytics and Search Console MCP servers require Gemini CLI restart to activate.
-- **File:** `40_Context_Hub/CURRENT_CONTEXT.md`
-- **Impact:** MCP tools unavailable until manual restart performed
-- **Fix Approach:** Document restart procedure, consider automation
-
-### Cloudflare Zone Monitoring Not Automated
-
-**Issue:** Security monitoring relies on manual log review via Cloudflare dashboard.
-- **File:** `40_Context_Hub/CURRENT_CONTEXT.md`
-- **Impact:** Delayed response to security incidents
-- **Fix Approach:** Configure Cloudflare alert policies and webhook notifications
-
-### reflexion.asia LiteSpeed Cache JS Conflict
-
-**Issue:** LiteSpeed Cache JS optimization conflicts with jQuery loading on reflexion.asia.
-- **File:** `00_System/Audits/reflexion.asia.md`
-- **Status:** Partially resolved by disabling some optimizations, but jQuery error persists
-- **Fix Approach:** Further LiteSpeed Cache configuration review needed
+**Vault-Wide:**
+- What's not tested: No automated tests for any Obsidian vault functionality
+- Risk: Broken links, outdated references, stale data could accumulate
+- Priority: Low - this is a documentation vault, not a code project
 
 ---
 
-## Documentation Gaps
-
-### No Test Suite Documentation
-
-**Issue:** No testing documentation found. This is an Obsidian vault, not a traditional codebase.
-- **Impact:** No automated validation of script functionality
-- **Fix Approach:** Document manual testing procedures for critical scripts
-
-### No Runbook for Common Operations
-
-**Issue:** While maintenance schedule exists in `00_System/Policies/05_Maintenance.md`, specific runbooks for common operations are missing.
-- **Impact:** Harder to onboard new operators or handle emergencies consistently
-- **Fix Approach:** Create runbook documents for: restart services, check logs, run backups, verify pipeline
-
-### VPS Access Credentials Not Centralized
-
-**Issue:** Multiple SSH access docs scattered: `10_Infrastructure/VPS_Hostinger/VPS_ACCESS_REFERENCE.md`, `10_Infrastructure/Shared_Hosting/Hostinger/Access/*.md`
-- **Impact:** Potential for credential drift or outdated access info
-- **Fix Approach:** Consolidate to single access reference document
-
-### Missing Dependency Documentation
-
-**Issue:** No single document listing all external service dependencies and their health status.
-- **Impact:** Difficult to quickly assess what services are required for pipeline to function
-- **Fix Approach:** Create dependency matrix: Service, URL, Health Check Endpoint, Restart Procedure
-
----
-
-## Pending TODO Items
-
-From `10_Infrastructure/VPS_Hostinger/TODO.md`:
-
-**High Priority:**
-- Create multi-agent Obsidian sync system (assigned to agent-claude)
-- Deploy monitoring on VPS (needs credentials)
-- Configure cron for monitoring (every 5 min)
-
-**Medium Priority:**
-- Adjust monitoring thresholds (after 1 week observation)
-- Disk optimization (Docker cleanup, log rotation)
-- Add backup SSH key
-
-**Low Priority:**
-- Add application health checks (HTTP endpoints)
-- Prometheus + Grafana integration
-- Automatic snapshot cleanup (retention policies)
-- Metrics history and analysis
-
----
-
-## Risk Assessment Summary
-
-| Category | Issue | Severity | Effort to Fix |
-|----------|-------|----------|---------------|
-| Security | 83 tables without RLS | CRITICAL | 2-4 hours |
-| Security | Hardcoded IP (80+ locations) | HIGH | 1-2 days |
-| Operations | Pipeline monitoring not enabled | HIGH | 2-3 hours |
-| Operations | No backup system documented | HIGH | 4-8 hours |
-| Performance | 5.4GB media on reflexion.asia | MEDIUM | 2-4 hours |
-| Technical | jQuery error on reflexion.asia | MEDIUM | 1-2 hours |
-| Technical | Deprecated Crawl4AI API references | MEDIUM | 4-8 hours |
-| Architecture | Symlink outside vault | MEDIUM | 1-2 days |
-| Completeness | Social media integration missing | MEDIUM | 4-8 hours |
-| Completeness | Phase 1.5/2 data sources not built | LOW | Weeks |
-
----
-
-*Concerns audit: 2026-04-13*
+*Concerns audit: 2026-04-21*
