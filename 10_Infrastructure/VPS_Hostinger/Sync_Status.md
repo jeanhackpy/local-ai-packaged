@@ -73,5 +73,4 @@ Aucun conflit détecté actuellement.
 
 ---
 
-*Dernière mise à jour: 2026-01-28 00:00*
-*Prochaine vérification: 2026-01-29 00:00*
+*Dernière mise à jour: 2026-04-21 — ⚠️ fichier daté (2026-01-28), nécessite révision complète*

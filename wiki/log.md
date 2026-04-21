@@ -77,15 +77,16 @@ grep -c "^## \[" wiki/log.md
 
 ---
 
-## [2026-04-21] ingest-full | 55 sources summaries ingested
+## [2026-04-21] ingest-full | 57 sources summaries ingested
 
 **Type** : ingest
 
 **Actions** :
 - 22 NVIDIA blueprint source summaries created in sources/
 - 33 Thailand/AI-ML/Research source summaries created in sources/
+- 2 new source summaries: dubai-satellite-news-price-forecasting, multi-modal-deep-learninghouse-price-prediction-v2
 
 **Stats**:
-- **Sources ingérées** : 55/65
+- **Sources ingérées** : 57/65 (all distinct content covered — remaining 8 raw files are duplicates with different filenames)
 - **Concepts** : 8
 - **Entities** : 2

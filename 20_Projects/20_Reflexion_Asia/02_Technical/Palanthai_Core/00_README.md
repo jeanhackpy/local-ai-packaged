@@ -114,8 +114,8 @@
 |:---|:---|:---|
 | Crawling | crawl4ai, Playwright, lxml | SIAM |
 | Relational DB | Supabase (PostgreSQL) | CHANG |
-| Vector DB | Qdrant (384-dim, Cosine) | CHANG |
-| Graph DB | Neo4j (Aura/Self-hosted) | NAGA |
+| Vector DB | Qdrant (768-dim, Cosine) | CHANG |
+| Graph DB | ⚠️ Neo4j **INACTIVE** | NAGA |
 | Embeddings | all-MiniLM-L6-v2 | GARUDA |
 | LLM | Claude API / Ollama (local) | GARUDA |
 | NLP (Thai) | PyThaiNLP, spaCy | NAGA |

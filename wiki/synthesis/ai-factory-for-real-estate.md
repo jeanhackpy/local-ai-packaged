@@ -104,9 +104,9 @@ The Palanthai stack currently runs on a single VPS (31.97.67.145). The NVIDIA bl
 ## Conclusion
 
 The AI factory for Thai real estate is not a single system — it is a stack:
-1. **Data layer**: Supabase (structured) + Qdrant (vectors) + Neo4j (relationships)
+1. **Data layer**: Supabase (structured) + Qdrant (768-dim vectors, **45k units**) + Neo4j (**⚠️ INACTIVE**)
 2. **Retrieval layer**: BM25 + BGE embeddings + BGE-reranker for precision
-3. **Model layer**: Ollama for generation, fine-tuned on Thai property corpus
+3. **Model layer**: ⚠️ Ollama **STOPPED** — Palanthai API v2.0.0 sur port 8500
 4. **Agentic layer**: n8n workflows + future NeMo Agent Toolkit for autonomous actions
 5. **Observability layer**: W&B for experiment tracking, n8n for operational monitoring
 

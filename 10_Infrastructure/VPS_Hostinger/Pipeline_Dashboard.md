@@ -26,4 +26,4 @@
 - [ ] Configurer les alertes Slack si un ingestor échoue.
 
 ---
-*Dernière mise à jour : 2026-03-11*
+*Dernière mise à jour : 2026-04-21 — ⚠️ docker ps confirmé: Ollama OFF, Neo4j INACTIVE, Palanthai API v2.0.0 sur port 8500*

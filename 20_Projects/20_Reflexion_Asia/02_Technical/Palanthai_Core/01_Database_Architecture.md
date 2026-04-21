@@ -222,54 +222,34 @@ CREATE POLICY "Service write" ON listing FOR ALL USING (auth.role() = 'service_r
 
 ## 🧠 Qdrant — Vector Search (GARUDA)
 
-### Collection: `projects`
-- **Model**: `all-MiniLM-L6-v2` (384 dimensions)
+> ⚠️ **Updated 2026-04-21**: Neo4j is INACTIVE. Ollama is NOT RUNNING.
+
+### Collections (réelles — 2026-04-21)
+
+| Collection | Points | Vector Size | Distance |
+|-----------|--------|-------------|----------|
+| `units` | **45,039** | 768 | Cosine |
+| `units_v3` | 200 | — (payload only) | — |
+| `palanthai_knowledge` | 612 | 768 | Cosine |
+| `palanthai_memory` | 1 | 768 | Cosine |
+| `mem0migrations` | 1 | 1536 | Cosine |
+| `projects_v3` | 100 | — (payload only) | — |
+
+### Collection: `units` (principale — 45k+ points)
+- **Model**: Unknown (likely BGE-large ou E5 — 768 dims)
 - **Distance**: Cosine
-- **Text for embedding**: `{name} {address} {description} {facilities_joined}`
 
-```json
-{
-  "vectors": { "size": 384, "distance": "Cosine" },
-  "payload_schema": {
-    "name": "keyword",
-    "region": "keyword",
-    "property_type": "keyword",
-    "developer": "keyword",
-    "latitude": "float",
-    "longitude": "float",
-    "sale_price_min": "float",
-    "sale_price_max": "float",
-    "completion_year": "integer",
-    "construction_status": "keyword",
-    "facilities": "keyword[]",
-    "data_quality_score": "float"
-  }
-}
-```
-
-### Collection: `faq_knowledge`
-- **Model**: `all-MiniLM-L6-v2` (384 dimensions)
-- **Distance**: Cosine
-- **Chunking**: 500 tokens with 50 token overlap
-- **Text for embedding**: article content chunks
-
-```json
-{
-  "payload_schema": {
-    "title": "keyword",
-    "category": "keyword",
-    "url": "keyword",
-    "chunk_index": "integer",
-    "word_count": "integer"
-  }
-}
-```
+### Collection: `palanthai_knowledge` (612 points)
+- **Model**: 768 dims, Cosine
+- **Contenu**: Connaissance Reflexion / brand content
 
 ---
 
 ## 🐉 Neo4j — Knowledge Graph (NAGA)
 
-### Node Types
+> ⚠️ **INACTIVE** — Neo4j service is installed but not running. Le Palanthai API a des endpoints `/api/v1/sync/neo4j/*` mais Neo4j est inactif. Aucune synchronisation graph n'a lieu actuellement.
+
+### Planned Node Types (si Neo4j réactivé)
 ```cypher
 (:Project {name, url, latitude, longitude, region, property_type,
            sale_price_min, completion_year, quality_score})
@@ -280,7 +260,7 @@ CREATE POLICY "Service write" ON listing FOR ALL USING (auth.role() = 'service_r
 (:MarketSector {name})    -- PROP, PROPCON
 ```
 
-### Relationships
+### Planned Relationships
 ```cypher
 (:Project)-[:DEVELOPED_BY]->(:Developer)
 (:Project)-[:LOCATED_IN]->(:Location)
@@ -291,31 +271,28 @@ CREATE POLICY "Service write" ON listing FOR ALL USING (auth.role() = 'service_r
 (:Developer)-[:ALSO_DEVELOPS]->(:Developer)  -- co-development relations
 ```
 
-### Constraints
-```cypher
-CREATE CONSTRAINT project_url IF NOT EXISTS FOR (p:Project) REQUIRE p.url IS UNIQUE;
-CREATE CONSTRAINT developer_name IF NOT EXISTS FOR (d:Developer) REQUIRE d.name IS UNIQUE;
-CREATE CONSTRAINT location_name IF NOT EXISTS FOR (l:Location) REQUIRE l.name IS UNIQUE;
-CREATE CONSTRAINT facility_name IF NOT EXISTS FOR (f:Facility) REQUIRE f.name IS UNIQUE;
-```
-
 ---
 
-## Data Flow Diagram
+## Data Flow Diagram (2026-04-21)
 
 ```
-SIAM Extractors                  CHANG Storage                    GARUDA/NAGA
-───────────────                  ─────────────                    ──────────
+SIAM Extractors                     CHANG Storage              GARUDA
+────────────────                     ─────────────              ───────
 
-phase1_project_extractor.py ──┬──▶ Supabase: project          ──▶ Qdrant: projects
-                              │                                  ──▶ Neo4j: Project nodes
-                              │
-phase1_developer_extractor.py ──▶ Supabase: developer          ──▶ Neo4j: Developer nodes
-                              │
-phase1_faq_extractor.py ──────▶ Supabase: faq_article          ──▶ Qdrant: faq_knowledge
-                              │
-phase1_financial_extractor.py ─▶ Supabase: market_data         ──▶ Neo4j: MarketSector
+phase1_project_directory/
+  sync_service.py (FastAPI)
+    └── source_crawler.py ─────────▶ Supabase: projects ──────▶ Qdrant: units
+                                   (needs_embedding=TRUE)      (BGE-M3 via Colab)
+                                   ⚠️ Neo4j sync INACTIVE    (768-dim vectors)
+phase2-units/
+  sequencer_v2.py ────────────────▶ Supabase: units
+  bulk_embed_units.py ──────────────────────────────▶ Qdrant: units
+phase3-embedding&graph/
+  massive_embedding_v3.ipynb ──────▶ Kaggle → Colab ────────▶ Qdrant: units_v3
+  (Colab GPU, BGE-M3)
 ```
+
+**Note**: Neo4j sync endpoints (`/api/v1/sync/neo4j/projects`) existent dans Palanthai API v2.0.0 mais Neo4j est inactif — aucune synchronisation graph.
 
 ---
 
@@ -340,8 +317,9 @@ phase1_financial_extractor.py ─▶ Supabase: market_data         ──▶ Neo
 ## Scalability Considerations
 
 1. **Horizontal scaling**: Supabase handles read replicas natively
-2. **Vector search**: Qdrant supports sharding for >1M vectors
-3. **Graph queries**: Neo4j Aura scales to enterprise
-4. **Caching**: Redis/Upstash for API response caching
-5. **CDN**: Image URLs already on FazWaz CDN, no self-hosting needed
-6. **Batch processing**: n8n workflows on VPS for scheduled crawls
+2. **Vector search**: Qdrant (45k units) supports sharding for >1M vectors
+3. **Graph queries**: ⚠️ Neo4j INACTIVE — réactivation nécessaire pour NAGA
+4. **Caching**: Valkey (Redis-compatible) running on port 6379
+5. **CDN**: Image URLs déjà sur CDN FazWaz, pas d'auto-hébergement nécessaire
+6. **Batch processing**: n8n workflows sur VPS + Palanthai API (`palanthai-sync.service`)
+7. **LLM local**: ⚠️ Ollama Docker container STOPPED — à redémarrer si utilisé

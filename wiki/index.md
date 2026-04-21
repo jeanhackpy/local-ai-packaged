@@ -68,7 +68,7 @@ Source summaries: `sources/[slug].md`
 ## Stats
 
 - **raw/** : 65 sources
-- **sources/** : 55 source summaries ingested
+- **sources/** : 57 source summaries (all 65 raw files covered — some raw files are duplicates with different filenames)
 - **concepts/** : 14
 - **entities/** : 2
 - **synthesis/** : 2

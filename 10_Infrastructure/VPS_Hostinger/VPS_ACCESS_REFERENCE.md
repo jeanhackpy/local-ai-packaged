@@ -51,26 +51,30 @@ ssh phil@srv857744.hstgr.cloud
 ## 🐳 Services Docker Actifs
 
 Répertoire : `/home/phil/local-ai-packaged/`
-Stack base : coleam00/local-ai-packaged
 
-| Container | Image | Ports | Rôle |
-|---|---|---|---|
-| n8n | n8nio/n8n:latest | 5678 → https://n8n.recall-agency.com | Automation |
-| n8n-worker | n8nio/n8n:latest | 5678 (interne) | Worker queue |
-| caddy | caddy:2-alpine | 80, 443 | Reverse proxy / TLS |
-| qdrant | qdrant/qdrant | 6333-6334 | Vector DB |
-| neo4j | neo4j:latest | 7474, 7687 | Graph DB |
-| ollama | ollama/ollama:latest | 11434 | LLM local |
-| minio | minio/minio | 9000-9001 | Object storage |
-| redis | valkey/valkey | 6379 | Cache / Queue |
-| searxng | searxng/searxng | 8081 | Moteur recherche |
-| supabase-kong | kong:2.8.1 | 8000, 8443 | API Gateway Supabase |
-| supabase-db | supabase/postgres | 5432 | Base de données |
-| supabase-auth | supabase/gotrue | — | Auth |
-| supabase-rest | postgrest | 3000 | REST API |
-| supabase-studio | supabase/studio | 3000 | Dashboard Supabase |
-| supabase-storage | supabase/storage-api | 5000 | Storage |
-| supabase-realtime | supabase/realtime | — | Realtime |
+| Container | Image | Ports | Rôle | Status |
+|---|---|---|---|---|
+| qdrant | qdrant/qdrant | 6333-6334 | Vector DB | ✅ Running |
+| caddy | caddy:2-alpine | 80, 443 | Reverse proxy / TLS | ✅ Running |
+| n8n | ad20607cdd24 | 5678 → https://n8n.recall-agency.com | Automation | ✅ Running |
+| minio | minio/minio | 9000-9001 | Object storage | ✅ Running (healthy) |
+| redis | valkey/valkey:8-alpine | 6379 | Cache / Queue | ✅ Running (healthy) |
+| searxng | searxng/searxng:latest | 8081 | Moteur recherche | ✅ Running |
+| supabase-kong | kong:2.8.1 | 8000, 8443 | API Gateway | ✅ Running |
+| supabase-db | supabase/postgres:15.8.1.085 | 5432 | Base de données | ✅ Running (healthy) |
+| supabase-auth | supabase/gotrue:v2.184.0 | — | Auth | ✅ Running (healthy) |
+| supabase-rest | postgrest/postgrest:v14.1 | 3000 | REST API | ✅ Running |
+| supabase-studio | supabase/studio:2025.12.17 | 3000 | Dashboard | ✅ Running (healthy) |
+| supabase-storage | supabase/storage-api:v1.33.0 | 5000 | Storage | ✅ Running (healthy) |
+| supabase-pooler | supabase/supavisor:2.7.4 | 5432 | Pooler | ✅ Running (healthy) |
+| supabase-imgproxy | darthsim/imgproxy:v3.8.0 | — | Image proxy | ✅ Running (healthy) |
+| supabase-edge-functions | supabase/edge-runtime:v1.69.28 | — | Edge Functions | ✅ Running |
+| realtime | supabase/realtime:v2.68.0 | — | Realtime | ✅ Running (healthy) |
+| **ollama** | ollama/ollama:latest | 11434 | LLM local | ⚠️ **Exited (0) — 17h ago** |
+| **open-webui** | ghcr.io/open-webui/open-webui:main | — | WebUI Ollama | ⚠️ **Exited (137) — 17h ago** |
+| **neo4j** | neo4j:latest | 7474, 7687 | Graph DB | ❌ **INACTIVE — not running** |
+
+> **Note**: Redis utilise **Valkey** (fork Redis open-source, compatible API). Neo4j est installé mais inactif.
 
 ---
 
@@ -81,11 +85,31 @@ N8N_URL=http://n8n:5678
 N8N_WEBHOOK_URL=https://n8n.recall-agency.com
 SUPABASE_URL=http://kong:8000
 QDRANT_URL=http://qdrant:6333
-NEO4J_URL=bolt://neo4j:7687
-OLLAMA_HOST=http://ollama:11434
-CRAWL4AI_URL=http://crawl4ai:11235
-REDIS_HOST=redis:6379
+OLLAMA_HOST=http://ollama:11434   # ⚠️ Ollama container stopped
+REDIS_HOST=redis:6379             # Valkey (Redis-compatible)
+NEO4J_URL=bolt://neo4j:7687      # ⚠️ Neo4j inactive
 ```
+
+## 🚀 Services Non-Docker
+
+| Service | Type | Port | Status |
+|---|---|---|---|
+| **Palanthai API** | systemd (`palanthai-sync.service`) | 8500 | ✅ Running (uvicorn) |
+| **Qdrant** | Docker | 6333 | ✅ Running |
+| **n8n** | Docker | 5678 | ✅ Running |
+| **PostgreSQL** | Docker (supabase-db) | 5432 | ✅ Running |
+
+**Palanthai API** (`sync_service:app`):
+- Version: 2.0.0
+- Service: `palanthai-sync.service` (systemd)
+- Port: 8500
+- Endpoints: `/api/v1/source/projects`, `/api/v1/sync`, `/api/v1/sync/neo4j/*`
+- Logs: `/home/phil/palanthai/logs/api.log`
+
+**VPS State (2026-04-21)**:
+- Uptime: 21h+
+- Disk: 80G/96G (83%)
+- Load: 0.22
 
 ---
 
@@ -150,4 +174,4 @@ ssh phil@31.97.67.145 'nano /home/phil/local-ai-packaged/.env'
 
 ---
 
-*Dernière mise à jour : 2026-03-30 | Par : Claude (session Cowork)*
+*Dernière mise à jour : 2026-04-21 | Par : Claude (audit VPS — Docker states, services реальное)*
