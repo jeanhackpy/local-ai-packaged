@@ -1,7 +1,6 @@
 # Palanthai — Local AI Stack
 
 Self-hosted AI infrastructure for Thai real estate intelligence.
-Forked from [coleam00/local-ai-packaged](https://github.com/coleam00/local-ai-packaged).
 
 **Last updated:** 2026-03-26
 
