@@ -6,6 +6,13 @@ kanban-plugin: basic
 
 ## Backlog
 
+- [ ] #agent-claude #priority-critical #type-security [SECURITY] Rotate all exposed credentials (VPS PG, Neo4j, Supabase anon key, 15+ API keys in .env)
+- [ ] #agent-claude #priority-critical #type-security [SECURITY] Fix command injection in sync_service.py and start_services.py (subprocess.run shell=True)
+- [ ] #agent-claude #priority-high #type-security [SECURITY] Move all hardcoded credentials to .env files
+- [ ] #agent-claude #priority-high #type-security [SECURITY] Add .env files to .gitignore / .dockerignore
+- [ ] #agent-claude #priority-high #type-security [SECURITY] Implement RLS policies on Supabase (if not already done per 2026-04-03 audit)
+- [ ] #agent-claude #priority-medium #type-security [SECURITY] Add retry logic + exponential backoff to wf_extract scripts
+- [ ] #agent-claude #priority-medium #type-security [SECURITY] Sanitize all scraped HTML content before storing
 - [ ] #agent-claude #priority-medium #type-monitoring Ajuster seuils monitoring selon comportement réel après 1 semaine
 - [ ] #agent-claude #priority-low #type-docs Ajouter health checks applicatifs (HTTP endpoints)
 - [ ] #agent-claude #priority-low #type-monitoring Intégration Prometheus + Grafana

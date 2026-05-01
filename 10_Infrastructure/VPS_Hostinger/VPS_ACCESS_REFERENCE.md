@@ -1,28 +1,23 @@
 ---
 type: infrastructure_reference
 tags: [vps, ssh, n8n, docker, infrastructure, supabase, security, rls]
-updated: 2026-04-03
+updated: 2026-05-01
 status: active
 ---
 
-# 🖥️ VPS Hostinger — Référence Accès & Services
+# 🖥️ VPS Hostinger — Accès & Services
 
-> **Note Agent IA** : Lire ce fichier en début de session pour avoir accès au VPS et connaître l'état des services. Connexion SSH via `osascript` shell depuis le Mac.
+> **Note Agent IA** : Lire ce fichier en début de session pour avoir accès au VPS et connaître l'état des services. Pour la structure complète et la sécurité, voir [[VPS_INFRASTRUCTURE_REFERENCE]].
 
-> **🔐 SECURITY UPDATE (2026-04-03)**: Row-Level Security now ENABLED on core Palanthai tables. See [[SUPABASE_RLS_AUDIT_2026-04-03]] for complete audit report.
+> **🔐 SECURITY ALERT (2026-05-01)**: 6 CRITICAL findings — hardcoded credentials in multiple scripts. See [[VPS_Security_Audit_2026-05-01]] and [[VPS_INFRASTRUCTURE_REFERENCE]] for full details. **Rotate all exposed credentials immediately.**
 
 ---
 
 ## 🔑 Accès SSH
 
 ```bash
-# Connexion directe (clé configurée dans ~/.ssh/config)
 ssh phil@31.97.67.145
-
-# Commande complète explicite
 ssh -i ~/.ssh/id_ed25519 phil@31.97.67.145
-
-# Via hostname
 ssh phil@srv857744.hstgr.cloud
 ```
 
@@ -44,7 +39,8 @@ ssh phil@srv857744.hstgr.cloud
 |---|---|
 | **n8n** | https://n8n.recall-agency.com |
 | Paperclip | https://paperclip.recall-agency.com |
-| *(Supabase désactivé)* | supabase.recall-agency.com |
+| Palanthai API | http://31.97.67.145:8500 |
+| Qdrant (ext) | http://31.97.67.145:6333 |
 
 ---
 
@@ -54,47 +50,47 @@ Répertoire : `/home/phil/local-ai-packaged/`
 
 | Container | Image | Ports | Rôle | Status |
 |---|---|---|---|---|
-| qdrant | qdrant/qdrant | 6333-6334 | Vector DB | ✅ Running |
 | caddy | caddy:2-alpine | 80, 443 | Reverse proxy / TLS | ✅ Running |
+| qdrant | qdrant/qdrant | 6333-6334 | Vector DB | ✅ Running |
 | n8n | ad20607cdd24 | 5678 → https://n8n.recall-agency.com | Automation | ✅ Running |
-| minio | minio/minio | 9000-9001 | Object storage | ✅ Running (healthy) |
-| redis | valkey/valkey:8-alpine | 6379 | Cache / Queue | ✅ Running (healthy) |
+| minio | minio/minio | 9000-9001 | Object storage | ✅ Running |
+| redis | valkey/valkey:8-alpine | 6379 | Cache / Queue | ✅ Running |
 | searxng | searxng/searxng:latest | 8081 | Moteur recherche | ✅ Running |
 | supabase-kong | kong:2.8.1 | 8000, 8443 | API Gateway | ✅ Running |
-| supabase-db | supabase/postgres:15.8.1.085 | 5432 | Base de données | ✅ Running (healthy) |
-| supabase-auth | supabase/gotrue:v2.184.0 | — | Auth | ✅ Running (healthy) |
+| supabase-db | supabase/postgres:15.8.1.085 | 5432 | Base de données | ✅ Running |
+| supabase-auth | supabase/gotrue:v2.184.0 | — | Auth | ✅ Running |
 | supabase-rest | postgrest/postgrest:v14.1 | 3000 | REST API | ✅ Running |
-| supabase-studio | supabase/studio:2025.12.17 | 3000 | Dashboard | ✅ Running (healthy) |
-| supabase-storage | supabase/storage-api:v1.33.0 | 5000 | Storage | ✅ Running (healthy) |
-| supabase-pooler | supabase/supavisor:2.7.4 | 5432 | Pooler | ✅ Running (healthy) |
-| supabase-imgproxy | darthsim/imgproxy:v3.8.0 | — | Image proxy | ✅ Running (healthy) |
+| supabase-studio | supabase/studio:2025.12.17 | 3000 | Dashboard | ✅ Running |
+| supabase-storage | supabase/storage-api:v1.33.0 | 5000 | Storage | ✅ Running |
+| supabase-pooler | supabase/supavisor:2.7.4 | 5432 | Pooler | ✅ Running |
+| supabase-imgproxy | darthsim/imgproxy:v3.8.0 | — | Image proxy | ✅ Running |
 | supabase-edge-functions | supabase/edge-runtime:v1.69.28 | — | Edge Functions | ✅ Running |
-| realtime | supabase/realtime:v2.68.0 | — | Realtime | ✅ Running (healthy) |
-| **ollama** | ollama/ollama:latest | 11434 | LLM local | ⚠️ **Exited (0) — 17h ago** |
-| **open-webui** | ghcr.io/open-webui/open-webui:main | — | WebUI Ollama | ⚠️ **Exited (137) — 17h ago** |
-| **neo4j** | neo4j:latest | 7474, 7687 | Graph DB | ❌ **INACTIVE — not running** |
-
-> **Note**: Redis utilise **Valkey** (fork Redis open-source, compatible API). Neo4j est installé mais inactif.
+| realtime | supabase/realtime:v2.68.0 | — | Realtime | ✅ Running |
+| **ollama** | ollama/ollama:latest | 11434 | LLM local | ⚠️ **Exited** |
+| **open-webui** | ghcr.io/open-webui/open-webui:main | — | WebUI Ollama | ⚠️ **Exited** |
+| **neo4j** | neo4j:latest | 7474, 7687 | Graph DB | ❌ **INACTIVE** |
 
 ---
 
-## 🔗 URLs Internes Docker (à utiliser dans les workflows n8n)
+## 🔗 URLs Internes Docker (n8n workflows)
 
 ```env
 N8N_URL=http://n8n:5678
 N8N_WEBHOOK_URL=https://n8n.recall-agency.com
 SUPABASE_URL=http://kong:8000
 QDRANT_URL=http://qdrant:6333
-OLLAMA_HOST=http://ollama:11434   # ⚠️ Ollama container stopped
+OLLAMA_HOST=http://ollama:11434   # ⚠️ Ollama stopped
 REDIS_HOST=redis:6379             # Valkey (Redis-compatible)
 NEO4J_URL=bolt://neo4j:7687      # ⚠️ Neo4j inactive
 ```
+
+---
 
 ## 🚀 Services Non-Docker
 
 | Service | Type | Port | Status |
 |---|---|---|---|
-| **Palanthai API** | systemd (`palanthai-sync.service`) | 8500 | ✅ Running (uvicorn) |
+| **Palanthai API** | systemd (`palanthai-sync.service`) | 8500 | ✅ Running |
 | **Qdrant** | Docker | 6333 | ✅ Running |
 | **n8n** | Docker | 5678 | ✅ Running |
 | **PostgreSQL** | Docker (supabase-db) | 5432 | ✅ Running |
@@ -105,31 +101,6 @@ NEO4J_URL=bolt://neo4j:7687      # ⚠️ Neo4j inactive
 - Port: 8500
 - Endpoints: `/api/v1/source/projects`, `/api/v1/sync`, `/api/v1/sync/neo4j/*`
 - Logs: `/home/phil/palanthai/logs/api.log`
-
-**VPS State (2026-04-21)**:
-- Uptime: 21h+
-- Disk: 80G/96G (83%)
-- Load: 0.22
-
----
-
-## ⚙️ Workflows n8n Existants
-
-Répertoire : `/home/phil/local-ai-packaged/n8n/`
-
-### 🟢 Actifs / En production
-| Fichier | Fonction |
-|---|---|
-| `SEO_Article_Monitoring_Generation.json` | SEO auto : GSC + GA4 → Ollama → WordPress (reflexion.asia + recall-agency.com) |
-| `V1_Local_RAG_AI_Agent.json` | RAG local (Ollama + Qdrant) |
-| `V2_Local_Supabase_RAG_AI_Agent.json` | RAG avec Supabase |
-| `V3_Local_Agentic_RAG_AI_Agent.json` | RAG agentique |
-
-### 📦 Backup
-WF-002, WF-003, WF-004, WF-006
-
-### 🔜 À créer
-- **Social Media Workflow** — Multi-brand (REcall, REflexion, PatrimoinAsia, JP) avec Airtable comme hub
 
 ---
 
@@ -148,30 +119,29 @@ ssh phil@31.97.67.145 'cd /home/phil/local-ai-packaged && docker compose restart
 # Redémarrage stack complète
 ssh phil@31.97.67.145 'cd /home/phil/local-ai-packaged && docker compose up -d'
 
-# Editer .env
-ssh phil@31.97.67.145 'nano /home/phil/local-ai-packaged/.env'
+# Palanthai API logs
+ssh phil@31.97.67.145 'tail -f /home/phil/palanthai/logs/api.log'
+
+# Fullrun progress
+ssh phil@31.97.67.145 'cat /home/phil/palanthai/phase1-project-directory/fullrun/data/progress.json'
 ```
 
 ---
 
-## 📁 Structure Fichiers VPS
+## 🔐 Security Summary
 
-```
-/home/phil/local-ai-packaged/
-├── docker-compose.yml
-├── docker-compose.override.public.yml
-├── docker-compose.override.private.yml
-├── .env                    ← Variables d'env (N8N_HOSTNAME, SECRETS...)
-├── Caddyfile               ← Config reverse proxy
-├── n8n/
-│   ├── workflows/          ← Workflows actifs
-│   ├── backup/             ← Backups WF-002..006
-│   └── SEO_Workflow_Setup.md
-├── supabase/
-├── neo4j/
-└── scripts/
-```
+> Full audit: [[VPS_Security_Audit_2026-05-01]] | Full infra reference: [[VPS_INFRASTRUCTURE_REFERENCE]]
+
+**CRITICAL credentials exposed and needing rotation:**
+- VPS PostgreSQL: `xpKe3z1z8q5d1QKjx1ZZzRRgFtQlUe3K` (in `migrate_cloud_to_vps.py`, `setup_vps_neo4j.py`)
+- Neo4j: `9PXofEGxRCw2O119HC3RnRUK` (in `setup_vps_neo4j.py`)
+- Supabase anon key: project `owmucbudvleotyilotoq` (in `migrate_cloud_to_vps.py`)
+- 15+ secrets in `local-ai-packaged/.env`
+
+**Command injection vulnerabilities:**
+- `palanthai/phase1-project-directory/sync_service.py` — `subprocess.run(shell=True)`
+- `local-ai-packaged/start_services.py` — `subprocess.run(shell=True)`
 
 ---
 
-*Dernière mise à jour : 2026-04-21 | Par : Claude (audit VPS — Docker states, services реальное)*
+*Dernière mise à jour : 2026-05-01 | Supercedes old access ref — see [[VPS_INFRASTRUCTURE_REFERENCE]] for complete VPS mapping*
