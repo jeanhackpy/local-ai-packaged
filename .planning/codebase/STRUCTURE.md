@@ -1,131 +1,176 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-21
+**Analysis Date:** 2026-05-01
 
 ## Directory Layout
 
 ```
-SystemMac/WIKI/
-├── WIKI_SCHEMA.md       # Schema for LLM agent behavior
-├── overview.md          # Thesis and research axes
-├── index.md            # Catalogue of all wiki content
-├── log.md              # Append-only chronological history
-├── raw/                # Immutable source documents (65 files)
-├── concepts/           # 14 concept pages (kebab-case .md files)
-├── entities/           # 2 entity pages (nvidia.md, fazwaz.md)
-├── sources/            # 59 source summaries (slug-based naming)
-└── synthesis/          # 2 cross-domain analyses
+SystemMac/
+├── 00_COMMAND_CENTER.md      # Strategic entry point
+├── CLAUDE.md                 # Project instructions
+├── README.md
+├── 00_System/                # macOS maintenance
+├── 10_Infrastructure/        # VPS Hostinger, Shared Hosting
+├── 20_Projects/              # Active projects with dates
+├── 30_Knowledge/            # Permanent technical knowledge base
+├── 40_Context_Hub/           # Agent instructions and sessions
+├── Clippings/                # Curated research
+├── WIKI/                     # Obsidian wiki (concepts, entities, synthesis)
+├── Excalidraw/               # Diagrams
+├── entities/                 # Entity files
+└── .env.local               # API keys (NEVER commit)
 ```
 
 ## Directory Purposes
 
-**Root (WIKI/):**
-- Purpose: Wiki entry point and schema
-- Contains: Schema, overview, index, log (all .md)
-- Key files: `index.md` (catalogue), `WIKI_SCHEMA.md` (LLM guide)
+**00_System/ (macOS Maintenance):**
+- Purpose: Local machine configuration, audits, policies
+- Contains:
+  - `Architecture/` — System mapping files
+  - `Audits/` — Technical audits
+  - `Configs/` — MCP skills inventory, git/ssh/zsh configs
+  - `Links/` — External service links
+  - `Maintenance/` — macOS maintenance scripts
+  - `Policies/` — Operating policies
+  - `Scripts/` — Utility scripts
+  - `Secrets/` — Credential references (not values)
+  - `spatial_building_match.js` — Spatial matching tool
 
-**raw/:**
-- Purpose: Immutable source documents
-- Contains: Papers, articles, blueprints, documentation
-- Key files: 65 raw markdown files (nvidia blueprints, research papers, market docs)
+**10_Infrastructure/ (VPS & Hosting):**
+- Purpose: Technical infrastructure documentation
+- Contains:
+  - `VPS_Hostinger/` — 31.97.67.145 full documentation (31 files)
+  - `Shared_Hosting/` — WordPress hosting (92.113.28.34)
+  - `Data_Architecture.md` — Complete data pipeline schema
+  - `VPS_Security_Audit_2026-05-01.md` — Security findings
 
-**concepts/:**
-- Purpose: Research topic pages
-- Contains: 14 concept pages (agentic-ai, rag, data-flywheel, data-pipeline, etc.)
-- Key files: `index.md` (concept listing), individual concept files
+**20_Projects/ (Active Work):**
+- Purpose: Projects with end dates (PARA 2.0)
+- Contains:
+  - `10_Recall_Agency/` — Identity, Technical, Knowledge, Tasks
+  - `20_Reflexion_Asia/` — Identity, Technical, Knowledge, Tasks
+  - `30_Patrimonasia/` — Identity, Technical, Knowledge, Tasks (NOT BUILT)
+  - `Active/` — Active sub-projects (websites redesign, recall-agency-v3-redesign)
+  - `Archive/` — Completed projects
+  - `Reflexion-Asia/` — Secondary reference
 
-**entities/:**
-- Purpose: Organization/platform pages
-- Contains: 2 entities (nvidia, fazwaz)
-- Key files: `nvidia.md`, `fazwaz.md`
+**30_Knowledge/ (Permanent KB):**
+- Purpose: Technical documentation, tutorials, tooling docs
+- Contains:
+  - `AI_Orchestration/` — IDE capabilities, Gemini CLI, Claude Code, Ollama, Antigravity
+  - `Agent_Factory/` — Skills registry, superpowers skills
+  - `API_Specs/` — API specifications
+  - `Business/` — Business knowledge
+  - `Development/` — Development docs (Script.py, crawl4ai, github inventory)
+  - `Tooling/` — Tool documentation
+  - `Vector_DB/` — Vector database docs
+  - `Visuals/` — Visual assets/documents
 
-**sources/:**
-- Purpose: Structured summaries of raw sources
-- Contains: 59 source summary documents
-- Key files: slug-based naming (e.g., `rag-reranker-setup.md`, `nvidia-omniverse-dsx-blueprint.md`)
+**40_Context_Hub/ (Agent Window):**
+- Purpose: AI agent context and instructions
+- Contains:
+  - `AGENT_INSTRUCTIONS.md` — Global agent instructions
+  - `CURRENT_CONTEXT.md` — Active task state
+  - `BIRD_EYE_VIEW.md` — System overview
+  - `AGENT_CROSS_COMMUNICATION.md` — Agent coordination
+  - `RE/` — Requirements/epics
+  - `SESSION_LOGS/` — Agent session logs
 
-**synthesis/:**
-- Purpose: Cross-domain multi-source analyses
-- Contains: 2 synthesis documents
-- Key files: `ai-factory-for-real-estate.md`, `thailand-property-intelligence.md`
+**WIKI/ (Obsidian Wiki):**
+- Purpose: Structured knowledge organization
+- Contains:
+  - `concepts/` — Concept definitions
+  - `entities/` — Entity files
+  - `raw/` — Raw source materials
+  - `sources/` — Source references
+  - `synthesis/` — Synthesized knowledge
+  - `index.md`, `log.md`, `overview.md`
+
+**Clippings/ (Curated Research):**
+- Purpose: Collected research materials
 
 ## Key File Locations
 
 **Entry Points:**
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/index.md` — Primary catalogue, start of query workflow
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/WIKI_SCHEMA.md` — LLM agent schema and workflows
+- `00_COMMAND_CENTER.md` — Strategic command center
+- `40_Context_Hub/AGENT_INSTRUCTIONS.md` — Agent identity and rules
+- `40_Context_Hub/CURRENT_CONTEXT.md` — Current task context
 
 **Configuration:**
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/WIKI_SCHEMA.md` — Schema defining 3-layer architecture and conventions
+- `.env.local` — API keys and credentials (for reference only, not committed)
+- `00_System/Configs/MCP_SKILLS_INVENTORY.md` — MCP server and skill inventory
+- `.gitignore` — Git ignore rules
 
-**Core Logic:**
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/overview.md` — Thesis and 5 research axes
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/log.md` — Append-only action history
+**Infrastructure:**
+- `10_Infrastructure/VPS_Hostinger/VPS_INFRASTRUCTURE_REFERENCE.md` — VPS complete reference
+- `10_Infrastructure/VPS_Hostinger/VPS_ARCHITECTURE_DIAGRAM.md` — Architecture diagrams
+- `10_Infrastructure/Data_Architecture.md` — Data pipeline schema
 
-**Content:**
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/concepts/*.md` — 14 concept pages
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/entities/*.md` — 2 entity pages
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/sources/*.md` — 59 source summaries
-- `/Users/phil/Documents/Vaults/SystemMac/WIKI/synthesis/*.md` — 2 synthesis analyses
+**Project Dashboards:**
+- `20_Projects/10_Recall_Agency/00_Dashboard.md`
+- `20_Projects/20_Reflexion_Asia/00_Dashboard.md`
+- `20_Projects/30_Patrimonasia/00_Dashboard.md`
+
+**Palanthai Core (on VPS):**
+- `/home/phil/palanthai/palanthai_api.py` — Main FastAPI
+- `/home/phil/palanthai/phase1-project-directory/` — Scraping pipeline
+- `/home/phil/palanthai/phase2/` — Extraction pipeline
+- `/home/phil/palanthai/phase3-embedding&graph/` — Content pipeline
 
 ## Naming Conventions
 
 **Files:**
-- All files: kebab-case (e.g., `real-estate-valuation.md`, `ai-factory-for-real-estate.md`)
-- Source summaries: slug from source filename (e.g., `rag-reranker-setup.md` from `rag-reranker-setup.md` in raw)
+- Markdown files: `UPPER_SNAKE_CASE.md` or `descriptive-name.md`
+- Project folders: `NN_Name/` (numbered prefix for ordering)
+- Documentation: `*.md` with frontmatter tags
 
 **Directories:**
-- All directories: lowercase, hyphenated (concepts, entities, sources, synthesis, raw)
-
-**Wiki Links:**
-- Obsidian `[[wiki/file-name]]` format (e.g., `[[concepts/rag]]`, `[[entities/nvidia]]`)
-
-**Frontmatter (required on all wiki pages):**
-```yaml
----
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
-tags: [concept, AI, Thailand]
-sources: [raw/filename.md]
----
-```
+- PARA 2.0: `00_System/`, `10_Infrastructure/`, `20_Projects/`, `30_Knowledge/`, `40_Context_Hub/`
+- Project subdirs: `01_Identity/`, `02_Technical/`, `03_Knowledge/`, `04_Tasks/`
 
 ## Where to Add New Code
 
-**Note:** This is a markdown knowledge wiki, not a code project. There is no implementation code.
+**New Project:**
+- Primary: `20_Projects/XX_ProjectName/`
+- Structure: `01_Identity/`, `02_Technical/`, `03_Knowledge/`, `04_Tasks/`
 
-**New Source Document:**
-- Primary: `raw/` directory
-- Summary: `sources/[slug].md`
+**New Infrastructure Doc:**
+- Primary: `10_Infrastructure/VPS_Hostinger/` or `Shared_Hosting/`
 
-**New Concept Page:**
-- Implementation: `concepts/[concept-name].md`
-- Must include frontmatter and connections to existing concepts/entities
+**New Knowledge:**
+- Primary: `30_Knowledge/` appropriate subdirectory
+- Consider WIKI/concepts/ for structured concepts
 
-**New Entity Page:**
-- Implementation: `entities/[entity-name].md`
+**New Agent Instruction:**
+- Primary: `40_Context_Hub/`
+- Session logs: `40_Context_Hub/SESSION_LOGS/`
 
-**New Synthesis:**
-- Implementation: `synthesis/[synthesis-name].md`
-- Triggered when query response is valuable enough to persist
+**VPS Scripts (execute via SSH):**
+- Palanthai scripts: `/home/phil/palanthai/phase1-project-directory/`
+- Docker/infra: `/home/phil/local-ai-packaged/`
 
 ## Special Directories
 
-**raw/:**
-- Purpose: Immutable source documents
-- Generated: No (user-managed)
-- Committed: Yes (version controlled in git)
+**.planning/ (Generated):**
+- Purpose: GSD planning outputs
+- Generated: Yes
+- Committed: Yes (architectural documentation)
 
-**sources/:**
-- Purpose: LLM-generated summaries of raw sources
-- Generated: Yes (by LLM during ingest)
-- Committed: Yes
+**.claude/ (Claude Code):**
+- Purpose: Claude Code project settings
+- Generated: Yes
+- Committed: No (.gitignore)
 
-**synthesis/:**
-- Purpose: Cross-domain analyses
-- Generated: Yes (by LLM during valuable query responses)
-- Committed: Yes
+**.smart-env/ (Smart Environment):**
+- Purpose: Environment configuration
+- Generated: Yes
+- Committed: No
+
+**.obsidian/ (Obsidian):**
+- Purpose: Obsidian vault configuration
+- Generated: Yes
+- Committed: No
 
 ---
 
-*Structure analysis: 2026-04-21*
+*Structure analysis: 2026-05-01*

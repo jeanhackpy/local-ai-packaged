@@ -1,123 +1,152 @@
 # Architecture
 
-**Analysis Date:** 2026-04-21
+**Analysis Date:** 2026-05-01
 
 ## Pattern Overview
 
-**Overall:** LLM-maintained knowledge wiki with 3-layer architecture (raw sources → processed wiki → cross-domain synthesis)
+**Overall:** Multi-project orchestration hub with distributed microservices
 
 **Key Characteristics:**
-- Immutable source layer (raw/) read-only by LLM
-- Structured wiki layer (concepts/, entities/, sources/) maintained by LLM agents
-- Cross-domain synthesis layer (synthesis/) for multi-source analyses
-- Schema-driven content management (WIKI_SCHEMA.md as guide)
+- Obsidian vault as central nervous system (not traditional codebase)
+- PARA 2.0 organizational structure across three projects
+- Hybrid infrastructure: local macOS + VPS Hostinger + Shared Hosting
+- AI agent orchestration via multiple CLI tools (Claude Code, Gemini CLI, Antigravity)
+- Data pipeline from scraping to WordPress publishing
 
 ## Layers
 
-**Raw Sources Layer:**
-- Purpose: Immutable source documents for AI/ML research on Thai real estate
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/raw/`
-- Contains: 65 source files (papers, articles, documentation, blueprints)
-- Depends on: Nothing (root layer)
-- Used by: LLM for ingestion and reference
+**Obsidian Vault (SystemMac):**
+- Purpose: Central coordination, documentation, agent instructions
+- Location: `/Users/phil/Documents/Vaults/SystemMac`
+- Contains: Project dashboards, infrastructure docs, agent instructions, session logs
+- Depends on: Nothing (it's the root context)
+- Used by: All agents and human operator
 
-**Wiki Processing Layer:**
-- Purpose: Structured knowledge extracted from raw sources
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/`
-- Contains: `concepts/`, `entities/`, `sources/`
-- Depends on: Raw sources
-- Used by: Query workflow, cross-domain synthesis
+**Infrastructure Layer (VPS Hostinger 31.97.67.145):**
+- Purpose: Docker-based microservices for data processing and automation
+- Location: `/home/phil/local-ai-packaged/` and `/home/phil/palanthai/`
+- Contains: Supabase, Qdrant, Neo4j, n8n, Ollama, Palanthai API
+- Depends on: Docker, systemd
+- Used by: Scraping pipeline, RAG queries, workflow automation
 
-**Synthesis Layer:**
-- Purpose: Cross-domain analyses connecting multiple sources
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/synthesis/`
-- Contains: 2 synthesis documents (ai-factory-for-real-estate, thailand-property-intelligence)
-- Depends on: Wiki processing layer
-- Used by: Research queries, planning
+**Data Pipeline (Palanthai):**
+- Purpose: Scrape real estate data, extract, embed, and publish
+- Location: `/home/phil/palanthai/` (phase1, phase2, phase3)
+- Contains: Python scrapers, Pydantic models, embedding scripts
+- Depends on: LivePhuket.com, FazWaz.com
+- Used by: n8n workflows, Palanthai API
+
+**Web Layer (Shared Hosting 92.113.28.34):**
+- Purpose: Production WordPress sites
+- Location: LiteSpeed + PHP on shared hosting
+- Contains: reflexion.asia, recall-agency.com, patrimonasia.com
+- Depends on: n8n workflows for content automation
+- Used by: End users
 
 ## Data Flow
 
-**Ingest Workflow:**
-1. Raw source file placed in `raw/`
-2. LLM reads source, creates `sources/[slug].md` summary
-3. LLM identifies entities → updates `entities/[entity].md`
-4. LLM identifies concepts → creates/updates `concepts/[concept].md`
-5. LLM updates `index.md` catalogue
-6. LLM appends entry to `log.md`
+**Primary Flow (Property Intelligence):**
 
-**Query Workflow:**
-1. Read `index.md` to identify relevant pages
-2. Read concerned pages
-3. Synthesize response with `[[page]]` citations
-4. If response is valuable → create new synthesis page
+```
+LivePhuket.com (Scraping)
+    ↓
+phase1/source_crawler.py → URL discovery (6 regions)
+    ↓
+phase1/wf_extract/*.py → Project extraction (12 city/type combos)
+    ↓
+phase1/fullrun/fullrun.py → Orchestrator (JSONL batches to disk)
+    ↓
+phase1/ingestor_v5.py → Multi-DB ingest (Supabase)
+    ↓
+phase2/sequencer_v2.py → Unit extraction + quality check
+    ↓
+db_ingestor_units.py → Supabase upsert
+    ↓
+phase3/content/data_cleaner.py → Brand replacement (source → "Reflexion")
+    ↓
+phase3/content/embed_to_qdrant.py → OpenRouter embeddings → Qdrant
+    ↓ (quality >= 75 gate)
+Qdrant (45,039 units, 768 dims, Cosine)
+    ↓
+Palanthai API (FastAPI, port 8500)
+    ↓
+n8n workflows (SEO automation, content generation)
+    ↓
+WordPress (reflexion.asia, recall-agency.com)
+```
 
-**Lint Workflow (weekly):**
-- Check contradictions between pages
-- Check outdated claims vs new sources
-- Find orphan pages (no incoming links)
-- Identify concepts without dedicated pages
-- Find missing connections
+**Secondary Flows:**
+
+```
+User → Chat Agent → Palanthai API → Qdrant (RAG)
+    ↓
+HERMES Agent (Python venv, dashboard :9119)
+    ↓
+SearXNG (meta-search, port 8081)
+
+n8n.recall-agency.com → Workflows → Supabase + Qdrant
+    ↓
+WordPress sites (92.113.28.34)
+```
 
 ## Key Abstractions
 
-**Concept Page:**
-- Purpose: Represents a research topic (RAG, data flywheel, property valuation)
-- Examples: `concepts/rag.md`, `concepts/data-pipeline.md`, `concepts/agentic-ai.md`
-- Pattern: Frontmatter (created, updated, tags, sources) + structured content with connections
+**Palanthai Module Architecture (Palantir-inspired):**
 
-**Entity Page:**
-- Purpose: Represents an organization, tool, or platform
-- Examples: `entities/nvidia.md`, `entities/fazwaz.md`
-- Pattern: Company/platform overview with related concepts
+| Module | Thai Name | Purpose |
+|--------|-----------|---------|
+| SIAM | สยาม | Scraping Intelligence & Acquisition — Crawlers, extractors, ETL |
+| CHANG | ช้าง | Central Hub for Aggregation, Normalization & Governance — Supabase, Qdrant, Neo4j |
+| NAGA | นาค | Node-based Architecture for Graph & Analysis — Knowledge graph (INACTIVE) |
+| GARUDA | ครุฑ | Generative AI-Ready Unified Data Access — LLM integration, RAG, semantic search |
+| KINNAREE | กินรี | Key Insights, Notifications & Automated Reporting — Market intel, due diligence |
+| LANNA | ล้านนา | Live Analytics, Notification & Navigation App — Frontend: chat, 3D maps, dashboards |
 
-**Source Summary:**
-- Purpose: Structured summary of raw source document
-- Examples: `sources/rag-reranker-setup.md`, `sources/nvidia-omniverse-dsx-blueprint.md`
-- Pattern: 2-3 sentence summary + key points + connections
+**Project Architecture:**
 
-**Synthesis Document:**
-- Purpose: Cross-domain analysis connecting multiple sources
-- Examples: `synthesis/ai-factory-for-real-estate.md`, `synthesis/thailand-property-intelligence.md`
-- Pattern: Thesis statement + evidence table + implications + conclusion
+Three projects under PARA 2.0, each with Identity/Technical/Knowledge/Tasks structure:
+
+- **Recall Agency** (10_Recall_Agency/) — B2B tech-first, Next.js rebranding, scraping automation
+- **Reflexion Asia** (20_Reflexion_Asia/) — Palantir of real estate, RAG, 3D discovery (Palanthai core)
+- **Patrimonasia** (30_Patrimonasia/) — European partner network, wealth management (NOT BUILT YET)
 
 ## Entry Points
 
-**Wiki Index:**
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/index.md`
-- Triggers: Query workflow starts here
-- Responsibilities: Catalog all wiki content, link to concepts/entities/sources
+**SystemMac Command Center:**
+- Location: `00_COMMAND_CENTER.md`
+- Triggers: Agent startup, project switching
+- Responsibilities: Strategic axes, project dashboards, infrastructure overview
 
-**Wiki Schema:**
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/WIKI_SCHEMA.md`
-- Triggers: Ingest workflow, LLM behavior guidance
-- Responsibilities: Define file organization, naming conventions, workflow patterns
+**Agent Instructions:**
+- Location: `40_Context_Hub/AGENT_INSTRUCTIONS.md`
+- Triggers: Every new agent session
+- Responsibilities: Identity, stack, rules, vault organization
 
-**Overview:**
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/overview.md`
-- Triggers: High-level orientation
-- Responsibilities: Thesis statement, 5 research axes, last updated timestamp
-
-**Log:**
-- Location: `/Users/phil/Documents/Vaults/SystemMac/WIKI/log.md`
-- Triggers: Append-only after any wiki change
-- Responsibilities: Chronological history of all ingests, restructures, queries
+**Current Context:**
+- Location: `40_Context_Hub/CURRENT_CONTEXT.md`
+- Triggers: Task start
+- Responsibilities: Active task state, work log, Google credentials
 
 ## Error Handling
 
-**Strategy:** Append-only log with explicit action tracking
+**Strategy:** Human-in-the-loop governance
 
 **Patterns:**
-- Each ingest logs: source file, entities found, concepts identified, actions taken
-- Each restructure logs: actions taken, stats (file counts per category)
-- Log enables audit trail for contradictions detection in lint workflow
+- Quality gates: Only embed units with quality score >= 75/100
+- Agent propose, human approve: No autonomous external actions
+- Brand replacement: External source names → "Reflexion" in outputs
+- Free models only: OpenRouter calls must use `:free` suffix
 
 ## Cross-Cutting Concerns
 
-**Logging:** Chronological log.md append-only history
-**Validation:** Frontmatter required on all wiki pages (created, updated, tags, sources)
-**Linking:** Obsidian `[[wiki/file-name]]` format for cross-references
-**Naming:** kebab-case for all files (`real-estate-valuation.md`, `ai-factory-for-real-estate.md`)
+**Logging:** Session logs in `40_Context_Hub/SESSION_LOGS/`, VPS logs in `/home/phil/palanthai/logs/`
+
+**Validation:** Pydantic models for all data schemas (unit_schema.py, models_parsers_00.py)
+
+**Security:** Security audit documented in `10_Infrastructure/VPS_Hostinger/VPS_Security_Audit_2026-05-01.md` — 6 CRITICAL findings including hardcoded credentials
+
+**Authentication:** Supabase Gotrue for auth, JWT tokens, RLS policies on all tables
 
 ---
 
-*Architecture analysis: 2026-04-21*
+*Architecture analysis: 2026-05-01*
