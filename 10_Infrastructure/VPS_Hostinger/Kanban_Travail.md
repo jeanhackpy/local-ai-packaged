@@ -6,6 +6,8 @@ kanban-plugin: basic
 
 ## Backlog
 
+- [ ] #agent-claude #priority-critical #type-maintenance [BACKUP] Implement pg_dump cron for PostgreSQL (Supabase)
+- [ ] #agent-claude #priority-critical #type-maintenance [BACKUP] Implement restic backup for Qdrant + Neo4j volumes to MinIO
 - [ ] #agent-claude #priority-critical #type-security [SECURITY] Rotate all exposed credentials (VPS PG, Neo4j, Supabase anon key, 15+ API keys in .env)
 - [ ] #agent-claude #priority-critical #type-security [SECURITY] Fix command injection in sync_service.py and start_services.py (subprocess.run shell=True)
 - [ ] #agent-claude #priority-high #type-security [SECURITY] Move all hardcoded credentials to .env files
@@ -17,6 +19,9 @@ kanban-plugin: basic
 - [ ] #agent-claude #priority-low #type-docs Ajouter health checks applicatifs (HTTP endpoints)
 - [ ] #agent-claude #priority-low #type-monitoring Intégration Prometheus + Grafana
 - [ ] #agent-claude #priority-medium #type-maintenance Optimisation disque (nettoyage Docker, rotation logs)
+- [ ] #agent-claude #priority-medium #type-maintenance Clean up OpenClaw npm packages (unused — clawdock, clawhub)
+- [ ] #agent-claude #priority-medium #type-infra Decide Ollama strategy: restart local OR stay OpenRouter-only
+- [ ] #agent-claude #priority-high #type-maintenance Configure offsite S3 backup for PostgreSQL and Qdrant
 
 ## In Progress
 

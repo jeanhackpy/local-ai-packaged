@@ -12,14 +12,30 @@
 |---------|--------|-------|
 | Qdrant | ✅ Running (Docker) | `units`: 45,039 pts, **768 dims**, Cosine |
 | Supabase (Postgres) | ✅ Running (Docker) | 10 containers |
-| Neo4j | ❌ **INACTIVE** | Container not running |
-| Ollama | ⚠️ **STOPPED** | Container exited |
+| Neo4j | ✅ Running (Docker) | Container active (corrected from INACTIVE) |
+| Ollama | ⚠️ **Exited** | Docker container stopped, binary status TBC |
 | Valkey (Redis) | ✅ Running (Docker) | Cache/Queue |
-| Palanthai API | ✅ Running (systemd) | v2.0.0, port 8500 |
+| Palanthai API | ✅ Running (systemd) | v2.0.0, port **8500 HTTP** (no Caddy) |
 | n8n | ✅ Running (Docker) | https://n8n.recall-agency.com |
+| SearXNG | ✅ Running (Docker) | Meta-search, port 8081 |
+| HERMES Agent | ✅ Running (Python venv) | PID 2126464, dashboard :9119 |
+| Next.js | ✅ Running (node) | temp-app, v16.0.10, port 3000 |
+| Syncthing | ✅ Running (binary) | sendonly → Mac, 3600s rescan |
 | reflexion_kb | ⚠️ Daté | 203 entries, last updated **2026-03-20** |
 
 > 🔐 **SECURITY ALERT**: Multiple CRITICAL vulnerabilities found — see [[VPS_Security_Audit_2026-05-01]]
+
+---
+
+## 🌐 WebHosting — Shared Hosting (92.113.28.34)
+
+> **Separate server from VPS.** LiteSpeed + PHP, NOT proxied through Caddy.
+
+| Site | URL | Status | Theme | SEO |
+|---|---|---|---|---|
+| reflexion.asia | https://reflexion.asia | ✅ Production | Houzez | RankMath |
+| recall-agency.com | https://recall-agency.com | ✅ Production | Astra child | RankMath + Polylang |
+| patrimonasia.com | https://patrimonasia.com | ❌ Not built | — | — |
 
 ---
 
@@ -149,7 +165,7 @@ fullrun_unit_floor_plans
 
 ## 🕸️ Graph Schema (Neo4j)
 
-> ⚠️ **INACTIVE** — Neo4j n'est pas en cours d'exécution. Les endpoints `/api/v1/sync/neo4j/*` existent dans Palanthai API v2.0.0 mais le serveur Neo4j est inactif.
+> ✅ **ACTIVE** (2026-05-01) — Docker container running. Endpoints `/api/v1/sync/neo4j/*` operational. Les endpoints `/api/v1/sync/neo4j/*` existent dans Palanthai API v2.0.0 mais le serveur Neo4j est inactif.
 
 ### Credentials (hardcoded — SECURITY RISK)
 ```
@@ -203,8 +219,8 @@ WordPress (reflexion.asia, recall-agency.com)
 
 ## ⚠️ Points de Vigilance
 
-- **Neo4j OFF**: Aucune synchronisation graph n'a lieu. Réactiver si utilisé.
-- **Ollama OFF**: Pas de LLM local. OpenRouter API nécessaire si Ollama redémarré.
+- **Neo4j ON**: Synchronisation graph active via Palanthai API.
+- **Ollama OFF**: Pas de LLM local. OpenRouter API utilisé pour Phase 3 embeddings.
 - **KB dated (2026-03-20)**: `reflexion_kb_clean.json` pas mis à jour depuis 1 mois.
 - **SECURITY**: Multiple hardcoded credentials exposed — rotate immediately. See [[VPS_Security_Audit_2026-05-01]]
 
