@@ -43,8 +43,8 @@ gemini-scribe/    — Gemini CLI workspace
 ## Workflow
 
 Work is done via:
-- Direct file editing in this vault
-- SSH to VPS for Python script execution
+- Direct file editing in this vault ONLY
+- MCP Hostimger & SSH to VPS for Python script execution
 - n8n UI for workflow management
 
 ## Related Documentation

@@ -12,7 +12,7 @@ This wiki documents the intersection of **AI/ML applied to Thai real estate** �
 
 ### 1. Property Intelligence Stack
 
-Thai real estate is data-sparse and fragmented — FazWaz lists 60k+ units with poor structured data. The Palanthai stack (Qdrant + Supabase + Ollama) addresses this with a pipeline: crawl → extract → embed → query. **Neo4j est INACTIF** — réactivation nécessaire pour NAGA knowledge graph. **Ollama Docker est STOPPED**. Le Palanthai API v2.0.0 tourne sur port 8500 (systemd). Le data flywheel pattern (NVIDIA blueprints + MLRun + W&B) est l'architecture de référence pour améliorer le pipeline.
+Thai real estate is data-sparse and fragmented — lists 60k+ units with poor structured data. The Palanthai stack (Qdrant + Supabase + Ollama) addresses this with a pipeline: crawl → extract → embed → query. **Neo4j est INACTIF** — réactivation nécessaire pour NAGA knowledge graph. **Ollama Docker est STOPPED**. Le Palanthai API v2.0.0 tourne sur port 8500 (systemd). Le data flywheel pattern (NVIDIA blueprints + MLRun + W&B) est l'architecture de référence pour améliorer le pipeline.
 
 ### 2. Valuation Models
 
