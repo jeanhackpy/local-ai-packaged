@@ -19,7 +19,7 @@ I’ll break this into **what’s strong**, **what’s off-brand or risky**, and
 
 This proposal is **visually impressive** and technically fluent, but it currently leans more toward **“AI startup aesthetic”** than **“Recall-Agency authority brand.”**
 
-It sells *capability* well, but it under-sells **credibility, trust, and strategic restraint** — which are non-negotiable for Recall’s positioning at the intersection of **AI, cybersecurity, OSINT, and real estate capital**.
+It sells *capability* well, but it under-sells **credibility, trust, and strategic restraint** — which are non-negotiable for Recall’s positioning at the intersection of **Agentic System, AI, cybersecurity, OSINT, and real estate capital**.
 
 Think:
 
