@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, property-valuation, computer-vision, deep-learning]
-sources: []
+sources: [raw/multi-modal-house-price-prediction.md, raw/gcn-floor-plan-valuation.md, raw/self-supervised-vit-valuation.md, raw/thailand-satellite-valuation.md, raw/building-condition-patch-convnet.md, raw/probabilistic-disaggregation-property-value.md, raw/sub-city-price-index-forecasting.md]
 ---
 
 ## Property Valuation
@@ -42,6 +42,7 @@ Estimation de valeur immobilière avec AI/ML.
 - [[sources/building-condition-patch-convnet]]
 - [[sources/probabilistic-disaggregation-property-value]]
 - [[sources/sub-city-price-index-forecasting]]
+- [[sources/zero-shot-neuro-symbolic-architecture]] (GPT-4 zero-shot floor plan generation)
 
 ## Connexions
 

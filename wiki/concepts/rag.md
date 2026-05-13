@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, RAG, retrieval, embeddings]
-sources: []
+sources: [raw/cyborg-enterprise-rag-blueprint.md, raw/rag-reranker-setup.md, raw/streaming-data-rag-nvidia.md, raw/from-transcripts-to-ai-agents.md, raw/retail-shopping-assistant-blueprint-by-nvidia.md]
 ---
 
 ## RAG (Retrieval Augmented Generation)
@@ -36,4 +36,4 @@ Paradigme pour connecter LLMs à données externes via retrieval. Le LLM génèr
 ## Connexions
 
 - [[concepts/agentic-ai]] (grounding)
-- [[concepts/knowledge-graph]] (structuring)
+- [[concepts/data-pipeline]] (RAG pipeline feeds from data pipeline)

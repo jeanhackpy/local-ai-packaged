@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, trust, AI, human-AI-collaboration]
-sources: []
+sources: [raw/architecture-of-trust-real-estate-ai.md, raw/trust-infrastructure-data.md, raw/deloitte-agentic-ai-lessons.md]
 ---
 
 ## Trust

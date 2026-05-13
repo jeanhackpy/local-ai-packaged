@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, digital-twins, AI-factory, simulation]
-sources: []
+sources: [raw/nvidia-omniverse-dsx-blueprint.md]
 ---
 
 ## Digital Twins
@@ -30,4 +30,4 @@ Digital twins permettent de :
 ## Connexions
 
 - [[entities/nvidia]]
-- [[concepts/AI-factory]]
+- [[synthesis/ai-factory-for-real-estate]] (AI factory architecture)

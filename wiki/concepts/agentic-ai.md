@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, AI, agentic-AI, automation]
-sources: []
+sources: [raw/deloitte-agentic-ai-lessons.md, raw/retail-agentic-commerce-blueprint.md, raw/retail-shopping-assistant-blueprint.md, raw/build-ai-virtual-assistant.md, raw/custom-instructions-guide.md]
 ---
 
 ## Agentic AI
@@ -35,6 +35,11 @@ Paradigme où l'AI ne se limite pas à générer du contenu mais **exécute des 
 ## Sources
 
 - [[sources/deloitte-agentic-ai-lessons]]
+- [[sources/retail-agentic-commerce]]
+- [[sources/retail-shopping-assistant]]
+- [[sources/build-ai-virtual-assistant]]
+- [[sources/custom-instructions-guide]]
+- [[sources/nvidia-ai-blueprints-virtual-assistant]]
 
 ## Connexions
 

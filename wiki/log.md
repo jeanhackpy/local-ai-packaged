@@ -90,3 +90,68 @@ grep -c "^## \[" wiki/log.md
 - **Sources ingérées** : 57/65 (all distinct content covered — remaining 8 raw files are duplicates with different filenames)
 - **Concepts** : 8
 - **Entities** : 2
+
+---
+
+## [2026-05-14] ingest-batch | ASEAN 2026 + 2 Thailand sources
+
+**Type** : ingest
+
+**Sources** :
+1. ASEAN Real Estate 2026: Investor Map (Younis Hijazi) — yields, tier framework, Thailand data
+2. Nation Thailand — Thai developers bundle LTR visas with condos (Sansiri >6.4B target)
+3. C9 Sessions Phuket — Maintenance fees & sinking funds (CBRE Thailand)
+
+**Actions** :
+- Created `raw/asean-real-estate-2026-investor-map.md` + `sources/`
+- Created `raw/nationthailand-thai-property-developers-ltr-visas.md` + `sources/`
+- Created `raw/c9-sessions-phuket-property-maintenance-fees.md` + `sources/`
+- Updated `concepts/immobilier-thailand.md` — LTR visa, Phuket fees, ASEAN context
+- Updated `index.md` — Thailand (20→22 sources), stats (69 raw, 61 sources)
+
+**Stats**:
+- **raw/** : 67 → 69 sources
+- **sources/** : 59 → 61 source summaries
+- **Concepts updated** : immobilier-thailand (LTR visa strategy, Phuket property management)
+
+---
+
+## [2026-05-14] lint | Wiki health check — fixed broken links + added sources
+
+**Type** : lint
+
+**Issues found**:
+1. **Broken links (2)**: `AI-observability` → removed, `AI-factory` → `synthesis/ai-factory-for-real-estate`
+2. **Missing Sources (5)**: computer-vision, data-flywheel, immobilier-thailand, property-valuation, trust
+3. **Orphan sources (15)**: c9-sessions, nationthailand, s2vec, yc-combinator-spitch, etc.
+
+**Actions**:
+- Fixed `data-flywheel.md`: replaced `[[concepts/AI-observability]]` → `[[sources/ai-observability-data-flywheel-weights-biases]]`, added Sources frontmatter
+- Fixed `digital-twins.md`: replaced `[[concepts/AI-factory]]` → `[[synthesis/ai-factory-for-real-estate]]`, added Sources frontmatter
+- Added Sources frontmatter: agentic-ai, computer-vision, data-pipeline, digital-twins, property-valuation, rag, security, trust, urban-analysis, voix-ai
+- Added source links to concepts: immobilier-thailand, agentic-ai, property-valuation, urban-analysis
+- Fixed rag.md Connexions: replaced `knowledge-graph` → `data-pipeline`
+
+**Stats**:
+- **Concepts updated**: 10 concepts now have Sources frontmatter
+- **Broken links fixed**: 2
+- **Orphan sources reduced**: 15 → 7 (c9-sessions, nationthailand, dubai, multi-modal-v2, nvidia-ai-blueprints, retail-catalog-enrichment, zero-shot)
+
+---
+
+## [2026-05-14] ingest | ASEAN Real Estate 2026 Investor Map
+
+**Type** : ingest
+
+**Source** : ASEAN Real Estate 2026: Investor Map — Younis Hijazi, PhD
+
+**Actions** :
+- Created `raw/asean-real-estate-2026-investor-map.md` — full source
+- Created `sources/asean-real-estate-2026-investor-map.md` — structured summary
+- Updated `concepts/immobilier-thailand.md` — added ASEAN investment context, updated sources
+- Updated `index.md` — Thailand section (19→20 sources), stats (67 raw, 59 sources)
+
+**Stats**:
+- **raw/** : 66 → 67 sources
+- **sources/** : 58 → 59 source summaries
+- **Concepts updated** : immobilier-thailand (ASEAN yields, LTR Visa, Phuket 8-15%)

@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, data-flywheel, AI-observability, ML-pipeline]
-sources: []
+sources: [raw/nvidia-omniverse-dsx-blueprint.md, raw/ai-observability-data-flywheel-wandb.md, raw/ai-orchestration-data-flywheel-iguazio.md]
 ---
 
 ## Data Flywheel
@@ -39,4 +39,5 @@ Cycle où le système génère des données qui améliorent le modèle qui gén�
 ## Connexions
 
 - [[concepts/agentic-ai]] (agentic → flywheel)
-- [[concepts/AI-observability]]
+- [[sources/ai-observability-data-flywheel-wandb]] (W&B observability for flywheel)
+- [[sources/ai-observability-data-flywheel-weights-biases]] (W&B Weave traceability)

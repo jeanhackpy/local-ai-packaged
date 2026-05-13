@@ -1,8 +1,8 @@
 ---
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-05-14
 tags: [concept, computer-vision, CNN, ViT, deep-learning]
-sources: []
+sources: [raw/multi-modal-house-price-prediction.md, raw/gcn-floor-plan-valuation.md, raw/visual-modalities-missing-data.md, raw/self-supervised-vit-valuation.md, raw/building-condition-patch-convnet.md, raw/ensemble-decision-real-estate-images.md]
 ---
 
 ## Computer Vision
