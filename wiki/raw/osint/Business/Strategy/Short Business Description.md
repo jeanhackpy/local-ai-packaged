@@ -1,2 +1,0 @@
-### **Short Business Description**
-Airokoi, your premier European Smart Shop, offers cutting-edge technology solutions and smart home devices. Elevate your lifestyle with our diverse range of innovative gadgets and electronics. Visit us for top-notch smart tech and redefine convenience today!
