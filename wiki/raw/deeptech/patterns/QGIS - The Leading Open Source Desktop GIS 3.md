@@ -1,0 +1,65 @@
+---
+created: 2024-06-29T02:31:28 (UTC +07:00)
+tags:
+  - GIS
+source: https://qgis.org/en/site/forusers/trainingmaterial/index.html#french
+author:
+---
+
+# Training material
+
+> ## Excerpt
+> In this directory page, you can get listed if you provide FREE training material
+for QGIS.
+
+---
+# Training material
+
+In this directory page, you can get listed if you provide FREE training material for QGIS.
+
+The general idea is to be able to (re)use material from each other.
+
+Educators are encouraged to use/mix/add material to the QGIS Training Manual.
+
+Please write to [psc@qgis.org](mailto:psc%40qgis.org) if you want to have something added here. Or you edit this page on [Github](https://github.com/qgis/QGIS-Website/blob/master/source/site/forusers/trainingmaterial/index.rst) and do a pull request.
+
+## English
+
+The official Training Manual can be found here: [http://docs.qgis.org/latest/en/docs/training\_manual/index.html](http://docs.qgis.org/latest/en/docs/training_manual/index.html)
+
+Tutorial material, originally written in English and translated in over 15 languages. (Produced and maintained by Ujaval Gandhi) [https://www.qgistutorials.com/](https://www.qgistutorials.com/)
+
+Tutorial material, originally developed as part of a workshop for the Ecology and Evolutionary Biology Program at Texas A&M University (produced and maintained by Mike Treglia): [http://mltconsecol.github.io/QGIS-Tutorial/](http://mltconsecol.github.io/QGIS-Tutorial/)
+
+In-person training material, originally developed for the New York City Department of Transportation by [Datapolitan](http://www.datapolitan.com):
+
+-   [Introduction to GIS Fundamentals](http://training.datapolitan.com/qgis-training/Introduction_to_GIS_Fundamentals)
+    
+-   [Intermediate GIS with QGIS and PostGIS](http://training.datapolitan.com/qgis-training/Intermediate_GIS/)
+    
+-   [Source code for training materials](https://github.com/Datapolitan-Training/qgis-training)
+    
+
+Online course material for QGIS training developed and maintained by [Spatial Thoughts](http://spatialthoughts.com/). Available for self-study and adaptation by other trainers:
+
+-   [Introduction to QGIS](https://courses.spatialthoughts.com/introduction-to-qgis.html)
+    
+-   [Advanced QGIS](https://courses.spatialthoughts.com/advanced-qgis.html)
+    
+-   [Customizing QGIS with Python](https://courses.spatialthoughts.com/pyqgis-in-a-day.html)
+    
+
+Workbook developed by the [“GIS and RS” Laboratory at the Junior Academy of Sciences of Ukraine](https://man.gov.ua/online-projects/akademiya-copernicus-laboratoriya-gis-ta-dzz):
+
+-   [Fundamentals of Remote Sensing Practice Book](https://api.man.gov.ua/api/assets/man/a42bb07a-5cb3-44aa-bc25-e660d64997bc/)
+    
+
+
+
+## French
+
+The French Ministry of Environment supports the QGIS project. Training material from them is available here: [http://www.geoinformations.developpement-durable.gouv.fr/qgis-formations-et-supports-pedagogiques-r947.html](http://www.geoinformations.developpement-durable.gouv.fr/qgis-formations-et-supports-pedagogiques-r947.html)
+
+Other resources from them are available here: [http://www.geoinformations.developpement-durable.gouv.fr/qgis-r625.html](http://www.geoinformations.developpement-durable.gouv.fr/qgis-r625.html)
+
+The French National Center for Scientific Research (CNRS), created an online QGIS tutorial: [http://ouvrir.passages.cnrs.fr/tutoqgis/](http://ouvrir.passages.cnrs.fr/tutoqgis/)

@@ -211,5 +211,30 @@ grep -c "^## \[" wiki/log.md
 **Next Steps** (from mega-consolidation):
 1. [x] Create source summaries for ObsiVault real-estate files (see roadmap-2026)
 2. [x] Create source summaries for Gemini project files (gemini-blackboard, daily-interactions)
-3. [ ] Update concept links across new sources
-4. [ ] Consider archiving original vaults after verification
+3. [x] Update concept links across new sources (recall-os, security, immobilier-thailand, agentic-ai)
+4. [ ] Create additional synthesis pages for cross-vault insights
+5. [ ] Archive original 4 vaults (keep raw, mark as consolidated)
+
+---
+
+## [2026-05-14] migrate-complete | Full vault migration verification
+
+**Type** : verify
+
+**Verified migrations**:
+- **ObsiVault** : 7 articles + 15 notes = 22 files copied
+  - articles: ChatGPT, DJ set, Music Set Tools, Philo Art Book, Techno Mix (x2), ROADMAP 2026
+  - notes: 2023 Investment Thesis, ASINT, Concept Tokenized, Crypto Bull Run, Knowledge Management, OSINT Detecting Astroturfing, OSINT Obsidian NLP, OSINT Test, OpSec Criminal Safety, Psychology Study Guides, Social Network Analysis (x2), Solana Token Analysis, Web3 Marketing Agency
+- **Gemini-obsidian** : 8 files (Project_Blueprint, 000_Blackboard, GEMINI, daily_interactions x2, system updates x2, reboot)
+- **OSINT** : Full area structure (Real Estate, AI_ML_DataScience, Blockchain, Cybersecurity, Business, etc.)
+- **DEEPTECH** : General, ai-ml-deeptech, blockchain-crypto, business-amazon, osint-security, patterns
+
+**Actions**:
+- Updated index.md with complete vault structure
+- Reorganized external vaults section by source vault
+- Updated stats: 100+ raw sources, 4 external vaults merged
+
+**Stats**:
+- **raw/** : 89 → 100+ sources
+- **External vaults**: 4 (ObsiVault, Gemini-obsidian, OSINT, DEEPTECH)
+- **Index updated**: vault structure, file listings, stats

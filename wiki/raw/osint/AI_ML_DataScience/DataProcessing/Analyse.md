@@ -1,0 +1,4 @@
+### Analyse :
+1. **Forte vente** : La chute rapide et continue suggère une forte pression de vente. Cela pourrait être dû à une panique sur le marché, des prises de bénéfices massives ou des nouvelles négatives spécifiques à l'actif ou au marché plus large.
+2. **Volatilité extrême** : La baisse drastique de plus de 21 % en une courte période indique une volatilité extrême. Les investisseurs réagissent probablement à des événements récents ou à des annonces qui ont eu un impact significatif sur le sentiment du marché.
+3. **Absence de support** : Le prix a franchi plusieurs niveaux de support sans montrer de signes de stabilisation, ce qui pourrait indiquer une poursuite de la baisse à court terme.

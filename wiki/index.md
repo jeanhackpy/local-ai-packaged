@@ -2,7 +2,7 @@
 
 > Catalogue du wiki. Mis à jour lors de chaque ingest.
 
-**Dernière mise à jour** : 2026-04-21 (full ingest complete)
+**Dernière mise à jour** : 2026-05-14 (mega-consolidation complete)
 
 ---
 
@@ -67,35 +67,46 @@ Source summaries: `sources/[slug].md`
 
 ---
 
-## 🌍 External Vaults Consolidated
-
-### Gemini-obsidian (Project REcall)
-- [[raw/Project_Blueprint]] — REcall OS: "Palantir for Real Estate" SEA
-- [[raw/000_Blackboard]] — General brainstorming notes
-- [[raw/gemini-obsidian/daily_interactions/2025-07-03]] — Daily interaction log
-
-### ObsiVault (Clippings & Sources)
-- [[raw/ChatGPT]] — ChatGPT consciousness exploration
-- [[raw/DJ set]] — Music set curation
-- [[raw/✅ ROADMAP 2026]] — 2026 strategic roadmap
-- [[raw/Philo Art Book]] — Propaganda art book
-
-### OSINT (Intelligence Areas)
-- [[raw/_Real_Estate_Proptech_MOC]] — Real Estate & PropTech master index
-- [[raw/_AI_ML_Data_Science_MOC]] — AI/ML/Data Science master index
-- [[raw/_Blockchain_Crypto_MOC]] — Blockchain & Crypto master index
-- [[raw/_Cybersecurity_OSINT_MOC]] — Cybersecurity & OSINT master index
-- [[raw/Thailand's Luxury Real Estate Market Thrives in 2025]] — Thailand luxury market analysis
-
----
-
 ## Stats
 
-- **raw/** : 89 sources (69 original + 20 from external vaults)
-- **sources/** : 70 source summaries (was 61)
+- **raw/** : 100+ sources (69 original + 31 from external vaults)
+- **sources/** : 70 source summaries
 - **concepts/** : 14
 - **entities/** : 2
-- **synthesis/** : 3 (was 2, added mega-consolidation)
+- **synthesis/** : 3
 - **External vaults merged**: 4 (ObsiVault, Gemini-obsidian, OSINT, DEEPTECH)
+
+## External Vaults Consolidated
+
+### ObsiVault (Clippings & Sources)
+- [[raw/obsivault/articles/ChatGPT]] — ChatGPT consciousness exploration
+- [[raw/obsivault/articles/DJ set]] — Music set curation
+- [[raw/obsivault/articles/✅ ROADMAP 2026]] — 2026 strategic roadmap
+- [[raw/obsivault/articles/Philo Art Book]] — Propaganda art book
+- [[raw/obsivault/notes/2023 Investment Thesis - Deeptech and Crypto]] — Deeptech & crypto investment thesis
+- [[raw/obsivault/notes/Concept - Tokenized Vacation Properties]] — Tokenized vacation properties concept
+- [[raw/obsivault/notes/OSINT - Detecting Social Media Astroturfing and Bots]] — Social media astroturfing detection
+- [[raw/obsivault/notes/Social Network Analysis Overview]] — SNA fundamentals
+- [[raw/obsivault/notes/Web3 Marketing Agency Notes]] — Web3 marketing frameworks
+
+### Gemini-obsidian (Project REcall)
+- [[raw/gemini-obsidian/Project_Blueprint]] — REcall OS full blueprint
+- [[raw/gemini-obsidian/000_Blackboard]] — General brainstorming
+- [[raw/gemini-obsidian/daily_interactions/2025-07-03]] — Daily interaction log
+- [[raw/gemini-obsidian/GEMINI]] — Gemini CLI configuration
+
+### OSINT (Intelligence Areas)
+- [[raw/osint/areas/_AI_ML_Data_Science_MOC]] — AI/ML/Data Science master index
+- [[raw/osint/areas/_Blockchain_Crypto_MOC]] — Blockchain & Crypto master index
+- [[raw/osint/areas/_Cybersecurity_OSINT_MOC]] — Cybersecurity & OSINT master index
+- [[raw/osint/areas/_Real_Estate_Proptech_MOC]] — Real Estate & PropTech master index
+- [[raw/osint/clippings/Thailand's Luxury Real Estate Market Thrives in 2025]] — Luxury market analysis
+
+### DEEPTECH (Research)
+- [[raw/deeptech/ai-ml-deeptech]] — AI/ML deeptech research
+- [[raw/deeptech/blockchain-crypto]] — Blockchain & crypto research
+- [[raw/deeptech/business-amazon]] — Amazon business research
+- [[raw/deeptech/osint-security]] — OSINT security research
+- [[raw/deeptech/patterns]] — Pattern libraries
 
 Voir [[log]] pour l'historique complet.
