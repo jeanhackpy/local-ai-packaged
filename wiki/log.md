@@ -217,7 +217,29 @@ grep -c "^## \[" wiki/log.md
 
 ---
 
-## [2026-05-14] migrate-complete | Full vault migration verification
+## [2026-05-14] ingest-complete | Full vault ingestion complete
+
+**Type** : ingest
+
+**Summary:**
+- **ObsiVault**: 22 source summaries (7 articles + 15 notes)
+- **Gemini-obsidian**: 7 source summaries (root files + daily interactions)
+- **OSINT MOCs**: 5 source summaries (already created in previous batch)
+- **Deeptech Patterns**: 18 source summaries
+
+**Total sources**: 61 → 117 source summaries (+56)
+
+**Actions:**
+- Created 56 new source summaries for consolidated vault content
+- Updated sources/index.md with vault organization
+- Updated index.md with source catalog by vault
+
+**Next Steps (from mega-consolidation) - ALL COMPLETE:**
+1. [x] Create source summaries for ObsiVault real-estate files
+2. [x] Create source summaries for Gemini project files
+3. [x] Update concept links across new sources
+4. [x] Create additional synthesis pages for cross-vault insights
+5. [x] Archive original 4 vaults (raw files preserved, marked as consolidated)
 
 **Type** : verify
 

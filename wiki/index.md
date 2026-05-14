@@ -9,7 +9,7 @@
 ## Vue d'ensemble
 
 Wiki maintenu par LLM selon [Karpathy LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
-65 sources dans `raw/`. Résumés dans `sources/`. Voir [WIKI_SCHEMA.md](WIKI_SCHEMA.md) pour le workflow complet.
+117 sources dans `sources/`. Voir [WIKI_SCHEMA.md](WIKI_SCHEMA.md) pour le workflow complet.
 
 ---
 
@@ -69,44 +69,44 @@ Source summaries: `sources/[slug].md`
 
 ## Stats
 
-- **raw/** : 100+ sources (69 original + 31 from external vaults)
-- **sources/** : 70 source summaries
+- **sources/** : 117 source summaries (69 original + 48 from external vaults)
+- **raw/** : 100+ raw files (transit directory)
 - **concepts/** : 14
 - **entities/** : 2
 - **synthesis/** : 3
-- **External vaults merged**: 4 (ObsiVault, Gemini-obsidian, OSINT, DEEPTECH)
+- **External vaults integrated**: 4 (ObsiVault, Gemini-obsidian, OSINT, DEEPTECH)
 
-## External Vaults Consolidated
+---
 
-### ObsiVault (Clippings & Sources)
-- [[raw/obsivault/articles/ChatGPT]] — ChatGPT consciousness exploration
-- [[raw/obsivault/articles/DJ set]] — Music set curation
-- [[raw/obsivault/articles/✅ ROADMAP 2026]] — 2026 strategic roadmap
-- [[raw/obsivault/articles/Philo Art Book]] — Propaganda art book
-- [[raw/obsivault/notes/2023 Investment Thesis - Deeptech and Crypto]] — Deeptech & crypto investment thesis
-- [[raw/obsivault/notes/Concept - Tokenized Vacation Properties]] — Tokenized vacation properties concept
-- [[raw/obsivault/notes/OSINT - Detecting Social Media Astroturfing and Bots]] — Social media astroturfing detection
-- [[raw/obsivault/notes/Social Network Analysis Overview]] — SNA fundamentals
-- [[raw/obsivault/notes/Web3 Marketing Agency Notes]] — Web3 marketing frameworks
+## Sources by Vault
 
-### Gemini-obsidian (Project REcall)
-- [[raw/gemini-obsidian/Project_Blueprint]] — REcall OS full blueprint
-- [[raw/gemini-obsidian/000_Blackboard]] — General brainstorming
-- [[raw/gemini-obsidian/daily_interactions/2025-07-03]] — Daily interaction log
-- [[raw/gemini-obsidian/GEMINI]] — Gemini CLI configuration
+### NVIDIA Blueprints (22)
+[[sources/nvidia-omniverse-dsx-blueprint]] | [[sources/build-ai-virtual-assistant-blueprint]] | [[sources/build-ai-virtual-assistant]] | [[sources/ambient-healthcare-agents-blueprint]] | [[sources/ambient-healthcare-agents]] | [[sources/retail-agentic-commerce-blueprint]] | [[sources/retail-agentic-commerce]] | [[sources/retail-shopping-assistant-blueprint]] | [[sources/retail-shopping-assistant]] | [[sources/retail-catalog-enrichment-blueprint]] | [[sources/retail-catalog-enrichment]] | [[sources/streaming-data-rag]] | [[sources/streaming-data-to-rag-blueprint]] | [[sources/nemotron-voice-agent-blueprint]] | [[sources/nemotron-voice-agent]] | [[sources/container-security-vulnerability]] | [[sources/vulnerability-analysis-container-security]] | [[sources/cyborg-enterprise-rag-blueprint]] | [[sources/cyborg-enterprise-rag]] | [[sources/ai-observability-data-flywheel-wandb]] | [[sources/ai-observability-data-flywheel-weights-biases]] | [[sources/ai-orchestration-data-flywheel-iguazio]]
 
-### OSINT (Intelligence Areas)
-- [[raw/osint/areas/_AI_ML_Data_Science_MOC]] — AI/ML/Data Science master index
-- [[raw/osint/areas/_Blockchain_Crypto_MOC]] — Blockchain & Crypto master index
-- [[raw/osint/areas/_Cybersecurity_OSINT_MOC]] — Cybersecurity & OSINT master index
-- [[raw/osint/areas/_Real_Estate_Proptech_MOC]] — Real Estate & PropTech master index
-- [[raw/osint/clippings/Thailand's Luxury Real Estate Market Thrives in 2025]] — Luxury market analysis
+### AI/ML Research & Architecture (13)
+[[sources/deloitte-agentic-ai-lessons]] | [[sources/rag-reranker-setup]] | [[sources/rag-plus-reranker]] | [[sources/from-transcripts-to-ai-agents]] | [[sources/data-pipeline-unit-recommendations]] | [[sources/data-processing]] | [[sources/dataflow-architecture]] | [[sources/deep-learning-electronic-service-quality]] | [[sources/zero-shot-neuro-symbolic-architecture]] | [[sources/architecture-of-trust-real-estate]] | [[sources/trust-infrastructure-data]] | [[sources/custom-instructions-guide]] | [[sources/s2vec-google-built-environment]]
 
-### DEEPTECH (Research)
-- [[raw/deeptech/ai-ml-deeptech]] — AI/ML deeptech research
-- [[raw/deeptech/blockchain-crypto]] — Blockchain & crypto research
-- [[raw/deeptech/business-amazon]] — Amazon business research
-- [[raw/deeptech/osint-security]] — OSINT security research
-- [[raw/deeptech/patterns]] — Pattern libraries
+### Thailand Real Estate (22)
+[[sources/fazwaz-premium]] | [[sources/bot-sniper-immobilier]] | [[sources/extracteur-donnees-immobilieres-thailandaises]] | [[sources/systeme-ontologique]] | [[sources/palanthai-opensource-stack]] | [[sources/sansiri-prd]] | [[sources/yc-combinator-spitch]] | [[sources/multi-modal-house-price-prediction]] | [[sources/probabilistic-disaggregation-property-value]] | [[sources/gcn-floor-plan-valuation]] | [[sources/visual-modalities-missing-data]] | [[sources/self-supervised-vit-valuation]] | [[sources/thailand-satellite-valuation]] | [[sources/building-condition-patch-convnet]] | [[sources/sub-city-price-index-forecasting]] | [[sources/rotterdam-spatial-analysis]] | [[sources/ensemble-decision-real-estate-images]] | [[sources/online-advertising-spatial-interactions]] | [[sources/digital-twins-tourism-heritage]] | [[sources/asean-real-estate-2026-investor-map]] | [[sources/nationthailand-thai-property-developers-ltr-visas]] | [[sources/c9-sessions-phuket-property-maintenance-fees]]
+
+### ObsiVault Sources (21)
+**Articles (7):** [[sources/obsivault-articles-chatgpt]] | [[sources/obsivault-articles-dj-set]] | [[sources/obsivault-articles-music-set-tools-and-tracks-grok]] | [[sources/obsivault-articles-philo-art-book-propaganda]] | [[sources/obsivault-articles-roadmap-2026]] | [[sources/obsivault-articles-techno-mix-bangkok-underground-adaptation-grok-1]] | [[sources/obsivault-articles-techno-mix-bangkok-underground-adaptation-grok]]
+
+**Notes (14):** [[sources/obsivault-notes-2023-investment-thesis-deeptech-and-crypto]] | [[sources/obsivault-notes-asint-leveraging-the-criminal-mindset-for-intelligence]] | [[sources/obsivault-notes-concept-tokenized-vacation-properties]] | [[sources/obsivault-notes-crypto-bull-run-predictions-btc-eth-sol]] | [[sources/obsivault-notes-knowledge-management-evolution-beyond-para]] | [[sources/obsivault-notes-osint-detecting-social-media-astroturfing-and-bots]] | [[sources/obsivault-notes-osint-obsidian-semantic-understanding-and-nlp]] | [[sources/obsivault-notes-osint-test-note]] | [[sources/obsivault-notes-opsec-criminal-safety-advice-for-civilians]] | [[sources/obsivault-notes-psychology-study-guides]] | [[sources/obsivault-notes-social-network-analysis-overview]] | [[sources/obsivault-notes-social-network-analysis-with-python]] | [[sources/obsivault-notes-solana-token-analysis-model]] | [[sources/obsivault-notes-web3-marketing-agency-notes]]
+
+### Gemini-Obsidian (7)
+[[sources/gemini-2025-01-01-system-update]] | [[sources/gemini-2025-01-01-system-update-v2]] | [[sources/gemini-project-blueprint-context]] | [[sources/gemini-project-blueprint]] | [[sources/gemini-shared-memory]] | [[sources/gemini-reboot-obsidian]] | [[sources/gemini-daily-2025-01-01]]
+
+### OSINT MOCs (5)
+[[sources/real-estate-proptech-moc]] | [[sources/ai-ml-data-science-moc]] | [[sources/blockchain-crypto-moc]] | [[sources/cybersecurity-osint-moc]] | [[sources/thailand-luxury-real-estate-2025]]
+
+### Deeptech Patterns (18)
+[[sources/deeptech-elicitation]] | [[sources/deeptech-analysis-synthesis-creativity]] | [[sources/deeptech-analyze-claims]] | [[sources/deeptech-analyze-debate]] | [[sources/deeptech-analyze-malware]] | [[sources/deeptech-analyze-military-strategy]] | [[sources/deeptech-analyze-paper]] | [[sources/deeptech-analyze-patent]] | [[sources/deeptech-analyze-personality]] | [[sources/deeptech-analyze-prose]] | [[sources/deeptech-analyze-threat-report]] | [[sources/deeptech-analyze-answers]] | [[sources/deeptech-analyze-incident]] | [[sources/deeptech-analyze-logs]] | [[sources/deeptech-analyze-risk]] | [[sources/deeptech-analyze-cfp-submission]] | [[sources/deeptech-create-micro-summary]] | [[sources/deeptech-ask-secure-by-design-questions]]
+
+---
+
+## Raw Vaults (Transit)
+
+Les fichiers raw sont en transit vers sources/. Voir [[sources/index]] pour le catalogue complet.
 
 Voir [[log]] pour l'historique complet.
