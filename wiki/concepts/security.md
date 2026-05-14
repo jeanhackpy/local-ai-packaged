@@ -33,9 +33,11 @@ Cyborg Enterprise RAG blueprint introduces encryption-in-use for vector embeddin
 
 - [[sources/container-security-vulnerability]]
 - [[sources/vulnerability-analysis-container-security]]
+- [[sources/cybersecurity-osint-moc]] — OSINT cybersecurity framework
 
 ## Connexions
 
 - [[concepts/rag]] — RAG architecture for security knowledge bases
 - [[concepts/agentic-ai]] — autonomous security agents that scan and remediate
 - [[entities/nvidia]] — NIM microservices for security workloads
+- [[concepts/recall-os]] — Reputation Shield service for agencies

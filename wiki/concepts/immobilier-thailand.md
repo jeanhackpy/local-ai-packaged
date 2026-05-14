@@ -34,6 +34,9 @@ Marché immobilier thaïlandais avec focus sur :
 - [[sources/asean-real-estate-2026-investor-map]]
 - [[sources/yc-combinator-spitch]] (YC startup patterns, market fit Thailand)
 - [[sources/digital-twins-tourism-heritage]] (digital twins application)
+- [[sources/thailand-luxury-real-estate-2025]] — Luxury segment analysis
+- [[sources/roadmap-2026]] — Strategic context for Thailand expansion
+- [[sources/real-estate-proptech-moc]] — OSINT Real Estate framework
 
 ## ASEAN Investment Context 2026
 

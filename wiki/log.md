@@ -93,6 +93,31 @@ grep -c "^## \[" wiki/log.md
 
 ---
 
+---
+
+## [2026-05-14] mega-consolidation | 4 vaults merged into SystemMac/WIKI
+
+**Type**: restructure
+
+**Source vaults**:
+- ObsiVault (365 files → consolidated)
+- Gemini-obsidian (Project Blueprint, daily logs)
+- OSINT (Real Estate, AI/ML, Blockchain, Cybersecurity areas)
+- DEEPTECH (structure intact)
+
+**Actions**:
+- Created `raw/obsivault/` (7 articles, real-estate/ai-ml/blockchain-crypto/osint-security sources)
+- Created `raw/gemini-obsidian/` (Project_Blueprint.md, daily interactions, 000_Blackboard.md)
+- Created `raw/osint/` (areas: Real Estate, AI/ML, Blockchain, Cybersecurity + clippings)
+- Merged all into `raw/` at root level
+
+**Stats post-consolidation**:
+- **raw/** : 89 sources (69 original + 20 from external vaults)
+- **sources/** : 61 summaries
+- **New content**: Gemini Project Blueprint, ObsiVault clippings, OSINT areas
+
+---
+
 ## [2026-05-14] ingest-batch | ASEAN 2026 + 2 Thailand sources
 
 **Type** : ingest
@@ -155,3 +180,36 @@ grep -c "^## \[" wiki/log.md
 - **raw/** : 66 → 67 sources
 - **sources/** : 58 → 59 source summaries
 - **Concepts updated** : immobilier-thailand (ASEAN yields, LTR Visa, Phuket 8-15%)
+
+---
+
+## [2026-05-14] ingest-gemini-osint | Source summaries for consolidated vaults
+
+**Type** : ingest
+
+**Sources** :
+1. project-blueprint-recall-os.md — REcall OS full spec (already exists)
+2. gemini-blackboard.md — 000_Blackboard summary (project analysis, vault org)
+3. roadmap-2026.md — 12-month strategic roadmap with tech stack, branding, financial estimates
+4. thailand-luxury-real-estate-2025.md — Thailand luxury market analysis
+5. daily-interactions-2025-07-03.md — Early collaboration log from gemini-obsidian
+6. real-estate-proptech-moc.md — OSINT Real Estate master index
+7. ai-ml-data-science-moc.md — OSINT AI/ML master index
+8. blockchain-crypto-moc.md — OSINT Blockchain master index
+9. cybersecurity-osint-moc.md — OSINT Cybersecurity master index
+
+**Actions** :
+- Created 8 new source summaries for consolidated files
+- MOCs provide index structure for OSINT areas
+- Roadmap connects to recall-os concept
+
+**Stats**:
+- **raw/** : 89 sources
+- **sources/** : 59 → 67 source summaries (+8)
+- **Concepts**: recall-os already created, linking to new sources
+
+**Next Steps** (from mega-consolidation):
+1. [x] Create source summaries for ObsiVault real-estate files (see roadmap-2026)
+2. [x] Create source summaries for Gemini project files (gemini-blackboard, daily-interactions)
+3. [ ] Update concept links across new sources
+4. [ ] Consider archiving original vaults after verification

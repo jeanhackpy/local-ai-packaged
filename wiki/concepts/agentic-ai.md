@@ -40,9 +40,12 @@ Paradigme où l'AI ne se limite pas à générer du contenu mais **exécute des 
 - [[sources/build-ai-virtual-assistant]]
 - [[sources/custom-instructions-guide]]
 - [[sources/nvidia-ai-blueprints-virtual-assistant]]
+- [[sources/ai-ml-data-science-moc]] — OSINT AI/ML framework
 
 ## Connexions
 
 - [[entities/nvidia]] (NVIDIA blueprints sur agentic commerce, etc.)
 - [[concepts/data-flywheel]] (agentic → data flywheel)
 - [[concepts/rag]] (grounding = key pour trust)
+- [[concepts/recall-os]] — AI Real Estate Expert Agent architecture
+- [[sources/roadmap-2026]] — n8n multi-agent system for Thailand real estate

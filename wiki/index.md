@@ -13,10 +13,11 @@ Wiki maintenu par LLM selon [Karpathy LLM Wiki](https://gist.github.com/karpathy
 
 ---
 
-## Synthesis (2 analyses transversales)
+## Synthesis (3 analyses transversales)
 
 - [[synthesis/ai-factory-for-real-estate]] — NVIDIA blueprints + Palanthai stack → AI factory architecture for Thai property intelligence
 - [[synthesis/thailand-property-intelligence]] — FazWaz + valuation research + deal intelligence → data layer for Thai real estate AI
+- [[synthesis/mega-consolidation]] — 4 vaults merged: ObsiVault, Gemini-obsidian, OSINT, DEEPTECH → unified REcall OS knowledge
 
 ---
 
@@ -39,6 +40,7 @@ Wiki maintenu par LLM selon [Karpathy LLM Wiki](https://gist.github.com/karpathy
 - [[concepts/computer-vision]] — Image analysis for real estate (facade, floor plan, satellite)
 - [[concepts/trust]] — Trust infrastructure: provenance, uncertainty, transparency
 - [[concepts/urban-analysis]] — Spatial analysis: street conditions, price indices, GIS
+- [[concepts/recall-os]] — REcall OS: Palantir for Real Estate SEA
 
 ---
 
@@ -65,12 +67,35 @@ Source summaries: `sources/[slug].md`
 
 ---
 
+## 🌍 External Vaults Consolidated
+
+### Gemini-obsidian (Project REcall)
+- [[raw/Project_Blueprint]] — REcall OS: "Palantir for Real Estate" SEA
+- [[raw/000_Blackboard]] — General brainstorming notes
+- [[raw/gemini-obsidian/daily_interactions/2025-07-03]] — Daily interaction log
+
+### ObsiVault (Clippings & Sources)
+- [[raw/ChatGPT]] — ChatGPT consciousness exploration
+- [[raw/DJ set]] — Music set curation
+- [[raw/✅ ROADMAP 2026]] — 2026 strategic roadmap
+- [[raw/Philo Art Book]] — Propaganda art book
+
+### OSINT (Intelligence Areas)
+- [[raw/_Real_Estate_Proptech_MOC]] — Real Estate & PropTech master index
+- [[raw/_AI_ML_Data_Science_MOC]] — AI/ML/Data Science master index
+- [[raw/_Blockchain_Crypto_MOC]] — Blockchain & Crypto master index
+- [[raw/_Cybersecurity_OSINT_MOC]] — Cybersecurity & OSINT master index
+- [[raw/Thailand's Luxury Real Estate Market Thrives in 2025]] — Thailand luxury market analysis
+
+---
+
 ## Stats
 
-- **raw/** : 69 sources
-- **sources/** : 61 source summaries
+- **raw/** : 89 sources (69 original + 20 from external vaults)
+- **sources/** : 70 source summaries (was 61)
 - **concepts/** : 14
 - **entities/** : 2
-- **synthesis/** : 2
+- **synthesis/** : 3 (was 2, added mega-consolidation)
+- **External vaults merged**: 4 (ObsiVault, Gemini-obsidian, OSINT, DEEPTECH)
 
 Voir [[log]] pour l'historique complet.
