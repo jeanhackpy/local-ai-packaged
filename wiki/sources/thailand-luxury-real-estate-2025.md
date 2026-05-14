@@ -1,51 +1,17 @@
 ---
 created: 2026-05-14
 updated: 2026-05-14
-tags: [source, thailand, real-estate, luxury, market-analysis]
-sources: [raw/Thailand's Luxury Real Estate Market Thrives in 2025.md]
+tags: [Thailand, real-estate, luxury, market-analysis, 2025]
+source: clippings
 ---
 
-## Thailand Luxury Real Estate Market 2025
+# Thailand Luxury Real Estate Market Thrives in 2025
 
-**Source:** Clipping (likely Property Report or Thai media)
-**Date:** 2025
+## Summary
 
-### Key Market Highlights
+Market analysis of Thailand's luxury real estate segment in 2025. Strong demand from Chinese and Hong Kong buyers, Western investors seeking alternatives, LTR visa program impact, and weak baht making Thailand attractive. Record prices in Sukhumvit, Silom, Sathorn; strong villa demand in Phuket, Samui, Hua Hin.
 
-#### Growth Drivers
-- Strong demand from Chinese and Hong Kong buyers
-- Western investors seeking alternative investments
-- LTR (Long-Term Resident) visa program boosting high-end segment
-- Weak baht making Thailand attractive for foreign buyers
-
-#### Luxury Segments Performance
-- **Condominiums:** Record prices in Sukhumvit, Silom, Sathorn
-- **Villas:** Strong demand in Phuket, Samui, Hua Hin
-- **Commercial:** Recovery in hospitality and retail
-
-#### Regional Comparison
-- Bangkok premium: 15-25% price premium over 2023
-- Phuket: 20-30% increase in villa sales
-- Pattaya: Rebounding with new Chinese direct flights
-
-### Key Trends
-
-1. **Foreign Buyer Resurgence**
-   - Chinese buyers returning post-COVID
-   - Hong Kong investors seeking diversification
-   - Western buyers from US/Europe increasing
-
-2. **LTR Visa Impact**
-   - 10-year visa program attracting retirees
-   - $500K+ property requirement for visa
-   - Boosting ultra-luxury segment
-
-3. **Location Preferences**
-   - Central Bangkok (Sukhumvit, Silom) dominant
-   - Phuket West Coast (Bang Tao, Kamala) premium
-   - Hua Hin emerging as lifestyle destination
-
-### Market Data
+## Key Market Data
 
 | Segment | Price Range (USD) | YoY Growth |
 |---------|-------------------|------------|
@@ -53,9 +19,22 @@ sources: [raw/Thailand's Luxury Real Estate Market Thrives in 2025.md]
 | Phuket Villa | 800K-3M | +20% |
 | Hua Hin Premium | 400K-1M | +12% |
 
----
+## Growth Drivers
 
-## Sources
+- Chinese/Hong Kong buyer resurgence post-COVID
+- LTR (Long-Term Resident) 10-year visa program
+- Weak baht exchange rate
+- Western investors seeking diversification
 
-- [[raw/Thailand's Luxury Real Estate Market Thrives in 2025]]
-- [[concepts/immobilier-thailand]]
+## Regional Performance
+
+- **Bangkok**: 15-25% price premium in Sukhumvit, Silom, Sathorn
+- **Phuket**: 20-30% villa sales increase (Bang Tao, Kamala premium)
+- **Pattaya**: Rebounding with new Chinese direct flights
+- **Hua Hin**: Emerging as lifestyle destination
+
+## Connections
+
+- [[concepts/immobilier-thailand]] — Thailand real estate market
+- [[sources/nationthailand-thai-property-developers-ltr-visas]] — LTR visa strategy
+- [[sources/asean-real-estate-2026-investor-map]] — Regional investment context

@@ -62,7 +62,16 @@ author:
 | [Solana Token Analysis Model](obsivault-notes-solana-token-analysis-model.md) | crypto, solana, python, analysis | Python script for Solana token analysis via CoinGecko API, sklearn regression |
 | [Web3 Marketing Agency Notes](obsivault-notes-web3-marketing-agency-notes.md) | Web3, marketing, crypto, blockchain, agency | Coinbound services: 500+ influencers, PR (Forbes/CoinTelegraph), SEO, lead gen |
 
-## Gemini-Obsidian Sources (7 sources)
+## MOC Index Files (4 sources)
+
+| Source | Tags | Summary |
+|--------|------|---------|
+| [AI, ML & Data Science MOC](_AI_ML_Data_Science_MOC.md) | MOC, AI, ML, Data-Science, index, French | French-language Master Table of Contents indexing all AI/ML/Data Science resources via Obsidian Dataview queries |
+| [Blockchain & Crypto MOC](_Blockchain_Crypto_MOC.md) | MOC, Blockchain, Crypto, index, French | French-language Master Table of Contents indexing all Blockchain and Cryptocurrency resources |
+| [Cybersecurity & OSINT MOC](_Cybersecurity_OSINT_MOC.md) | MOC, Cybersecurity, OSINT, index, French | French-language Master Table of Contents indexing all Cybersecurity and OSINT resources |
+| [Real Estate & Proptech MOC](_Real_Estate_Proptech_MOC.md) | MOC, Real-Estate, Proptech, index, French | French-language Master Table of Contents indexing all Real Estate and Proptech resources |
+
+## Gemini-Obsidian Sources (8 sources)
 
 | Source | Tags | Summary |
 |--------|------|---------|
@@ -73,3 +82,4 @@ author:
 | [Gemini Shared Memory README](gemini-shared-memory.md) | vault-structure, Obsidian, Supabase | Vault organization guide: directory structure, logging conventions, Qdrant/Supabase configuration |
 | [Gemini Reboot - Context Recovery](gemini-reboot-obsidian.md) | context-recovery, workflow | Quick-reference protocol for re-establishing context when resuming vault work |
 | [Daily - 2025-01-01](gemini-daily-2025-01-01.md) | daily-interaction, maintenance | New Year operations: infrastructure maintenance, Qdrant config, documentation updates |
+| [Gemini Blackboard](gemini-blackboard.md) | Gemini, communication, project-tracking, vault | AI-generated status note summarizing 3 projects: Thailand Real Estate Analysis, Multi-Agent n8n system, VPS Management |

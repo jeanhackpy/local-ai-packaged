@@ -69,8 +69,8 @@ Source summaries: `sources/[slug].md`
 
 ## Stats
 
-- **sources/** : 117 source summaries (69 original + 48 from external vaults)
-- **raw/** : 100+ raw files (transit directory)
+- **sources/** : 150 source summaries (complete ingestion)
+- **raw/** : transit directory (files processed)
 - **concepts/** : 14
 - **entities/** : 2
 - **synthesis/** : 3
