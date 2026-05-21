@@ -309,20 +309,87 @@ def main():
     # Wait for OpenClaw to be ready
     # wait_for_openclay()
     
-    print("\n" + "="*60)
-    print("🚀 All services started successfully!")
-    print("="*60)
-    print("\n📊 Service URLs:")
-    print("  • OpenClaw Gateway:    http://localhost:18789")
-    print("  • OpenClaw Control UI: http://localhost:18789")
-    print("  • Open WebUI:          http://localhost:8080")
-    print("  • n8n:                 http://localhost:5678")
-    print("  • Qdrant:              http://localhost:6333")
-    print("  • Neo4j Browser:       http://localhost:7474")
-    print("  • Supabase Kong:       http://localhost:8000")
-    print("  • Caddy (Proxy):       http://localhost:80")
-    print("\n📖 Documentation: docs/OPENCLAW_INTEGRATIONS.md")
-    print("="*60)
+    print("All services started successfully!")
+    print("============================================================")
+    print()
+    print("📊 Service URLs:")
+
+    def _get_compose_ports():
+        try:
+            out = subprocess.check_output([
+                "docker", "ps", "--filter", "label=com.docker.compose.project=localai",
+                "--format", "{{.Names}}|{{.Ports}}"
+            ], text=True)
+        except Exception:
+            return {}
+
+        m = {}
+        for line in out.splitlines():
+            if '|' in line:
+                name, ports = line.split('|', 1)
+                m[name.strip()] = ports.strip()
+        return m
+
+    def _extract_host_port(ports_str, prefer_container_port=None):
+        import re
+        if not ports_str:
+            return None
+        # match host port patterns like 0.0.0.0:5678->5678/tcp
+        m = re.search(r'0\.0\.0\.0:(\d+)->', ports_str)
+        if m:
+            return m.group(1)
+        # match host->container like 5678->5678/tcp
+        m = re.search(r'(\d+)->\d+/tcp', ports_str)
+        if m:
+            return m.group(1)
+        # fallback: any bare port like 8080/tcp
+        m = re.search(r'(\d+)/tcp', ports_str)
+        if m:
+            return m.group(1)
+        return None
+
+    ports_map = _get_compose_ports()
+
+    def find_port_for(matches, prefer=None):
+        for k, v in ports_map.items():
+            for match in matches:
+                if match in k:
+                    hp = _extract_host_port(v, prefer)
+                    if hp:
+                        return hp
+        return None
+
+    entries = []
+    # OpenClaw is not managed by Docker here; only show it if detected
+    openclaw_port = find_port_for(["openclaw", "openclaw-gateway"]) or None
+    entries.append(("OpenClaw Gateway", openclaw_port))
+    entries.append(("OpenClaw Control UI", openclaw_port))
+
+    # Try to detect Open WebUI (commonly exposed on 8080)
+    webui_port = find_port_for(["webui", "open-webui", "imgproxy", "studio", "searxng"], prefer="8080")
+    if not webui_port:
+        # try to find any mapping to container port 8080
+        for v in ports_map.values():
+            if ":8080->" in v or ":8080/tcp" in v or "->8080/tcp" in v:
+                webui_port = _extract_host_port(v)
+                break
+    entries.append(("Open WebUI", webui_port))
+
+    entries.append(("n8n", find_port_for(["n8n"])) )
+    entries.append(("Qdrant", find_port_for(["qdrant"])) )
+    entries.append(("Neo4j Browser", find_port_for(["neo4j"])) )
+    entries.append(("Supabase Kong", find_port_for(["kong", "supabase-kong"])) )
+    entries.append(("Caddy (Proxy)", find_port_for(["caddy"])) )
+
+    for name, port in entries:
+        if port:
+            print(f"  • {name}: http://localhost:{port}")
+        else:
+            print(f"  • {name}: not running / not exposed")
+
+    print()
+    print("📖 Documentation: docs/OPENCLAW_INTEGRATIONS.md")
+    print("============================================================")
 
 if __name__ == "__main__":
     main()
