@@ -1,0 +1,266 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e11]:
+          - link "Titleman Logo" [ref=e13] [cursor=pointer]:
+            - /url: /?locale=en
+            - img "Titleman Logo" [ref=e15]
+          - navigation [ref=e18]:
+            - list [ref=e19]:
+              - listitem [ref=e20] [cursor=pointer]:
+                - generic [ref=e21]: Product
+              - listitem [ref=e23] [cursor=pointer]:
+                - generic [ref=e24]: Alpha Drivers
+              - listitem [ref=e26] [cursor=pointer]:
+                - generic [ref=e27]: Solutions
+              - listitem [ref=e29] [cursor=pointer]:
+                - link "Sources & Data" [ref=e31]:
+                  - /url: /sources-and-data?locale=en
+              - listitem [ref=e32] [cursor=pointer]:
+                - link "Security" [ref=e34]:
+                  - /url: /security?locale=en
+              - listitem [ref=e35] [cursor=pointer]:
+                - link "Company" [ref=e37]:
+                  - /url: /company?locale=en
+          - generic [ref=e38]:
+            - generic [ref=e42] [cursor=pointer]: en
+            - button "Sign in" [ref=e45] [cursor=pointer]
+            - button "Sign up" [ref=e47] [cursor=pointer]
+        - generic [ref=e50]:
+          - heading "AI for Real Estate" [level=1] [ref=e51]
+          - generic [ref=e52]: Your Organization, Supercharged by AI
+          - button "Get access" [ref=e54] [cursor=pointer]
+        - img [ref=e58]
+      - generic [ref=e62]:
+        - img [ref=e66]
+        - button [ref=e69] [cursor=pointer]:
+          - img [ref=e70]
+      - generic [ref=e74]: Titleman is an AI platform built specifically for real estate, development, mortgage, banking, and investment companies.
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - text: The top real estate teams
+          - text: use Titleman for
+        - button "Get access" [ref=e81] [cursor=pointer]
+      - generic [ref=e82]:
+        - heading "Used by professionals from" [level=2] [ref=e84]
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - img "Fidelity Investments" [ref=e89]
+            - img "Newmark" [ref=e92]
+            - img "Knight Frank" [ref=e95]
+            - img "ING Group (Germany / Wholesale)" [ref=e98]
+            - img "Blackstone" [ref=e101]
+            - img "DLF Limited" [ref=e104]
+            - img "McKinsey & Company" [ref=e107]
+            - img "J.P. Morgan / JPMorgan Chase & Co." [ref=e110]
+            - img "Cushman & Wakefield" [ref=e113]
+            - img "Deloitte" [ref=e116]
+            - img "Schroders" [ref=e119]
+            - img "ANZ" [ref=e122]
+            - img "Savills / Savills España / Savills NA" [ref=e125]
+            - img "PwC" [ref=e128]
+            - img "Compass" [ref=e131]
+            - img [ref=e134]
+            - img [ref=e137]
+            - img [ref=e140]
+            - img [ref=e143]
+            - img [ref=e146]
+            - img [ref=e149]
+            - img [ref=e152]
+            - img [ref=e155]
+            - img [ref=e158]
+            - img [ref=e161]
+            - img [ref=e164]
+            - img [ref=e167]
+            - img [ref=e170]
+            - img [ref=e173]
+            - img [ref=e176]
+          - generic [ref=e177]:
+            - img "Nedbank CIB" [ref=e180]
+            - img "APG Asset Management" [ref=e183]
+            - img "KPMG / KPMG Lower Gulf / KPMG España" [ref=e186]
+            - img "EY-Parthenon" [ref=e189]
+            - img "Citigroup / Citi" [ref=e192]
+            - img "Colliers / Colliers International" [ref=e195]
+            - img "Bank of America" [ref=e198]
+            - img "Santander CIB" [ref=e201]
+            - img "Marcus & Millichap" [ref=e204]
+            - img "BNP Paribas Real Estate" [ref=e207]
+            - img "CBRE / CBRE GWS / CBRE Capital Markets" [ref=e210]
+            - img "Societe Generale CIB" [ref=e213]
+            - img "UBS" [ref=e216]
+            - img "JLL" [ref=e219]
+            - img "Foster + Partners" [ref=e222]
+            - img [ref=e225]
+            - img [ref=e228]
+            - img [ref=e231]
+            - img [ref=e234]
+            - img [ref=e237]
+            - img [ref=e240]
+            - img [ref=e243]
+            - img [ref=e246]
+            - img [ref=e249]
+            - img [ref=e252]
+            - img [ref=e255]
+            - img [ref=e258]
+            - img [ref=e261]
+            - img [ref=e264]
+            - img [ref=e267]
+      - generic [ref=e270]:
+        - heading "AI for Real Estate Price Estimation, Work, Analysis, Reports" [level=2] [ref=e272]
+        - generic [ref=e273]:
+          - img [ref=e278]
+          - generic [ref=e280]:
+            - generic [ref=e281]: Price estimation of any property in the world
+            - generic [ref=e282]: Instant, precise valuations for residential, commercial, and land assets globally.
+            - link "Explore" [ref=e284] [cursor=pointer]:
+              - /url: /product/price-estimation-of-any-property?locale=en
+              - text: Explore
+        - generic [ref=e286]:
+          - generic [ref=e287]:
+            - generic [ref=e288]: Your Organization AI
+            - generic [ref=e289]: Securely add your data and rules and get the cleverest person in the room — an AI with full knowledge of your organization and projects, available to your whole team to boost productivity.
+            - link "Explore" [ref=e291] [cursor=pointer]:
+              - /url: /product/your-organization-ai?locale=en
+              - text: Explore
+          - img [ref=e297]
+        - generic [ref=e299]:
+          - img [ref=e304]
+          - generic [ref=e306]:
+            - generic [ref=e307]: Knowledge
+            - generic [ref=e308]: Rapid Research, Grounded Results
+            - generic [ref=e309]: Get answers to complex research questions across 190 countries related to land, commercial, and residential markets.
+            - link "Explore" [ref=e311] [cursor=pointer]:
+              - /url: /product/knowledge-rapid-research-grounded-results?locale=en
+              - text: Explore
+      - generic [ref=e315]:
+        - heading "Data & Access Search" [level=2] [ref=e317]
+        - generic [ref=e318]:
+          - generic [ref=e319]:
+            - generic [ref=e320]: "2560"
+            - generic [ref=e321]: open sources
+          - generic [ref=e322]:
+            - generic [ref=e323]: "140"
+            - generic [ref=e324]: closed databases and registers
+          - generic [ref=e325]:
+            - generic [ref=e326]: "190"
+            - generic [ref=e327]: countries coverage
+      - generic [ref=e330]:
+        - generic [ref=e331]:
+          - generic [ref=e332]: Solutions for All Real Estate Pros
+          - heading "How Real Estate Professionals Use Titleman" [level=2] [ref=e333]
+        - generic [ref=e335]:
+          - generic [ref=e337]:
+            - generic [ref=e339] [cursor=pointer]: Investment Firms
+            - generic [ref=e341] [cursor=pointer]: Developers
+            - generic [ref=e343] [cursor=pointer]: Banks & Mortgage Lenders
+            - generic [ref=e345] [cursor=pointer]: Brokerage Firms
+          - generic [ref=e347]:
+            - generic [ref=e349]:
+              - img [ref=e354]
+              - generic [ref=e356]:
+                - generic [ref=e357]: Investment Firms
+                - generic [ref=e358]: Market analysis, investment insights
+                - link "Explore" [ref=e360] [cursor=pointer]:
+                  - /url: /solutions/investment-firms?locale=en
+                  - text: Explore
+            - generic [ref=e363]:
+              - img [ref=e368]
+              - generic [ref=e370]:
+                - generic [ref=e371]: Developers
+                - generic [ref=e372]: Land & building valuations, development feasibility, smart pricing Family Offices
+                - link "Explore" [ref=e374] [cursor=pointer]:
+                  - /url: /solutions/developers?locale=en
+                  - text: Explore
+            - generic [ref=e377]:
+              - img [ref=e382]
+              - generic [ref=e384]:
+                - generic [ref=e385]: Banks & Mortgage Lenders
+                - generic [ref=e386]: Price estimation, risk analysis
+                - link "Explore" [ref=e388] [cursor=pointer]:
+                  - /url: /solutions/banks-and-mortgage-lenders?locale=en
+                  - text: Explore
+            - generic [ref=e391]:
+              - img [ref=e396]
+              - generic [ref=e398]:
+                - generic [ref=e399]: Brokerage Firms
+                - generic [ref=e400]: Investment memos, client reports
+                - link "Explore" [ref=e402] [cursor=pointer]:
+                  - /url: /solutions/brokerage-firms?locale=en
+                  - text: Explore
+      - generic [ref=e404]:
+        - generic [ref=e407]:
+          - heading "Unlock Professional-Class AI for Your Firm" [level=2] [ref=e408]
+          - generic [ref=e409]:
+            - generic [ref=e410]:
+              - generic [ref=e413]: Enterprise-Grade Security
+              - generic [ref=e414]: Robust, industry-standard protection with zero training on your private data.
+            - generic [ref=e415]:
+              - generic [ref=e418]: Agentic Workflows
+              - generic [ref=e419]: Produce expert-quality work for complex workflows—no prompting required.
+            - generic [ref=e420]:
+              - generic [ref=e423]: Domain-Specific Models
+              - generic [ref=e424]: High-performing custom models built for complex professional tasks.
+            - generic [ref=e425]:
+              - generic [ref=e428]: 24/7 Customer Support
+              - generic [ref=e429]: White-glove assistance to resolve issues and maximize your Titleman experience.
+        - generic [ref=e432]:
+          - generic [ref=e433]: Unlock Professional-Class AI for Your Firm
+          - button "Get access" [ref=e434] [cursor=pointer]
+  - contentinfo [ref=e436]:
+    - generic [ref=e437]:
+      - link "Titleman Logo" [ref=e439] [cursor=pointer]:
+        - /url: /?locale=en
+        - img "Titleman Logo" [ref=e441]
+      - generic [ref=e442]:
+        - generic [ref=e443]: Product
+        - list [ref=e444]:
+          - listitem [ref=e445]:
+            - link "Pricing" [ref=e446] [cursor=pointer]:
+              - /url: /pricing?locale=en
+          - listitem [ref=e447]:
+            - link "Sources & Data" [ref=e448] [cursor=pointer]:
+              - /url: /sources-and-data?locale=en
+          - listitem [ref=e449]:
+            - link "Heavy Model" [ref=e450] [cursor=pointer]:
+              - /url: /alpha-drivers/heavy-model?locale=en
+          - listitem [ref=e451]:
+            - link "Light Model" [ref=e452] [cursor=pointer]:
+              - /url: /alpha-drivers/light-model?locale=en
+      - generic [ref=e453]:
+        - generic [ref=e454]: Resources
+        - list [ref=e455]:
+          - listitem [ref=e456]:
+            - link "Company" [ref=e457] [cursor=pointer]:
+              - /url: /company?locale=en
+          - listitem [ref=e458]:
+            - link "Legal" [ref=e459] [cursor=pointer]:
+              - /url: /legal?locale=en
+          - listitem [ref=e460]:
+            - link "Privacy Policy" [ref=e461] [cursor=pointer]:
+              - /url: /legal/privacy-policy?locale=en
+          - listitem [ref=e462]:
+            - link "Terms & Conditions" [ref=e463] [cursor=pointer]:
+              - /url: /legal/terms-and-conditions?locale=en
+          - listitem [ref=e464]:
+            - link "Imprint & Legal" [ref=e465] [cursor=pointer]:
+              - /url: /legal-notice?locale=en
+      - generic [ref=e466]:
+        - generic [ref=e467]: Socials
+        - list [ref=e468]:
+          - listitem [ref=e469]:
+            - link "LinkedIn" [ref=e470] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/titleman-ai/
+      - generic [ref=e471]:
+        - generic [ref=e472]: Contact us
+        - list [ref=e473]:
+          - listitem [ref=e474]:
+            - link "support@titleman.ai" [ref=e475] [cursor=pointer]:
+              - /url: mailto:support@titleman.ai?subject=%5BTicket%201779362512819%5D%20Support%20Request
+          - listitem [ref=e476]:
+            - link "Give feedback" [ref=e477] [cursor=pointer]:
+              - /url: https://wa.me/971507218752
+      - generic:
+        - generic:
+          - img
