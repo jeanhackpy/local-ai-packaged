@@ -223,6 +223,118 @@
 
 ---
 
+## COMPARATIF SKILLS SEO/GEO — 22 MAI 2026
+
+### Tableau comparatif
+
+| Outil | Facilité | Pertinence | Temps | Output | Score |
+|-------|----------|-----------|-------|--------|-------|
+| **ai-marketing-seo / gsc_client** | ★★★★☆ | ★★★★☆ | <30s | JSON/table | **4/5** |
+| **ai-marketing-seo / trend_scout** | ★★★★☆ | ★★★☆☆ | ~2min | JSON/markdown | **3.5/5** |
+| **geo-seo-claude / fetch_page** | ★★★★☆ | ★★★★☆ | <5s | headers + status | **4/5** |
+| **geo-seo-claude / citability_scorer** | ★★★☆☆ | ★★★★★ | 10-30s | JSON score | **3/5** ⚠️ Cloudflare |
+| **geo-seo-claude (sub-skills)** | N/A | N/A | N/A | — | **0/5** ⚠️ Install incomplet |
+| **seo-audit (builtin)** | ★★★★★ | ★★★★☆ | N/A | Liste findings | **4/5** |
+| **schema-markup (builtin)** | ★★★★★ | ★★★★☆ | N/A | JSON-LD | **4/5** |
+| **toprank-seo** | N/A | N/A | N/A | — | **0/5** ❌ Non installé |
+
+### Recommandation
+**Utiliser en priorité:**
+1. `ai-marketing-seo` + `gsc_client` pour données GSC
+2. `seo-audit` (builtin) pour audit technique
+3. `schema-markup` (builtin) pour structured data
+4. `geo-seo-claude` une fois sub-skills réinstallés
+
+---
+
+## DONNÉES GSC — 22 MAI 2026
+
+### Top Pages (28 jours)
+| Page | Clicks | Impr | CTR | Pos |
+|------|--------|------|-----|-----|
+| https://recall-agency.com/ | 3 | 178 | 1.7% | 6.3 |
+| https://recall-agency.com/about/ | 0 | 28 | 0% | 5.8 |
+| https://recall-agency.com/en/privacy-policy/ | 0 | 18 | 0% | 4.6 |
+| https://recall-agency.com/services/ | 0 | 27 | 0% | 5.9 |
+| https://recall-agency.com/en/search-engine-optimization/ | 0 | 14 | 0% | 14.1 |
+| https://recall-agency.com/web-design/ | 0 | 12 | 0% | 4.6 |
+| https://recall-agency.com/en/contact/ | 0 | 11 | 0% | 8.7 |
+
+### Device Split
+| Device | Clicks | Impr | CTR | Pos |
+|--------|--------|------|-----|-----|
+| Desktop | 2 | 167 | 1.2% | 6.7 |
+| Mobile | 1 | 48 | 2.1% | 6.1 |
+
+### Striking Distance Keywords
+**0 keywords** en position 4-20 — pas de quick wins immédiate
+
+### Keywords avec données
+| Query | Clicks | Impr | CTR | Pos |
+|-------|--------|------|-----|-----|
+| recall agency | 0 | 43 | 0% | 6.7 |
+| recall marketing | 0 | 8 | 0% | 16.1 |
+| recall media | 0 | 1 | 0% | 10.0 |
+| advertising recall | 0 | 1 | 0% | 79.0 |
+
+### Posts (5 articles — analyse content)
+| Titre | Mots | Stats | Définitions |
+|-------|------|-------|-------------|
+| Real Estate: 3 Technologies... | 672 | 0 | 2 |
+| How to Leverage PPC... | 522 | 0 | 0 |
+| What Are the Best Apps... | 678 | 4 | 2 |
+| How to Leverage Local SEO... | 844 | 3 | 1 |
+| Realize Your Full Potential Online... | 1606 | 2 | 4 |
+
+---
+
+## SEO AUDIT — FINDINGS
+
+### ✅ Points forts
+- Robots.txt OK (wp-admin bloqué, sitemap référencé)
+- Sitemap XML actif et à jour (Rank Math)
+- SSL/HTTPS valide
+- Mobile-friendly (X-Frame-Options: SAMEORIGIN)
+- 5 articles de blog avec contenu substantive (522-1606 mots)
+- Pas de duplicate content evident
+
+### ❌ Issues critiques
+
+**Indexation:**
+- 15 URLs dans sitemap EN + homepage FR (multilingual pas optimal)
+- `/en/home/` canonical non défini
+- Home page ranke en pos 6.3 mais 0 clics malgré 178 impressions
+
+**Meta tags:**
+- Title tags et meta descriptions probablement manquants ou non optimisés sur pages EN
+- Articles sans meta descriptions personnalisées
+
+**Structure technique:**
+- Response headers LiteSpeed Cache (CDN Hostinger) — OK
+- HSTS, X-XSS-Protection, X-Content-Type-Options — bons headers
+- Canonical non visible dans les responses
+
+**Content ( GEO citability):**
+- Articles contiennent peu de statistiques (0-4 par article)
+- Definition patterns faibles (0-4 par article)
+- Longueur OK mais densité factuelle faible pour citation AI
+- Aucun schema markup detecté
+
+### 🔴 Actions prioritaires
+1. Ajouter meta descriptions uniques sur 5 articles
+2. Optimiser title tags avec keywords "real estate Thailand"
+3. Ajouter schema Organization + Service sur homepage
+4. Créer FAQPage schema pour articles
+5. Améliorer Answer Block Quality dans articles (definition patterns)
+
+### 🟡 Actions secondaires
+1. Canonicaliser /en/home/ vers /
+2. Ajouter OpenGraph + Twitter cards
+3. Optimiser images avec alt text descriptive
+4. Internal linking entre articles
+
+---
+
 ## NOTES
 
 - Tous les tests ont été effectués en **lecture seule**

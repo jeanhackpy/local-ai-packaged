@@ -1,0 +1,107 @@
+- generic [active] [ref=e1]:
+  - link "Aller au contenu" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e8]:
+        - link "REcall Agency" [ref=e12] [cursor=pointer]:
+          - /url: https://recall-agency.com/
+          - img "Recall Agency Logo" [ref=e13]
+        - text: 
+        - navigation "Navigation du site" [ref=e16]:
+          - list [ref=e18]:
+            - listitem [ref=e19]:
+              - link "Home – Français" [ref=e20] [cursor=pointer]:
+                - /url: https://recall-agency.com/
+            - listitem [ref=e21]:
+              - button "Get Started" [ref=e22] [cursor=pointer]:
+                - generic [ref=e23]: Get Started
+    - main [ref=e27]:
+      - article [ref=e28]:
+        - heading "Home – Français" [level=1] [ref=e30]
+    - generic [ref=e41]:
+      - heading "Get to know RECALL Agency today" [level=2] [ref=e43]
+      - paragraph [ref=e45]:
+        - text: We care about our clients. We’re fearless and innovative—because that’s what it takes
+        - text: to become successful in the world of digital marketing.
+    - generic [ref=e52]:
+      - generic [ref=e54]:
+        - generic [ref=e56]:
+          - heading "Company" [level=4] [ref=e58]
+          - list [ref=e60]:
+            - listitem [ref=e61]:
+              - link "Connect with us" [ref=e62] [cursor=pointer]:
+                - /url: https://recall-agency.com/contact/
+            - listitem [ref=e63]:
+              - link "Privacy Policy" [ref=e64] [cursor=pointer]:
+                - /url: https://recall-agency.com/privacy-policy/
+            - listitem [ref=e65]:
+              - link "Terms of Use" [ref=e66] [cursor=pointer]:
+                - /url: https://recall-agency.com/terms-of-use/
+            - listitem [ref=e67]:
+              - link "About Us" [ref=e68] [cursor=pointer]:
+                - /url: https://recall-agency.com/about/
+            - listitem [ref=e69]:
+              - link "Portfolio" [ref=e70] [cursor=pointer]:
+                - /url: https://view.accesshub.co/TG7xMILa/portfolio/
+            - listitem [ref=e71]:
+              - link "Insights" [ref=e72] [cursor=pointer]:
+                - /url: https://recall-agency.com/blog/
+            - listitem [ref=e73]:
+              - link "Log-In" [ref=e74] [cursor=pointer]:
+                - /url: https://crm.zoho.com/portal/REcallAndREflexion/crm/login.sas
+        - generic [ref=e76]:
+          - heading "Services" [level=4] [ref=e78]
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Website & Development" [ref=e82] [cursor=pointer]:
+                - /url: https://recall-agency.com/web-design/
+            - listitem [ref=e83]:
+              - link "Search Engine Optimization" [ref=e84] [cursor=pointer]:
+                - /url: https://recall-agency.com/search-engine-optimization/
+            - listitem [ref=e85]:
+              - link "Google Ads & Facebook Ads" [ref=e86] [cursor=pointer]:
+                - /url: https://recall-agency.com/services/
+            - listitem [ref=e87]:
+              - link "CRM & Customer Experience" [ref=e88] [cursor=pointer]:
+                - /url: https://recall-agency.com/services/
+            - listitem [ref=e89]:
+              - link "Strategy, Analytics & Marketing" [ref=e90] [cursor=pointer]:
+                - /url: https://recall-agency.com/services/
+        - generic [ref=e92]:
+          - heading "Expertise" [level=4] [ref=e94]
+          - list [ref=e96]:
+            - listitem [ref=e97]:
+              - link "Real Estate Tech Strategy" [ref=e98] [cursor=pointer]:
+                - /url: https://recall-agency.com/contact/
+            - listitem [ref=e99]:
+              - link "E-commerce Accelerator" [ref=e100] [cursor=pointer]:
+                - /url: https://recall-agency.com/web-design/
+            - listitem [ref=e101]:
+              - link "Blockchain Technology" [ref=e102] [cursor=pointer]:
+                - /url: https://recall-agency.com/contact/
+            - listitem [ref=e103]:
+              - link "Digital Transformation" [ref=e104] [cursor=pointer]:
+                - /url: https://recall-agency.com/contact/
+            - listitem [ref=e105]:
+              - link "Sustainable Growth" [ref=e106] [cursor=pointer]:
+                - /url: https://recall-agency.com/contact/
+      - list [ref=e116]:
+        - listitem [ref=e117]:
+          - link:
+            - /url: https://www.instagram.com/recall_agency/
+        - listitem [ref=e118]:
+          - link:
+            - /url: https://fb.me/recallsmarketing
+        - listitem [ref=e119]:
+          - link:
+            - /url: https://www.linkedin.com/company/recalldigitalmarketing
+        - listitem [ref=e120]:
+          - link:
+            - /url: https://twitter.com/digital_recall
+    - contentinfo [ref=e121]:
+      - generic [ref=e126]:
+        - generic [ref=e127]: © 2026 REcall Agency | All Rights Reserved.
+        - link "Sitemap" [ref=e129] [cursor=pointer]:
+          - /url: /sitemap
+  - text: 
