@@ -555,9 +555,90 @@ Links à ajouter:
 
 ---
 
-**Rédigé:** 22 mai 2026
+**Rédigé:** 22 mai 2026 (updated 23 mai 2026)
 **Master SEO:** Claude Code
-**Prochaine action: Mettre à jour meta descriptions (en attente validation humaine)**
+**Prochaine action:** Valider stratégie avec utilisateur
+
+---
+
+## UPDATE 23 MAI 2026 — ANALYSE COMPLÉMENTAIRE
+
+### GSC Recall-agency.com (28 jours) — données fraîches
+
+**Top pages:**
+| Page | Clics | Impr | CTR | Pos |
+|------|-------|------|-----|-----|
+| / | 3 | 173 | 1.7% | 6.7 |
+| /about/ | 0 | 26 | 0% | 5.9 |
+| /en/privacy-policy/ | 0 | 17 | 0% | 4.5 |
+| /en/search-engine-optimization/ | 0 | 13 | 0% | 14.6 |
+| /services/ | 0 | 23 | 0% | 6.1 |
+| /web-design/ | 0 | 11 | 0% | 4.6 |
+| /en/contact/ | 0 | 9 | 0% | 8.3 |
+
+**Device split:**
+- Desktop: 2 clics / 163 impr / CTR 1.2% / pos 7.2
+- Mobile: 1 clic / 46 impr / CTR 2.2% / pos 5.8
+
+**Top queries:**
+- "recall agency": 0 clics / 41 impr / pos 6.7
+- "recall marketing": 0 clics / 9 impr / pos 19.2
+- "recall media": 0 clics / 1 impr / pos 10.0
+- "advertising recall": 0 clics / 1 impr / pos 79.0
+
+**Striking distance:** 0 keywords en position 4-20
+
+### SEO recall-agency.com — CONSTATS
+
+**Points critiques:**
+1. Homepage title = "Home - Français | REcall Agency" — generic, pas de keyword
+2. About/Services/Contact redirect vers /en/ (version EN) — fragmenté
+3. Meta descriptions présentes sur pages EN ✅ mais homepage FR n'a pas de meta description visible dans GSC
+4. Pas de H1 structuré — le H1 principal est "A Digital Marketing Agency Committed to Growing Businesses" sur /en/about/
+5. Homepage pos 6.7 avec 0 clics = meta description missing ou non compelling
+6. Site multilingue mal structuré (FR + EN + TH + ZH + TT)
+
+**Actions prioritaires pour recall-agency.com:**
+1. Homepage FR: ajouter meta description compelling avec "agency Thailand" + CTA
+2. Canonicaliser /en/home/ vers /
+3. Ajouter schema Organization + Service
+4. Réécrire H1 homepage avec keyword principal
+5. Posts 2020 = EXPIRÉS → refresh avec Thailand focus
+
+### reflexion.asia — CONSTATS SÉPARÉS
+
+**robots.txt analysis:**
+- Content-Signal: search=yes, ai-train=no ✅ search OK
+- ClaudeBot, GPTBot, Google-Extended tous BLOQUÉS ⚠️ GEO impact
+- Cloudflare active (blocking citability_scorer)
+
+**GSC reflexion.asia (28 jours):**
+- 14 clics / 1621 impressions
+- "investir en thailande": pos 10.1 (STRIKING DISTANCE ✅)
+- Homepage pos 4.5 avec 0 clics — meta description missing
+- 43% mobile mais 3x moins traffic desktop
+
+**Top pages reflexion:**
+- /guide-investissement-immobilier-thailande/: 9 clics / 979 impr / CTR 0.9% / pos 10.5
+- /acheter-villa-thailande/: 2 clics / 531 impr / CTR 0.4% / pos 22.1
+
+**Content reflexion (10 posts):**
+- 728-1198 mots par post ✅
+- 4-7 H2s par post ✅
+- 0 images sur tous les posts ❌
+- 0 external links ❌
+- No H1 sur homepage et guide-investissement ❌
+- 4 titres "Investir en Thaïlande" avec variations mineures ❌
+
+**Actions réflexion prioritaires:**
+1. Supprimer ClaudeBot block → GEO impact
+2. Ajouter H1 sur homepage et guide-investissement
+3. Ajouter 2-3 images par post
+4. Differencier titres duplicates
+
+---
+
+**NVIDIA MCP server:** Pas de package npm officiel trouvé. Le NVIDIA_API_KEY sur VPS (`nvapi-...`) est pour NVIDIA NIM API (inference). Pas de MCP server officiel NVIDIA pour Claude Code. Option: construire custom MCP server avec @modelcontextprotocol/sdk.
 
 - Tous les tests ont été effectués en **lecture seule**
 - Aucun impact sur le VPS ou WordPress

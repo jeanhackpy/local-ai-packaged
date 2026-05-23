@@ -167,6 +167,49 @@ Allow: /
 
 ---
 
-**Rapport:** 22 mai 2026
-**Site:** reflexion.asia
-**Tools:** GSC API + WordPress REST API
+## UPDATE 23 MAI 2026
+
+###robots.txt Analysis — Updated
+```
+User-agent: *
+Content-Signal: search=yes,ai-train=no
+Allow: /
+```
+- ✅ search=yes — Google peut indexer
+- ⚠️ ClaudeBot blocked via ai-train=no → Impact GEO majeur
+- ⚠️ GPTBot blocked → Impact AI search (ChatGPT, Bing AI)
+- ⚠️ Google-Extended blocked → Impact Google AI Overviews
+- Cloudflare active — bloque fetch_programming depuis scripts Python
+
+**Impact:** Le site ne pourra pas être cité par ChatGPT/Claude/Perplexity tant que ai-train=no. Fix: changer en `ai-input=yes` pour，允许AI用作RAG grounding。
+
+### reflexion.asia — Actions Prioritaires Cross-Site
+
+**Pour recall-agency.com:**
+1. Homepage FR: meta description + H1 avec keyword "Thailand digital marketing"
+2. Canonical /en/home/ → /
+3. Posts 2020 = EXPIRÉS → refresh Thailand focus
+4. Schema Organization sur homepage
+5. 0 keywords striking distance — construire topical authority
+
+**Pour reflexion.asia:**
+1. Fix robots.txt ai-train=no → ai-input=yes (GEO quick win)
+2. Ajouter H1 sur homepage-default et guide-investissement
+3. Ajouter images aux 10 posts (0 images = 0 engagement)
+4. "investir en thailande" pos 10.1 → target top 5
+
+**KPIs globaux (90j):**
+| KPI | Baseline | Target |
+|-----|----------|--------|
+| Clics/mois (recall) | 4 | 50 |
+| Pos "recall agency" | 6.7 | 1-3 |
+| Striking distance kw (recall) | 0 | 10 |
+| Clics/mois (reflexion) | 14 | 50 |
+| Pos "investir en thailande" | 10.1 | 1-5 |
+| GEO presence (AI search) | 0% | >20% |
+
+---
+
+**Rapport:** 22-23 mai 2026
+**Sites:** reflexion.asia + recall-agency.com
+**Tools:** GSC API + WordPress REST API + curl + citability_scorer.py
