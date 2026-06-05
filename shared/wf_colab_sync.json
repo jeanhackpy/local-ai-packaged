@@ -1,0 +1,354 @@
+{
+  "name": "WF-Colab Sync Embedding",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "wf-colab-sync",
+        "responseMode": "response",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "wf-colab-sync",
+      "triggerOn": "manual"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "fileName": "={{ $json.name }}",
+        "folderId": "13Mc5Nu2mgtQcsOFuN79Ug6-i1mRFPE9q",
+        "options": {
+          "mimeType": "text/csv"
+        }
+      },
+      "id": "gdrive-upload-csv",
+      "name": "Upload CSV to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 4,
+      "position": [220, 300],
+      "credentials": {
+        "googleDriveOAuth2OAuth2": {
+          "id": "1",
+          "name": "Google Drive (Recall Agency)"
+        }
+      },
+      "discardCurrentItemAsFirst": false,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://n8n.recall-agency.com/webhook/wf-colab-result",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "folder_id",
+              "value": "13Mc5Nu2mgtQcsOFuN79Ug6-i1mRFPE9q"
+            },
+            {
+              "name": "csv_uploaded",
+              "value": "={{ $('Upload CSV to Drive').itemCount }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISOString() }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "log-upload",
+      "name": "Log CSV Uploaded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "command": "echo 'CSV uploaded to Drive. Awaiting Colab callback on /webhook/wf-colab-result'",
+        "options": {}
+      },
+      "id": "done-upload",
+      "name": "CSV → Drive Done",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "path": "wf-colab-result",
+        "responseMode": "response",
+        "options": {}
+      },
+      "id": "webhook-result",
+      "name": "Colab Result Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 600],
+      "webhookId": "wf-colab-result",
+      "triggerOn": "manual"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "folderId": "={{ $json.body.folder_id || '13Mc5Nu2mgtQcsOFuN79Ug6-i1mRFPE9q' }}",
+        "query": "name contains '_vectors.parquet' and trashed = false",
+        "options": {
+          "fields": ["id", "name", "size", "createdTime"],
+          "pageSize": 100
+        }
+      },
+      "id": "poll-parquet-list",
+      "name": "Find Parquet Files",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 4,
+      "position": [220, 600],
+      "credentials": {
+        "googleDriveOAuth2OAuth2": {
+          "id": "1",
+          "name": "Google Drive (Recall Agency)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-files",
+              "leftValue": "{{ $json.files }}",
+              "rightValue": [],
+              "operator": {
+                "type": "objectExists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-parquet-exists",
+      "name": "Parquet Files Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 600]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.files[0].id }}",
+        "options": {}
+      },
+      "id": "download-parquet",
+      "name": "Download Parquet",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 4,
+      "position": [660, 480],
+      "credentials": {
+        "googleDriveOAuth2OAuth2": {
+          "id": "1",
+          "name": "Google Drive (Recall Agency)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=/home/phil/venv/bin/python3 /home/phil/palanthai/phase3/scripts/upload_vectors_to_qdrant.py --collection units_v3 --file /tmp/{{ $json.name }}",
+        "options": {
+          "executions": {
+            "timeout": 3600
+          }
+        }
+      },
+      "id": "upsert-qdrant",
+      "name": "Upsert to Qdrant",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [880, 480]
+    },
+    {
+      "parameters": {
+        "url": "https://9d1cadcd-481f-4cbe-acc0-aa6ded64064f.supabase.co/rest/v1/rpc.colab_status_update",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjogInNlcnZpY2Vfcm9sZSIsICJpc3MiOiAic3VwYWJhc2UiLCAiaWF0IjogMTc2ODYzNjM1MiwgImV4cCI6IDIwODM5OTYzNTJ9.uRxPCPeQA8LJvzP7z__EKf9hyD0RLCPjYY2UXAKufg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_collection",
+              "value": "units_v3"
+            },
+            {
+              "name": "p_points_count",
+              "value": "={{ $json.count || 0 }}"
+            },
+            {
+              "name": "p_status",
+              "value": "vectors_upserted"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "update-supabase",
+      "name": "Update Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 480]
+    },
+    {
+      "parameters": {
+        "command": "echo 'No parquet files found yet'",
+        "options": {}
+      },
+      "id": "no-parquet",
+      "name": "No Parquet Yet",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [660, 720]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Upload CSV to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload CSV to Drive": {
+      "main": [
+        [
+          {
+            "node": "Log CSV Uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log CSV Uploaded": {
+      "main": [
+        [
+          {
+            "node": "CSV → Drive Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Colab Result Webhook": {
+      "main": [
+        [
+          {
+            "node": "Find Parquet Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Parquet Files": {
+      "main": [
+        [
+          {
+            "node": "Parquet Files Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parquet Files Found?": {
+      "main": [
+        [
+          {
+            "node": "Download Parquet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Parquet Yet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Parquet": {
+      "main": [
+        [
+          {
+            "node": "Upsert to Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert to Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataForExecutionDurations": "all",
+    "timezone": "Asia/Bangkok",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": ["phase3", "embedding", "colab", "qdrant"],
+  "webentries": [
+    {
+      "path": "wf-colab-sync",
+      "restrictions": {
+        "post": { "auth": false },
+        "get": { "auth": false }
+      }
+    },
+    {
+      "path": "wf-colab-result",
+      "restrictions": {
+        "post": { "auth": false },
+        "get": { "auth": false }
+      }
+    }
+  ]
+}
