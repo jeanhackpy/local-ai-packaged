@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ COMMAND & CONTROL — System Dashboard</title>
+<style>
+  :root {
+    --bg-base: #0a0c10;
+    --bg-panel: #10141c;
+    --bg-card: #151922;
+    --bg-card-hover: #1c2130;
+    --border: #1e2535;
+    --border-bright: #2a3450;
+    --accent: #00d4ff;
+    --accent-dim: #0099bb;
+    --green: #00e676;
+    --green-dim: #00994f;
+    --yellow: #ffca28;
+    --yellow-dim: #b38f1d;
+    --red: #ff5252;
+    --red-dim: #cc0000;
+    --purple: #b39ddb;
+    --text-primary: #e0e8f5;
+    --text-secondary: #7a8fad;
+    --text-muted: #4a5568;
+    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-bright);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), #0050aa);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .header-title h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .header-title p {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    margin-top: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .header-stat {
+    text-align: right;
+  }
+  .header-stat .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .header-stat .value { font-size: 13px; font-family: var(--font-mono); color: var(--text-primary); }
+
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  .sys-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border-bright); }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title .icon { font-size: 13px; }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+  .grid-services { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+
+  /* ── VPS STAT CARDS ── */
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.yellow::before { background: var(--yellow); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.purple::before { background: var(--purple); }
+
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; font-family: var(--font-mono); line-height: 1; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.blue { color: var(--accent); }
+  .stat-value.purple { color: var(--purple); }
+  .stat-sub { font-size: 11px; color: var(--text-secondary); margin-top: 5px; font-family: var(--font-mono); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin-top: 10px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .progress-fill.green { background: var(--green); }
+  .progress-fill.yellow { background: var(--yellow); }
+  .progress-fill.red { background: var(--red); }
+  .progress-fill.blue { background: var(--accent); }
+
+  /* ── SERVICE CHIPS ── */
+  .service-chip {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+    cursor: default;
+  }
+  .service-chip:hover { border-color: var(--border-bright); background: var(--bg-card-hover); }
+
+  .service-chip .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.up { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .dot.warn { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+  .dot.down { background: var(--red); box-shadow: 0 0 5px var(--red); }
+  .dot.inactive { background: var(--text-muted); }
+
+  .service-chip .name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .service-chip .port {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  /* ── DB MONITOR ── */
+  .db-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .db-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+  .db-header .db-icon { font-size: 18px; }
+  .db-header-text h3 { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .db-header-text p { font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); margin-top: 1px; }
+  .db-badge {
+    margin-left: auto;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .db-badge.up { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+  .db-badge.warn { background: rgba(255,202,40,0.15); color: var(--yellow); border: 1px solid rgba(255,202,40,0.3); }
+  .db-badge.down { background: rgba(255,82,82,0.15); color: var(--red); border: 1px solid rgba(255,82,82,0.3); }
+
+  .db-body { padding: 14px 16px; }
+
+  .db-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .db-metric:last-child { border-bottom: none; }
+  .db-metric .key { font-size: 11px; color: var(--text-secondary); }
+  .db-metric .val {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .db-metric .val.green { color: var(--green); }
+  .db-metric .val.yellow { color: var(--yellow); }
+  .db-metric .val.red { color: var(--red); }
+  .db-metric .val.blue { color: var(--accent); }
+  .db-metric .val.purple { color: var(--purple); }
+
+  /* ── COLLECTION ROWS ── */
+  .collection-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .collection-row:last-child { border-bottom: none; }
+  .collection-row .cname {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .collection-row .ccount {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .mini-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .mini-bar { height: 100%; border-radius: 2px; background: var(--accent); }
+  .collection-row .cdim { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); width: 60px; text-align: right; }
+
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .data-table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    font-size: 11px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(30,37,53,0.6);
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── ALERT BOX ── */
+  .alert {
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .alert:last-child { margin-bottom: 0; }
+  .alert.critical {
+    background: rgba(255,82,82,0.08);
+    border: 1px solid rgba(255,82,82,0.25);
+  }
+  .alert.warning {
+    background: rgba(255,202,40,0.08);
+    border: 1px solid rgba(255,202,40,0.25);
+  }
+  .alert.info {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.2);
+  }
+  .alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .alert-body h4 { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .alert-body p { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+  .alert.critical h4 { color: var(--red); }
+  .alert.warning h4 { color: var(--yellow); }
+  .alert.info h4 { color: var(--accent); }
+
+  /* ── PROJECT CARD ── */
+  .project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .project-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .project-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .project-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .project-domain { font-size: 11px; color: var(--accent); font-family: var(--font-mono); margin-top: 2px; }
+  .project-body { padding: 14px 16px; }
+  .project-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .project-status-badge.active { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+  .project-status-badge.building { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
+  .project-status-badge.pending { background: rgba(74,85,104,0.3); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .project-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .p-metric { background: var(--bg-panel); border-radius: 6px; padding: 8px 10px; }
+  .p-metric .pm-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .p-metric .pm-value { font-size: 14px; font-weight: 700; font-family: var(--font-mono); margin-top: 2px; color: var(--text-primary); }
+  .p-metric .pm-value.green { color: var(--green); }
+  .p-metric .pm-value.blue { color: var(--accent); }
+  .p-metric .pm-value.yellow { color: var(--yellow); }
+  .p-metric .pm-value.muted { color: var(--text-muted); }
+
+  /* ── N8N CARD ── */
+  .n8n-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .n8n-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .n8n-logo { font-size: 22px; }
+  .n8n-header-text h3 { font-size: 13px; font-weight: 700; }
+  .n8n-header-text a { font-size: 11px; color: var(--accent); text-decoration: none; font-family: var(--font-mono); }
+  .n8n-body { padding: 14px 16px; }
+
+  /* ── CMD BOX ── */
+  .cmd-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .cmd-box:last-child { margin-bottom: 0; }
+  .cmd-box .cmd-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .cmd-box code {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--green);
+    white-space: pre-wrap;
+    line-height: 1.7;
+    user-select: all;
+  }
+
+  /* ── URL LINKS ── */
+  .url-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .url-row:last-child { border-bottom: none; }
+  .url-row .dot { flex-shrink: 0; }
+  .url-row .service-name { font-size: 12px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .url-row a {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .url-row a:hover { text-decoration: underline; }
+
+  /* ── PIPELINE FLOW ── */
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg-panel);
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+    transition: border-color 0.15s;
+  }
+  .pipeline-step:hover { border-color: var(--border-bright); }
+  .pipeline-step .step-num {
+    width: 22px; height: 22px;
+    background: var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .pipeline-step .step-name { font-size: 12px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .pipeline-step .step-file { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); }
+  .pipeline-step .step-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .step-status.ok { background: rgba(0,230,118,0.12); color: var(--green); }
+  .step-status.warn { background: rgba(255,202,40,0.12); color: var(--yellow); }
+  .step-status.off { background: rgba(74,85,104,0.3); color: var(--text-muted); }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  /* ── TAGS ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+  }
+  .tag.exposed { background: rgba(255,82,82,0.12); color: var(--red); border: 1px solid rgba(255,82,82,0.2); }
+  .tag.secure { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+
+  /* ── SUPABASE TABLES ── */
+  .table-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    margin: 3px;
+  }
+  .table-pill .pill-val { color: var(--text-primary); font-weight: 700; }
+
+  /* ── SCROLL BAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">C²</div>
+    <div class="header-title">
+      <h1>Command &amp; Control</h1>
+      <p>Real Estate Intelligence Stack — VPS 31.97.67.145</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-stat">
+      <div class="label">VPS Plan</div>
+      <div class="value">KVM 2 · 2vCPU · 8GB</div>
+    </div>
+    <div class="header-stat">
+      <div class="label">OS</div>
+      <div class="value">Ubuntu 24.04 LTS</div>
+    </div>
+    <div class="header-stat">
+      <div class="label">Last Sync</div>
+      <div class="value">2026-06-01</div>
+    </div>
+    <div class="sys-status">
+      <div class="pulse-dot"></div>
+      SYSTEM NOMINAL
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="container">
+
+  <!-- ── ROW 1: VPS Quick Stats ── -->
+  <div>
+    <div class="section-title">⚡ VPS Overview</div>
+    <div class="grid-4">
+      <div class="stat-card yellow">
+        <div class="stat-label">Disk Usage</div>
+        <div class="stat-value yellow">87%</div>
+        <div class="stat-sub">84 GB used / 96 GB SSD</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Used</span><span>13 GB free</span></div>
+          <div class="progress-bar"><div class="progress-fill yellow" style="width:87%"></div></div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Docker Services</div>
+        <div class="stat-value green">19</div>
+        <div class="stat-sub">All containers Up · 25h+</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Healthy</span><span>100%</span></div>
+          <div class="progress-bar"><div class="progress-fill green" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Total Vectors (Qdrant)</div>
+        <div class="stat-value blue">45K</div>
+        <div class="stat-sub">45,039 units · 768 dims · Cosine</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>units</span><span>palanthai_knowledge: 612</span></div>
+          <div class="progress-bar"><div class="progress-fill blue" style="width:75%"></div></div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">PostgreSQL</div>
+        <div class="stat-value green">2.5GB</div>
+        <div class="stat-sub">145 tables · 53,301 units</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>replica_unit</span><span>53,301 rows</span></div>
+          <div class="progress-bar"><div class="progress-fill green" style="width:55%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 2: Docker Services ── -->
+  <div>
+    <div class="section-title">🐳 Docker Stack — 19 Containers</div>
+    <div class="card">
+      <div class="grid-services">
+        <div class="service-chip"><div class="dot up"></div><div class="name">caddy</div><div class="port">:80/:443</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">n8n</div><div class="port">:5678</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">qdrant</div><div class="port">:6333</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">neo4j</div><div class="port">:7474/:7687</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">ollama</div><div class="port">:11434</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">minio</div><div class="port">:9000/:9001</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">valkey</div><div class="port">:6379</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">searxng</div><div class="port">:8081</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-kong</div><div class="port">:8000</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-db</div><div class="port">:5432</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-auth</div><div class="port">—</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-rest</div><div class="port">:3000</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-studio</div><div class="port">:3000</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-storage</div><div class="port">:5000</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-pooler</div><div class="port">:6543</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-meta</div><div class="port">:8080</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-imgproxy</div><div class="port">:8080</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">sb-edge-fn</div><div class="port">—</div></div>
+        <div class="service-chip"><div class="dot up"></div><div class="name">realtime</div><div class="port">—</div></div>
+      </div>
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+        <div class="section-title" style="margin-bottom:8px;">⚙️ Bare Metal &amp; Systemd</div>
+        <div class="grid-services">
+          <div class="service-chip"><div class="dot up"></div><div class="name">Palanthai API</div><div class="port">:8765</div></div>
+          <div class="service-chip"><div class="dot up"></div><div class="name">HERMES Agent</div><div class="port">:9119</div></div>
+          <div class="service-chip"><div class="dot up"></div><div class="name">Fail2ban</div><div class="port">—</div></div>
+          <div class="service-chip"><div class="dot up"></div><div class="name">Tailscale</div><div class="port">100.78.x</div></div>
+          <div class="service-chip"><div class="dot inactive"></div><div class="name">Syncthing</div><div class="port">❌ inactive</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 3: DB Monitor ── -->
+  <div>
+    <div class="section-title">🗄️ Database Monitor</div>
+    <div class="grid-3">
+
+      <!-- SUPABASE / POSTGRES -->
+      <div class="db-card">
+        <div class="db-header">
+          <div class="db-icon">🐘</div>
+          <div class="db-header-text">
+            <h3>Supabase / PostgreSQL</h3>
+            <p>supabase.recall-agency.com · port 5432</p>
+          </div>
+          <div class="db-badge up">HEALTHY</div>
+        </div>
+        <div class="db-body">
+          <div class="db-metric"><span class="key">Size</span><span class="val green">2,527 MB</span></div>
+          <div class="db-metric"><span class="key">Tables</span><span class="val blue">145</span></div>
+          <div class="db-metric"><span class="key">replica_unit rows</span><span class="val">53,301</span></div>
+          <div class="db-metric"><span class="key">replica_projects_live</span><span class="val">6,646</span></div>
+          <div class="db-metric"><span class="key">unit_features</span><span class="val">245,865</span></div>
+          <div class="db-metric"><span class="key">PG Version</span><span class="val">15.8.1.085</span></div>
+          <div class="db-metric"><span class="key">Pooler</span><span class="val green">Supavisor 2.7.4</span></div>
+          <div class="db-metric"><span class="key">RLS</span><span class="val yellow">⚠ Partial (Tier 1 done)</span></div>
+          <div style="margin-top:10px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">KEY TABLES</div>
+            <div>
+              <span class="table-pill">Constructor <span class="pill-val">—</span></span>
+              <span class="table-pill">Residence <span class="pill-val">—</span></span>
+              <span class="table-pill">Listing <span class="pill-val">—</span></span>
+              <span class="table-pill">fullrun_unit <span class="pill-val">—</span></span>
+              <span class="table-pill">fullrun_projects_live <span class="pill-val">—</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QDRANT -->
+      <div class="db-card">
+        <div class="db-header">
+          <div class="db-icon">🧠</div>
+          <div class="db-header-text">
+            <h3>Qdrant — Vector Store</h3>
+            <p>31.97.67.145:6333 · REST + gRPC</p>
+          </div>
+          <div class="db-badge up">GREEN</div>
+        </div>
+        <div class="db-body">
+          <div class="db-metric"><span class="key">Status</span><span class="val green">✓ Running · HNSW m=16</span></div>
+          <div class="db-metric"><span class="key">Auth</span><span class="val red">⚠ NO AUTH (exposed)</span></div>
+          <div style="margin-top: 10px; font-size:10px; color:var(--text-muted); margin-bottom:8px;">COLLECTIONS</div>
+          <div class="collection-row">
+            <span class="cname">units</span>
+            <span class="ccount">45,039</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:100%"></div></div>
+            <span class="cdim">768 dim</span>
+          </div>
+          <div class="collection-row">
+            <span class="cname">palanthai_knowledge</span>
+            <span class="ccount">612</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:1.4%"></div></div>
+            <span class="cdim">768 dim</span>
+          </div>
+          <div class="collection-row">
+            <span class="cname">units_v3</span>
+            <span class="ccount">200</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:0.4%"></div></div>
+            <span class="cdim">1024 dim</span>
+          </div>
+          <div class="collection-row">
+            <span class="cname">projects_v3</span>
+            <span class="ccount">100</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:0.2%"></div></div>
+            <span class="cdim">—</span>
+          </div>
+          <div class="collection-row">
+            <span class="cname">palanthai_memory</span>
+            <span class="ccount">1</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:0.01%"></div></div>
+            <span class="cdim">768 dim</span>
+          </div>
+          <div class="collection-row">
+            <span class="cname">mem0migrations</span>
+            <span class="ccount">1</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:0.01%"></div></div>
+            <span class="cdim">1536 dim</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEO4J -->
+      <div class="db-card">
+        <div class="db-header">
+          <div class="db-icon">🕸️</div>
+          <div class="db-header-text">
+            <h3>Neo4j — Graph DB</h3>
+            <p>neo4j.recall-agency.com · bolt:7687</p>
+          </div>
+          <div class="db-badge up">RUNNING</div>
+        </div>
+        <div class="db-body">
+          <div class="db-metric"><span class="key">Container</span><span class="val green">✓ Up (Docker)</span></div>
+          <div class="db-metric"><span class="key">Browser</span><span class="val blue">neo4j.recall-agency.com</span></div>
+          <div class="db-metric"><span class="key">Bolt Port</span><span class="val yellow">7687 ⚠ exposed</span></div>
+          <div class="db-metric"><span class="key">Sync API</span><span class="val green">/api/v1/sync/neo4j/* · active</span></div>
+          <div style="margin-top:12px; font-size:10px; color:var(--text-muted); margin-bottom:8px;">GRAPH SCHEMA (PLANNED)</div>
+          <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
+            <span class="table-pill">:Project</span>
+            <span class="table-pill">:Developer</span>
+            <span class="table-pill">:Location</span>
+            <span class="table-pill">:Feature</span>
+          </div>
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">RELATIONSHIPS</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--purple);">(Project)-[:DEVELOPED_BY]→(Developer)</div>
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--purple);">(Project)-[:LOCATED_IN]→(Location)</div>
+            <div style="font-size:10px; font-family:var(--font-mono); color:var(--purple);">(Project)-[:HAS_FEATURE]→(Feature)</div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="alert warning" style="margin-bottom:0;">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-body">
+                <h4>Credentials Exposed</h4>
+                <p>Hardcoded in sync_service.py — rotate immediately.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 4: n8n + URLs + Pipeline ── -->
+  <div class="grid-3">
+
+    <!-- N8N -->
+    <div class="n8n-card">
+      <div class="n8n-header">
+        <div class="n8n-logo">⚡</div>
+        <div class="n8n-header-text">
+          <h3>n8n Workflows</h3>
+          <a href="https://n8n.recall-agency.com" target="_blank">n8n.recall-agency.com</a>
+        </div>
+        <div class="db-badge up" style="margin-left:auto;">RUNNING</div>
+      </div>
+      <div class="n8n-body">
+        <div class="db-metric"><span class="key">Container Port</span><span class="val">:5678 (proxied Caddy)</span></div>
+        <div class="db-metric"><span class="key">Webhook URL</span><span class="val blue">n8n.recall-agency.com</span></div>
+        <div class="db-metric"><span class="key">Supabase conn</span><span class="val green">http://kong:8000</span></div>
+        <div class="db-metric"><span class="key">Qdrant conn</span><span class="val green">http://qdrant:6333</span></div>
+        <div class="db-metric"><span class="key">Ollama conn</span><span class="val green">http://ollama:11434</span></div>
+        <div class="db-metric"><span class="key">Redis conn</span><span class="val green">redis:6379</span></div>
+        <div class="db-metric"><span class="key">Neo4j conn</span><span class="val green">bolt://neo4j:7687</span></div>
+        <div style="margin-top:12px;">
+          <div class="cmd-box">
+            <div class="cmd-label">Open n8n UI</div>
+            <code>open https://n8n.recall-agency.com</code>
+          </div>
+          <div class="cmd-box">
+            <div class="cmd-label">Check logs</div>
+            <code>ssh phil@31.97.67.145 'docker logs n8n --tail 50'</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLIC URLs -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🌐</span>Service URLs</div>
+      <div class="url-row"><div class="dot up"></div><div class="service-name">n8n</div><a href="https://n8n.recall-agency.com" target="_blank">n8n.recall-agency.com</a></div>
+      <div class="url-row"><div class="dot up"></div><div class="service-name">Supabase</div><a href="https://supabase.recall-agency.com" target="_blank">supabase.recall-agency.com</a></div>
+      <div class="url-row"><div class="dot up"></div><div class="service-name">Neo4j Browser</div><a href="https://neo4j.recall-agency.com" target="_blank">neo4j.recall-agency.com</a></div>
+      <div class="url-row"><div class="dot warn"></div><div class="service-name">Palanthai API</div><a href="http://31.97.67.145:8765" target="_blank">31.97.67.145:8765</a></div>
+      <div class="url-row"><div class="dot warn"></div><div class="service-name">Qdrant REST</div><a href="http://31.97.67.145:6333" target="_blank">31.97.67.145:6333</a></div>
+      <div class="url-row"><div class="dot warn"></div><div class="service-name">Ollama</div><a href="http://31.97.67.145:11434" target="_blank">31.97.67.145:11434</a></div>
+      <div class="url-row"><div class="dot warn"></div><div class="service-name">SearXNG</div><a href="http://31.97.67.145:8081" target="_blank">31.97.67.145:8081</a></div>
+      <div class="url-row" style="border-top:1px solid var(--border-bright); margin-top:4px; padding-top:8px;"><div class="dot up"></div><div class="service-name">reflexion.asia</div><a href="https://reflexion.asia" target="_blank">reflexion.asia</a></div>
+      <div class="url-row"><div class="dot up"></div><div class="service-name">recall-agency.com</div><a href="https://recall-agency.com" target="_blank">recall-agency.com</a></div>
+      <div class="url-row"><div class="dot inactive"></div><div class="service-name">patrimonasia.com</div><span style="font-size:11px; color:var(--text-muted);">Not built</span></div>
+    </div>
+
+    <!-- PALANTHAI PIPELINE -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔄</span>Palanthai Pipeline Phases</div>
+      <div class="pipeline-step">
+        <div class="step-num">1</div>
+        <div>
+          <div class="step-name">Scraping</div>
+          <div class="step-file">source_crawler.py · wf_extract/*.py · fullrun.py</div>
+        </div>
+        <div class="step-status ok">ACTIVE</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-name">Extraction &amp; Sync</div>
+          <div class="step-file">sequencer_v2.py · db_ingestor_units.py</div>
+        </div>
+        <div class="step-status ok">ACTIVE</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-name">Embedding → Qdrant</div>
+          <div class="step-file">embed_to_qdrant.py · quality ≥ 75</div>
+        </div>
+        <div class="step-status warn">OLLAMA ✓</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">4</div>
+        <div>
+          <div class="step-name">Palanthai API</div>
+          <div class="step-file">palanthai_api.py · 49 routes · :8765</div>
+        </div>
+        <div class="step-status ok">PID 776</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">5</div>
+        <div>
+          <div class="step-name">n8n Automation</div>
+          <div class="step-file">SEO, content, RAG queries</div>
+        </div>
+        <div class="step-status ok">ACTIVE</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">7</div>
+        <div>
+          <div class="step-name">Agentic (LangGraph)</div>
+          <div class="step-file">phase7-agentic-langraph/</div>
+        </div>
+        <div class="step-status warn">IN PROGRESS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 5: Projects ── -->
+  <div>
+    <div class="section-title">🏛️ Strategic Projects</div>
+    <div class="grid-3">
+
+      <!-- RECALL AGENCY -->
+      <div class="project-card">
+        <div class="project-header">
+          <div class="project-name">Recall Agency</div>
+          <div class="project-domain">recall-agency.com</div>
+        </div>
+        <div class="project-body">
+          <span class="project-status-badge building">⚡ Rebranding</span>
+          <div class="project-metrics">
+            <div class="p-metric">
+              <div class="pm-label">Focus</div>
+              <div class="pm-value blue" style="font-size:11px;">B2B · Tech-first</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Frontend</div>
+              <div class="pm-value yellow" style="font-size:11px;">Next.js</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">CMS</div>
+              <div class="pm-value" style="font-size:11px;">WordPress → Next</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">SEO</div>
+              <div class="pm-value green" style="font-size:11px;">RankMath + Polylang</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="db-metric"><span class="key">Theme</span><span class="val">Astra child</span></div>
+            <div class="db-metric"><span class="key">Languages</span><span class="val">FR / EN</span></div>
+            <div class="db-metric"><span class="key">Server</span><span class="val">Shared 92.113.28.34</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REFLEXION ASIA -->
+      <div class="project-card">
+        <div class="project-header">
+          <div class="project-name">Reflexion Asia (Palanthai)</div>
+          <div class="project-domain">reflexion.asia</div>
+        </div>
+        <div class="project-body">
+          <span class="project-status-badge building">⚡ Data Pipeline</span>
+          <div class="project-metrics">
+            <div class="p-metric">
+              <div class="pm-label">Units (DB)</div>
+              <div class="pm-value green">53,301</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Vectors</div>
+              <div class="pm-value blue">45,039</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Projects</div>
+              <div class="pm-value">6,646</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Regions</div>
+              <div class="pm-value" style="font-size:11px;">6 cities</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="db-metric"><span class="key">Theme</span><span class="val">Houzez</span></div>
+            <div class="db-metric"><span class="key">API</span><span class="val">FastAPI v1.0.0 · 49 routes</span></div>
+            <div class="db-metric"><span class="key">KB</span><span class="val yellow">⚠ 612 entries (dated 2026-03-20)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRIMONASIA -->
+      <div class="project-card">
+        <div class="project-header">
+          <div class="project-name">Patrimonasia</div>
+          <div class="project-domain">patrimonasia.com</div>
+        </div>
+        <div class="project-body">
+          <span class="project-status-badge pending">⏸ On Hold</span>
+          <div class="project-metrics">
+            <div class="p-metric">
+              <div class="pm-label">Focus</div>
+              <div class="pm-value muted" style="font-size:11px;">Partner Network</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Status</div>
+              <div class="pm-value muted" style="font-size:11px;">Not built</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Blocked by</div>
+              <div class="pm-value muted" style="font-size:11px;">Reflexion stable</div>
+            </div>
+            <div class="p-metric">
+              <div class="pm-label">Market</div>
+              <div class="pm-value muted" style="font-size:11px;">EU → Thailand</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="db-metric"><span class="key">Domain</span><span class="val yellow">patrimonasia.com (reserved)</span></div>
+            <div class="db-metric"><span class="key">Theme</span><span class="val yellow">— not selected</span></div>
+            <div class="db-metric"><span class="key">Timeline</span><span class="val">After reflexion + recall stable</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 6: Security + Quick Actions ── -->
+  <div class="grid-2">
+
+    <!-- SECURITY ALERTS -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔐</span>Security Audit — CRITICAL Items</div>
+      <div class="alert critical">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <h4>Hardcoded Credentials — Neo4j + PostgreSQL</h4>
+          <p>sync_service.py and ingestor_v5.py contain hardcoded passwords. NEO4J_PASS exposed in plaintext. Rotate immediately. See <code style="font-size:10px; color:var(--red);">VPS_Security_Audit_2026-05-01</code></p>
+        </div>
+      </div>
+      <div class="alert critical">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <h4>Command Injection — sync_service.py</h4>
+          <p>Unvalidated input passed to shell commands. CVSS Critical. Must patch before any public exposure.</p>
+        </div>
+      </div>
+      <div class="alert critical">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <h4>Unauthenticated Ports Exposed</h4>
+          <p>Qdrant (:6333/:6334), Neo4j Bolt (:7687), PostgreSQL (:5432), Ollama (:11434), SearXNG (:8081), Palanthai API (:8765) — all internet-accessible without auth.</p>
+        </div>
+      </div>
+      <div class="alert warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <h4>Disk at 87% — Monitor Closely</h4>
+          <p>84 GB used / 96 GB. Docker images + JSONL batches growing. Clean orphan volumes and old logs.</p>
+        </div>
+      </div>
+      <div class="alert warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <h4>Syncthing Service Inactive</h4>
+          <p>VPS → Mac sync is down. <code style="font-size:10px;">systemctl start syncthing@phil.service</code></p>
+        </div>
+      </div>
+      <div class="alert info">
+        <div class="alert-icon">ℹ️</div>
+        <div class="alert-body">
+          <h4>Knowledge Base Stale (reflexion_kb)</h4>
+          <p>Last updated 2026-03-20 — 612 entries. Consider re-embedding with latest content.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="card">
+      <div class="card-title"><span class="icon">⌨️</span>Quick Commands</div>
+      <div class="cmd-box">
+        <div class="cmd-label">SSH to VPS</div>
+        <code>ssh phil@31.97.67.145</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Docker status</div>
+        <code>ssh phil@31.97.67.145 'cd ~/local-ai-packaged && docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Disk usage</div>
+        <code>ssh phil@31.97.67.145 'df -h / && du -sh ~/local-ai-packaged/volumes/* 2>/dev/null | sort -rh | head -10'</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Qdrant collections</div>
+        <code>curl http://31.97.67.145:6333/collections | python3 -m json.tool</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Palanthai API health</div>
+        <code>curl http://31.97.67.145:8765/health</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Restart all Docker services</div>
+        <code>ssh phil@31.97.67.145 'cd ~/local-ai-packaged && docker compose up -d'</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Palanthai API restart</div>
+        <code>ssh phil@31.97.67.145 'pkill -f palanthai_api && cd ~/palanthai && bash start_api.sh'</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">Fix: Start Syncthing</div>
+        <code>ssh phil@31.97.67.145 'systemctl start syncthing@phil.service'</code>
+      </div>
+      <div class="cmd-box">
+        <div class="cmd-label">HERMES via Tailscale SSH tunnel</div>
+        <code>ssh -L 9119:100.78.110.61:9119 phil@31.97.67.145
+# then open: http://localhost:9119</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 7: Ports Exposure Table ── -->
+  <div>
+    <div class="section-title">🔌 Port Exposure Matrix</div>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Port</th>
+            <th>Service</th>
+            <th>URL / Access</th>
+            <th>Auth</th>
+            <th>Via Caddy</th>
+            <th>Risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>22</td><td>SSH</td><td>ssh phil@31.97.67.145</td><td><span class="tag secure">SSH KEY</span></td><td>—</td><td style="color:var(--green)">LOW</td></tr>
+          <tr><td>80/443</td><td>Caddy HTTPS</td><td>*.recall-agency.com</td><td><span class="tag secure">TLS</span></td><td>✓</td><td style="color:var(--green)">OK</td></tr>
+          <tr><td>5432</td><td>PostgreSQL</td><td>psql direct</td><td><span class="tag exposed">NO IP FILTER</span></td><td>✗</td><td style="color:var(--red)">CRITICAL</td></tr>
+          <tr><td>5678</td><td>n8n</td><td>31.97.67.145:5678</td><td><span class="tag exposed">BYPASS POSSIBLE</span></td><td>n8n.recall-agency.com</td><td style="color:var(--yellow)">MED</td></tr>
+          <tr><td>6333/6334</td><td>Qdrant</td><td>31.97.67.145:6333</td><td><span class="tag exposed">NO AUTH</span></td><td>✗</td><td style="color:var(--red)">CRITICAL</td></tr>
+          <tr><td>7474/7687</td><td>Neo4j</td><td>neo4j.recall-agency.com</td><td><span class="tag exposed">EXPOSED</span></td><td>:7474 via Caddy</td><td style="color:var(--red)">CRITICAL</td></tr>
+          <tr><td>8000/8443</td><td>Supabase Kong</td><td>supabase.recall-agency.com</td><td><span class="tag secure">JWT</span></td><td>✓</td><td style="color:var(--green)">OK</td></tr>
+          <tr><td>8081</td><td>SearXNG</td><td>31.97.67.145:8081</td><td><span class="tag exposed">NO AUTH</span></td><td>✗</td><td style="color:var(--yellow)">MED</td></tr>
+          <tr><td>8765</td><td>Palanthai API</td><td>31.97.67.145:8765</td><td><span class="tag exposed">NO AUTH</span></td><td>✗</td><td style="color:var(--red)">HIGH</td></tr>
+          <tr><td>9119</td><td>HERMES Dashboard</td><td>100.78.110.61:9119</td><td><span class="tag secure">TAILSCALE</span></td><td>✗</td><td style="color:var(--green)">LOW</td></tr>
+          <tr><td>11434</td><td>Ollama</td><td>31.97.67.145:11434</td><td><span class="tag exposed">NO AUTH</span></td><td>✗</td><td style="color:var(--red)">HIGH</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<div class="footer">
+  COMMAND &amp; CONTROL v1.0 · Real Estate Intelligence Stack · VPS 31.97.67.145 · Hostinger KVM2 · Ubuntu 24.04 LTS<br>
+  Data last verified: 2026-06-01 · Source: VPS_SERVICE_MAP.md + Data_Architecture.md · Generated by Claude
+</div>
+
+</body>
+</html>

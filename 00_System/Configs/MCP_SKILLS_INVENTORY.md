@@ -1,54 +1,164 @@
 # 🧰 INVENTAIRE DES MCP & SKILLS
 
-Ce document recense tous les serveurs MCP (outils) et Skills (compétences) disponibles pour les agents IA dans cet environnement.
-
-## 🔌 Serveurs MCP (Outils de Connexion)
-
-| Serveur MCP | Capacités Clés | État |
-| :--- | :--- | :--- |
-| **cloudflare** | Gestion DNS, Workers, KV, R2, D1, Queues, AI Inference. | ✅ Actif |
-| **github** | Gestion repos, PRs, Issues, Commits, Search, Copilot. | ✅ Actif |
-| **google-analytics** | Rapports, Page views, Events (Recall, Reflexion, Patrimonasia). | ✅ Actif |
-| **google-maps** | Docs, Instructions, Geospatial data assist. | ✅ Actif |
-| **google-search-console** | SEO, Sitemaps, Indexation, Quick Wins detection. | ✅ Actif |
-| **hostinger-api** | Déploiement sites (WP, JS, Static), DNS, VPS, Billing. | ✅ Actif |
-| **obsidian** | Lecture/Écriture notes, Tags, Frontmatter, Patching. | ✅ Actif |
-| **stitch** | Design System, UI Screens generation (Text-to-UI). | ✅ Actif |
-| **julesServer** | Automatisation de tâches complexes via /jules. | ✅ Actif |
-| **chrome-devtools** | Debugging browser, Screenshots, Performance, A11y. | ✅ Actif |
-| **context7** | Documentation up-to-date pour toutes les librairies dev. | ✅ Actif |
-
-## ⚡ Skills Spécialisés (Workflow Agents)
-
-### 🧩 Superpowers (Core Workflow)
-| Skill | Description |
-| :--- | :--- |
-| `brainstorming` | Design et spécification avant implémentation. |
-| `writing-plans` | Création de plans d'exécution détaillés. |
-| `executing-plans` | Exécution rigoureuse de plans approuvés. |
-| `systematic-debugging` | Diagnostic et résolution de bugs. |
-| `test-driven-development` | Développement dirigé par les tests (TDD). |
-| `verification-loop` | Système de vérification final avant clôture. |
-
-### 🚀 Développement & Ops
-| Skill | Description |
-| :--- | :--- |
-| `huggingface-jobs` | Lancement de workloads IA sur infrastructure Cloud GPU. |
-| `transformers-js` | Inférence ML locale (Browser/Node). |
-| `mcp-server-patterns` | Construction de nouveaux serveurs MCP. |
-| `nextjs-turbopack` | Optimisation Next.js 16+ et Turbopack. |
-| `e2e-testing` | Tests Playwright de bout en bout. |
-| `crawl4ai-skill` | Deep dive en extraction de données web. |
-
-### 💎 Business & Marketing
-| Skill | Description |
-| :--- | :--- |
-| `deep-research` | Recherche multi-source (Exa, Firecrawl) avec citations. |
-| `market-research` | Intelligence de marché et analyse compétitive. |
-| `investor-outreach` | Outreach investisseurs et pitch decks. |
-| `content-engine` | Systèmes de contenu pour X, LinkedIn, TikTok. |
-| `crosspost` | Distribution multi-plateforme adaptative. |
-| `article-writing` | Rédaction de contenu long-form (Blog, Newsletter). |
+Recensement de tous les serveurs MCP et Skills disponibles pour les agents IA.
+*Dernière mise à jour : 2026-06-06*
 
 ---
-*Dernière mise à jour : 2026-03-29*
+
+## 🔌 MCP Locaux (claude_desktop_config.json)
+
+Ces serveurs tournent en local via `npx` au démarrage de Claude Desktop.
+
+| Serveur | Package | Auth | État |
+| :--- | :--- | :--- | :--- |
+| **cloudflare** | `@cloudflare/mcp-server-cloudflare` | Wrangler OAuth (`npx wrangler login`) | ✅ Actif |
+| **google** | `ga4-mcp` | gcloud ADC — `palanthai_oauth_client.json` | ✅ Actif |
+| **obsidian** | `@mauricio.wolff/mcp-obsidian` | Local filesystem | ✅ Actif |
+
+### 🔧 Maintenance Auth
+
+**Cloudflare** — token expire régulièrement :
+```bash
+npx wrangler login
+npx @cloudflare/mcp-server-cloudflare init   # met à jour le session_id dans config.json
+```
+
+**Google (ga4-mcp)** — si scopes expirés ou "insufficient authentication scopes" :
+```bash
+gcloud auth application-default login \
+  --client-id-file=$HOME/.config/gcloud/palanthai_oauth_client.json \
+  --scopes="https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/analytics.edit,https://www.googleapis.com/auth/webmasters,https://www.googleapis.com/auth/indexing"
+# puis redémarrer Claude Desktop
+```
+
+> ⚠️ Ne PAS utiliser `@googleworkspace/mcp-server-gsc` ou `@googleworkspace/mcp-server-ga4` — ces packages n'existent pas sur npm (404).
+
+---
+
+## 🌐 MCP Cowork (Plugins connectés)
+
+### Data & Analytics
+| Serveur | Capacités | Notes |
+| :--- | :--- | :--- |
+| **google** | GA4 reports, GSC analytics, URL inspection, Sitemaps, Indexing API | Voir propriétés ci-dessous |
+| **ahrefs** | Site Explorer, Rank Tracker, Keywords Explorer, GSC, Brand Radar, Social | — |
+| **similarweb** | Traffic intel, Lead enrichment, Competitor analysis | — |
+
+### Infrastructure
+| Serveur | Capacités |
+| :--- | :--- |
+| **cloudflare** (plugin) | Workers, KV, R2, D1, Durable Objects, Queues, AI inference, Cron, Zones |
+| **supabase** | SQL, Migrations, Edge Functions, Branches, Logs |
+| **n8n** | Workflows CRUD, Executions, Data Tables, Credentials |
+
+### Productivity & Knowledge
+| Serveur | Capacités |
+| :--- | :--- |
+| **obsidian** | Read/Write notes, Tags, Frontmatter, Search (vault : SystemMac) |
+| **notion** | Pages, Databases, Views, Comments, Search |
+| **airtable** | Bases, Tables, Records, Fields |
+
+### Sales & Marketing
+| Serveur | Capacités |
+| :--- | :--- |
+| **apollo** | Lead enrichment, Prospecting ICP, Sequences |
+| **similarweb** | Web intelligence, Competitors |
+
+### Engineering
+| Serveur | Capacités |
+| :--- | :--- |
+| **github** | Repos, PRs, Issues, Code search |
+| **linear** | Issues, Projects, Cycles |
+| **asana** | Tasks, Projects |
+| **pagerduty** | Incidents, On-call |
+| **datadog** | Logs, Metrics, Monitors |
+
+### Ops / Legal / Finance
+| Serveur | Capacités |
+| :--- | :--- |
+| **slack** | Messages, Channels |
+| **gmail** | Email read/search |
+| **google-calendar** | Événements, Agenda |
+| **box** | Files, Folders |
+| **atlassian** | Jira, Confluence |
+| **docusign** | Signatures électroniques |
+| **ms365** | Office 365 |
+| **bigquery** | SQL analytics |
+
+### Product & Design
+| Serveur | Capacités |
+| :--- | :--- |
+| **amplitude** | Product analytics |
+| **figma** | Design files |
+| **monday** | Project boards |
+| **clickup** | Tasks |
+| **pendo** | User onboarding |
+| **fireflies** | Meeting transcripts |
+
+---
+
+## 📊 Propriétés GA4 & GSC
+
+| Site | GSC | GA4 Property ID |
+| :--- | :--- | :--- |
+| recall-agency.com | `sc-domain:recall-agency.com` ✅ siteOwner | `250736461` |
+| reflexion.asia | `sc-domain:reflexion.asia` ✅ siteOwner | `292681207` |
+| reflexion-ai | — | `470602693` |
+| patrimonasia.com | — | *(property à créer)* |
+| The Little Big Shop | — | `305480195` |
+
+---
+
+## ⚡ Skills Cowork
+
+### Output Formats
+| Skill | Déclencheur |
+| :--- | :--- |
+| `docx` | Word `.docx` |
+| `xlsx` | Spreadsheet `.xlsx` |
+| `pptx` | Présentation `.pptx` |
+| `pdf` | PDF création/extraction |
+
+### Engineering
+| Skill | Usage |
+| :--- | :--- |
+| `engineering:code-review` | Review PR/diff |
+| `engineering:system-design` | Architecture decisions |
+| `engineering:incident-response` | Production incidents |
+| `engineering:documentation` | README, runbooks, API docs |
+| `mcp-builder` | Créer un nouveau serveur MCP |
+| `crawl4ai` | Web scraping / extraction structurée |
+
+### Data & Analytics
+| Skill | Usage |
+| :--- | :--- |
+| `data:interactive-dashboard-builder` | HTML dashboards Chart.js |
+| `data:sql-queries` | SQL multi-dialect |
+| `data:data-visualization` | Charts Python (matplotlib, plotly) |
+| `data:statistical-analysis` | Stats, outliers, hypothesis testing |
+
+### Sales & Marketing
+| Skill | Usage |
+| :--- | :--- |
+| `apollo:prospect` | ICP → leads enrichis |
+| `apollo:enrich-lead` | Enrichissement contact |
+| `marketing:seo-audit` | Audit SEO complet |
+| `marketing:content-creation` | Blog, social, newsletter |
+| `sales:competitive-intelligence` | Battlecards concurrents |
+
+### Productivity
+| Skill | Usage |
+| :--- | :--- |
+| `productivity:memory-management` | CLAUDE.md + memory/ |
+| `schedule` | Tâches planifiées (cron) |
+
+---
+
+## 🗂️ Fichiers de Config Clés
+
+| Fichier | Rôle |
+| :--- | :--- |
+| `~/Library/Application Support/Claude/claude_desktop_config.json` | Config MCP locaux + prefs Claude Desktop |
+| `~/.config/gcloud/application_default_credentials.json` | Credentials Google ADC actifs |
+| `~/.config/gcloud/palanthai_oauth_client.json` | OAuth client Desktop (project `palanthai` `690339909634`) |
+| `~/.wrangler/` | Auth Cloudflare Wrangler |

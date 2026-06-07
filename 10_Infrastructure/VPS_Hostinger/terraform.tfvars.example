@@ -1,0 +1,15 @@
+# terraform.tfvars.example — copy to terraform.tfvars and fill in
+
+# Required: get from OCI Console → Administration → Tenancy Details
+tenancy_ocid = "ocid1.tenancy.oc1..aaaaaaaaXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# Optional (defaults shown)
+region                 = "ap-singapore-1"
+ssh_public_key_path    = "~/.ssh/id_ed25519.pub"
+instance_display_name  = "palanthai-oracle"
+instance_shape         = "VM.Standard.A1.Flex"
+instance_ocpus         = 4
+instance_memory_gb     = 24
+boot_volume_size_gb    = 200
+vcn_cidr               = "10.0.0.0/16"
+subnet_cidr            = "10.0.1.0/24"

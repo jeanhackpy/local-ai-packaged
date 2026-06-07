@@ -1,6 +1,6 @@
 # 🕹️ COMMAND & CONTROL CENTER
 
-Bienvenue dans le centre de commande de l'écosystème SystemMac. Ce document est le point d'entrée unique pour l'utilisateur et les agents IA.
+Bienvenue dans le centre de commande du System. Ce document est le point d'entrée unique pour l'utilisateur et les agents IA.
 
 ## 🚀 Vision Stratégique
 **"The Real Estate Intelligence Stack"** : Maîtriser le marché immobilier thaïlandais par l'IA, la data et l'immersion.
