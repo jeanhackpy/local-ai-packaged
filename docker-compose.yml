@@ -151,6 +151,10 @@ services:
       source: /data/localai-cfg/localai-rclone.conf
       target: /etc/localai-rclone.conf
       read_only: true
+    - type: bind
+      source: /data/localai-cfg/localai-backup.sh
+      target: /usr/local/bin/localai-backup.sh
+      read_only: true
   functions:
     command:
     - start
@@ -291,7 +295,7 @@ services:
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
-    - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
+    - WEBHOOK_URL=${N8N_WEBHOOK_URL}
     - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
     expose:
