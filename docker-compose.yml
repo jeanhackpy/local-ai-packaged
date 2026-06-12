@@ -278,7 +278,7 @@ services:
           memory: 700m
     environment:
     - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=supabase-db
+    - DB_POSTGRESDB_HOST=db
     - DB_POSTGRESDB_USER=postgres
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     - DB_POSTGRESDB_DATABASE=postgres
@@ -674,7 +674,7 @@ volumes:
 x-n8n:
   environment:
   - DB_TYPE=postgresdb
-  - DB_POSTGRESDB_HOST=supabase-db
+  - DB_POSTGRESDB_HOST=db
   - DB_POSTGRESDB_USER=postgres
   - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
   - DB_POSTGRESDB_DATABASE=postgres
