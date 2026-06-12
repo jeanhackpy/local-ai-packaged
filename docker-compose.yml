@@ -44,12 +44,12 @@ services:
       interval: 5s
       retries: 3
       test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:9999/health
+      - CMD
+      - wget
+      - --no-verbose
+      - --tries=1
+      - --spider
+      - http://localhost:9999/health
       timeout: 5s
     image: supabase/gotrue:v2.184.0
     networks:
@@ -57,11 +57,11 @@ services:
     restart: unless-stopped
   db:
     command:
-      - postgres
-      - -c
-      - config_file=/etc/postgresql/postgresql.conf
-      - -c
-      - log_min_messages=fatal
+    - postgres
+    - -c
+    - config_file=/etc/postgresql/postgresql.conf
+    - -c
+    - log_min_messages=fatal
     container_name: supabase-db
     depends_on: {}
     environment:
@@ -78,76 +78,76 @@ services:
       interval: 5s
       retries: 10
       test:
-        - CMD
-        - pg_isready
-        - -U
-        - postgres
-        - -h
-        - localhost
+      - CMD
+      - pg_isready
+      - -U
+      - postgres
+      - -h
+      - localhost
       timeout: 5s
     image: supabase/postgres:15.8.1.085
     networks:
       default: null
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/realtime.sql
-        target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/webhooks.sql
-        target: /docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/roles.sql
-        target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/jwt.sql
-        target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: supabase-db-data
-        target: /var/lib/postgresql/data
-        type: volume
-        volume: {}
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/_supabase.sql
-        target: /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/logs.sql
-        target: /docker-entrypoint-initdb.d/migrations/99-logs.sql
-        type: bind
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/db/pooler.sql
-        target: /docker-entrypoint-initdb.d/migrations/99-pooler.sql
-        type: bind
-      - source: db-config
-        target: /etc/postgresql-custom
-        type: volume
-        volume: {}
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/realtime.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/webhooks.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/roles.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/jwt.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: supabase-db-data
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/_supabase.sql
+      target: /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/logs.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-logs.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/pooler.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-pooler.sql
+      type: bind
+    - source: db-config
+      target: /etc/postgresql-custom
+      type: volume
+      volume: {}
   functions:
     command:
-      - start
-      - --main-service
-      - /home/deno/functions/main
+    - start
+    - --main-service
+    - /home/deno/functions/main
     container_name: supabase-edge-functions
     depends_on: {}
     environment:
@@ -162,38 +162,38 @@ services:
       default: null
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: Z
-        source: ./supabase/docker/volumes/functions
-        target: /home/deno/functions
-        type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/functions
+      target: /home/deno/functions
+      type: bind
   imgproxy:
     container_name: supabase-imgproxy
     environment:
       IMGPROXY_BIND: :5001
       IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION}
       IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
-      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_USE_ETAG: 'true'
     healthcheck:
       interval: 5s
       retries: 3
       test:
-        - CMD
-        - imgproxy
-        - health
+      - CMD
+      - imgproxy
+      - health
       timeout: 5s
     image: darthsim/imgproxy:v3.8.0
     networks:
       default: null
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: z
-        source: ./supabase/docker/volumes/storage
-        target: /var/lib/storage
-        type: bind
+    - bind:
+        create_host_path: true
+        selinux: z
+      source: ./supabase/docker/volumes/storage
+      target: /var/lib/storage
+      type: bind
   kong:
     container_name: supabase-kong
     depends_on: {}
@@ -201,7 +201,7 @@ services:
     environment:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
-      KONG_DATABASE: "off"
+      KONG_DATABASE: 'off'
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
@@ -213,17 +213,17 @@ services:
     networks:
       default: null
     ports:
-      - ${KONG_HTTP_PORT}:8000/tcp
-      - ${KONG_HTTPS_PORT}:8443/tcp
+    - ${KONG_HTTP_PORT}:8000/tcp
+    - ${KONG_HTTPS_PORT}:8443/tcp
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: z
-        read_only: true
-        source: ./supabase/docker/volumes/api/kong.yml
-        target: /home/kong/temp.yml
-        type: bind
+    - bind:
+        create_host_path: true
+        selinux: z
+      read_only: true
+      source: ./supabase/docker/volumes/api/kong.yml
+      target: /home/kong/temp.yml
+      type: bind
   meta:
     container_name: supabase-meta
     depends_on:
@@ -250,29 +250,29 @@ services:
         limits:
           memory: 256m
     environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    - MINIO_ROOT_USER=minio
+    - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     expose:
-      - 9000/tcp
-      - 9001/tcp
+    - 9000/tcp
+    - 9001/tcp
     healthcheck:
       interval: 5s
       retries: 5
       test:
-        - CMD
-        - curl
-        - -f
-        - http://localhost:9000/minio/health/live
+      - CMD
+      - curl
+      - -f
+      - http://localhost:9000/minio/health/live
       timeout: 5s
     image: minio/minio:latest
     networks:
       default: null
     restart: always
     volumes:
-      - source: minio_storage
-        target: /data
-        type: volume
-        volume: {}
+    - source: minio_storage
+      target: /data
+      type: volume
+      volume: {}
   n8n:
     container_name: n8n
     deploy:
@@ -280,56 +280,53 @@ services:
         limits:
           memory: 700m
     environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=supabase-db
-      - DB_POSTGRESDB_USER=postgres
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_POSTGRESDB_DATABASE=postgres
-      - N8N_DIAGNOSTICS_ENABLED=false
-      - N8N_PERSONALIZATION_ENABLED=false
-      - N8N_ENCRYPTION_KEY
-      - N8N_USER_MANAGEMENT_JWT_SECRET
-      - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
+    - DB_TYPE=postgresdb
+    - DB_POSTGRESDB_HOST=supabase-db
+    - DB_POSTGRESDB_USER=postgres
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - DB_POSTGRESDB_DATABASE=postgres
+    - N8N_DIAGNOSTICS_ENABLED=false
+    - N8N_PERSONALIZATION_ENABLED=false
+    - N8N_ENCRYPTION_KEY
+    - N8N_USER_MANAGEMENT_JWT_SECRET
+    - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
+    - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
     expose:
-      - 5678/tcp
+    - 5678/tcp
     image: n8nio/n8n:latest
     labels:
-      - traefik.enable=true
-      - traefik.docker.network=coolify
-      - traefik.http.routers.n8n.rule=Host(`n8n.recall-agency.com`)
-      - traefik.http.routers.n8n.entrypoints=https
-      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
-      - traefik.http.services.n8n.loadbalancer.server.port=5678
-      - traefik.http.routers.n8n-http.rule=Host(`n8n.recall-agency.com`)
-      - traefik.http.routers.n8n-http.entrypoints=http
-      - traefik.http.routers.n8n-http.middlewares=n8n-https
-      - traefik.http.middlewares.n8n-https.redirectscheme.scheme=https
+    - traefik.enable=true
+    - traefik.docker.network=coolify
+    - traefik.http.routers.n8n.rule=Host(`n8n.recall-agency.com`)
+    - traefik.http.routers.n8n.entrypoints=https
+    - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+    - traefik.http.services.n8n.loadbalancer.server.port=5678
+    - traefik.http.routers.n8n-http.rule=Host(`n8n.recall-agency.com`)
+    - traefik.http.routers.n8n-http.entrypoints=http
+    - traefik.http.routers.n8n-http.middlewares=n8n-https
+    - traefik.http.middlewares.n8n-https.redirectscheme.scheme=https
     networks:
       coolify: null
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "5678"
-        target: 5678
+    - 5678:5678
     restart: unless-stopped
     volumes:
-      - source: n8n_storage
-        target: /home/node/.n8n
-        type: volume
-        volume: {}
-      - bind:
-          create_host_path: true
-        source: ./n8n/backup
-        target: /backup
-        type: bind
-      - bind:
-          create_host_path: true
-        source: ./shared
-        target: /data/shared
-        type: bind
+    - source: n8n_storage
+      target: /home/node/.n8n
+      type: volume
+      volume: {}
+    - bind:
+        create_host_path: true
+      source: ./n8n/backup
+      target: /backup
+      type: bind
+    - bind:
+        create_host_path: true
+      source: ./shared
+      target: /data/shared
+      type: bind
   neo4j:
     container_name: neo4j
     deploy:
@@ -337,69 +334,57 @@ services:
         limits:
           memory: 1g
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/your_password}
-      - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_server_config_strict__validation_enabled=false
+    - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/your_password}
+    - NEO4J_PLUGINS=["apoc"]
+    - NEO4J_server_config_strict__validation_enabled=false
     expose:
-      - 7473/tcp
-      - 7474/tcp
-      - 7687/tcp
+    - 7473/tcp
+    - 7474/tcp
+    - 7687/tcp
     image: neo4j:latest
     networks:
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "7473"
-        target: 7473
-      - mode: ingress
-        protocol: tcp
-        published: "7474"
-        target: 7474
-      - mode: ingress
-        protocol: tcp
-        published: "7687"
-        target: 7687
+    - 7473:7473
+    - 7474:7474
+    - 7687:7687
     restart: unless-stopped
     volumes:
-      - source: neo4j-data
-        target: /data
-        type: volume
-        volume: {}
-      - source: neo4j-plugins
-        target: /plugins
-        type: volume
-        volume: {}
+    - source: neo4j-data
+      target: /data
+      type: volume
+      volume: {}
+    - source: neo4j-plugins
+      target: /plugins
+      type: volume
+      volume: {}
   ollama:
     container_name: ollama
     deploy:
       resources:
         limits:
-          cpus: "1.5"
+          cpus: '1.5'
           memory: 2500m
     environment:
-      - OLLAMA_CONTEXT_LENGTH=8192
-      - OLLAMA_FLASH_ATTENTION=1
-      - OLLAMA_KV_CACHE_TYPE=q8_0
-      - OLLAMA_MAX_LOADED_MODELS=2
-      - OLLAMA_MAX_QUEUE=4
-      - OLLAMA_NUM_PARALLEL=1
+    - OLLAMA_CONTEXT_LENGTH=8192
+    - OLLAMA_FLASH_ATTENTION=1
+    - OLLAMA_KV_CACHE_TYPE=q8_0
+    - OLLAMA_MAX_LOADED_MODELS=2
+    - OLLAMA_MAX_QUEUE=4
+    - OLLAMA_NUM_PARALLEL=1
     expose:
-      - 11434/tcp
+    - 11434/tcp
     image: ollama/ollama:latest
     networks:
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "11434"
-        target: 11434
+    - 11434:11434
     restart: unless-stopped
     volumes:
-      - source: ollama_storage
-        target: /root/.ollama
-        type: volume
-        volume: {}
+    - source: ollama_storage
+      target: /root/.ollama
+      type: volume
+      volume: {}
   qdrant:
     container_name: qdrant
     deploy:
@@ -407,26 +392,20 @@ services:
         limits:
           memory: 1g
     expose:
-      - 6333/tcp
-      - 6334/tcp
+    - 6333/tcp
+    - 6334/tcp
     image: qdrant/qdrant
     networks:
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "6333"
-        target: 6333
-      - mode: ingress
-        protocol: tcp
-        published: "6334"
-        target: 6334
+    - 6333:6333
+    - 6334:6334
     restart: unless-stopped
     volumes:
-      - source: qdrant_storage
-        target: /qdrant/storage
-        type: volume
-        volume: {}
+    - source: qdrant_storage
+      target: /qdrant/storage
+      type: volume
+      volume: {}
   realtime:
     container_name: realtime-dev.supabase-realtime
     depends_on:
@@ -446,56 +425,54 @@ services:
       DNS_NODES: ''''''
       ERL_AFLAGS: -proto_dist inet_tcp
       PORT: 4000
-      RLIMIT_NOFILE: "10000"
-      RUN_JANITOR: "true"
+      RLIMIT_NOFILE: '10000'
+      RUN_JANITOR: 'true'
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      SEED_SELF_HOST: "true"
+      SEED_SELF_HOST: 'true'
     healthcheck:
       interval: 5s
       retries: 3
       test:
-        - CMD-SHELL
-        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY}" http://localhost:4000/api/tenants/realtime-dev/health'
+      - CMD-SHELL
+      - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY}" http://localhost:4000/api/tenants/realtime-dev/health'
       timeout: 5s
     image: supabase/realtime:v2.68.0
     networks:
       default: null
     restart: unless-stopped
   redis:
-    command: |
-      valkey-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    command: 'valkey-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+
+      '
     container_name: redis
     deploy:
       resources:
         limits:
           memory: 300m
     expose:
-      - 6379/tcp
+    - 6379/tcp
     healthcheck:
       interval: 3s
       retries: 10
       test:
-        - CMD
-        - redis-cli
-        - ping
+      - CMD
+      - redis-cli
+      - ping
       timeout: 5s
     image: docker.io/valkey/valkey:8-alpine
     networks:
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "6379"
-        target: 6379
+    - 6379:6379
     restart: unless-stopped
     volumes:
-      - source: valkey-data
-        target: /data
-        type: volume
-        volume: {}
+    - source: valkey-data
+      target: /data
+      type: volume
+      volume: {}
   rest:
     command:
-      - postgrest
+    - postgrest
     container_name: supabase-rest
     depends_on:
       db:
@@ -507,7 +484,7 @@ services:
       PGRST_DB_ANON_ROLE: anon
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_DB_USE_LEGACY_GUCS: 'false'
       PGRST_JWT_SECRET: ${JWT_SECRET}
     image: postgrest/postgrest:v14.1
     networks:
@@ -520,24 +497,21 @@ services:
         limits:
           memory: 256m
     environment:
-      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+    - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
     expose:
-      - 8080/tcp
+    - 8080/tcp
     image: docker.io/searxng/searxng:latest
     networks:
       default: null
     ports:
-      - mode: ingress
-        protocol: tcp
-        published: "8081"
-        target: 8080
+    - 8081:8080
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-        source: ./searxng
-        target: /etc/searxng
-        type: bind
+    - bind:
+        create_host_path: true
+      source: ./searxng
+      target: /etc/searxng
+      type: bind
   storage:
     container_name: supabase-storage
     depends_on:
@@ -553,7 +527,7 @@ services:
     environment:
       ANON_KEY: ${ANON_KEY}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      ENABLE_IMAGE_TRANSFORMATION: "true"
+      ENABLE_IMAGE_TRANSFORMATION: 'true'
       FILE_SIZE_LIMIT: 52428800
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       GLOBAL_S3_BUCKET: stub
@@ -561,7 +535,7 @@ services:
       PGRST_JWT_SECRET: ${JWT_SECRET}
       POSTGREST_URL: http://rest:3000
       REGION: stub
-      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      REQUEST_ALLOW_X_FORWARDED_PATH: 'true'
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
       STORAGE_BACKEND: file
       TENANT_ID: stub
@@ -569,24 +543,24 @@ services:
       interval: 5s
       retries: 3
       test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://storage:5000/status
+      - CMD
+      - wget
+      - --no-verbose
+      - --tries=1
+      - --spider
+      - http://storage:5000/status
       timeout: 5s
     image: supabase/storage-api:v1.33.0
     networks:
       default: null
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: z
-        source: ./supabase/docker/volumes/storage
-        target: /var/lib/storage
-        type: bind
+    - bind:
+        create_host_path: true
+        selinux: z
+      source: ./supabase/docker/volumes/storage
+      target: /var/lib/storage
+      type: bind
   studio:
     container_name: supabase-studio
     depends_on: {}
@@ -616,10 +590,10 @@ services:
       interval: 5s
       retries: 3
       test:
-        - CMD
-        - node
-        - -e
-        - fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})
+      - CMD
+      - node
+      - -e
+      - fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})
       timeout: 10s
     image: supabase/studio:2025.12.17-sha-43f4f7f
     networks:
@@ -627,9 +601,9 @@ services:
     restart: unless-stopped
   supavisor:
     command:
-      - /bin/sh
-      - -c
-      - /app/bin/migrate && /app/bin/supavisor eval "$$(cat /etc/pooler/pooler.exs)" && /app/bin/server
+    - /bin/sh
+    - -c
+    - /app/bin/migrate && /app/bin/supavisor eval "$$(cat /etc/pooler/pooler.exs)" && /app/bin/server
     container_name: supabase-pooler
     depends_on:
       db:
@@ -657,29 +631,29 @@ services:
       interval: 10s
       retries: 5
       test:
-        - CMD
-        - curl
-        - -sSfL
-        - --head
-        - -o
-        - /dev/null
-        - http://127.0.0.1:4000/api/health
+      - CMD
+      - curl
+      - -sSfL
+      - --head
+      - -o
+      - /dev/null
+      - http://127.0.0.1:4000/api/health
       timeout: 5s
     image: supabase/supavisor:2.7.4
     networks:
       default: null
     ports:
-      - ${POSTGRES_PORT}:5432
-      - ${POOLER_PROXY_PORT_TRANSACTION}:6543
+    - ${POSTGRES_PORT}:5432
+    - ${POOLER_PROXY_PORT_TRANSACTION}:6543
     restart: unless-stopped
     volumes:
-      - bind:
-          create_host_path: true
-          selinux: z
-        read_only: true
-        source: ./supabase/docker/volumes/pooler/pooler.exs
-        target: /etc/pooler/pooler.exs
-        type: bind
+    - bind:
+        create_host_path: true
+        selinux: z
+      read_only: true
+      source: ./supabase/docker/volumes/pooler/pooler.exs
+      target: /etc/pooler/pooler.exs
+      type: bind
 volumes:
   db-config:
     name: lap-deploy_db-config
@@ -702,16 +676,16 @@ volumes:
     name: lap-deploy_valkey-data
 x-n8n:
   environment:
-    - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=supabase-db
-    - DB_POSTGRESDB_USER=postgres
-    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-    - DB_POSTGRESDB_DATABASE=postgres
-    - N8N_DIAGNOSTICS_ENABLED=false
-    - N8N_PERSONALIZATION_ENABLED=false
-    - N8N_ENCRYPTION_KEY
-    - N8N_USER_MANAGEMENT_JWT_SECRET
-    - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
-    - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-    - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
+  - DB_TYPE=postgresdb
+  - DB_POSTGRESDB_HOST=supabase-db
+  - DB_POSTGRESDB_USER=postgres
+  - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+  - DB_POSTGRESDB_DATABASE=postgres
+  - N8N_DIAGNOSTICS_ENABLED=false
+  - N8N_PERSONALIZATION_ENABLED=false
+  - N8N_ENCRYPTION_KEY
+  - N8N_USER_MANAGEMENT_JWT_SECRET
+  - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
+  - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+  - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
   image: n8nio/n8n:latest
