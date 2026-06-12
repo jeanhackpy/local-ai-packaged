@@ -162,10 +162,7 @@ services:
       default: null
     restart: unless-stopped
     volumes:
-    - bind:
-        create_host_path: true
-        selinux: Z
-      source: ./supabase/docker/volumes/functions
+    - source: /data/localai-cfg/functions
       target: /home/deno/functions
       type: bind
   imgproxy:
@@ -644,11 +641,8 @@ services:
     - ${POOLER_PROXY_PORT_TRANSACTION}:6543
     restart: unless-stopped
     volumes:
-    - bind:
-        create_host_path: true
-        selinux: z
-      read_only: true
-      source: ./supabase/docker/volumes/pooler/pooler.exs
+    - read_only: true
+      source: /data/localai-cfg/pooler/pooler.exs
       target: /etc/pooler/pooler.exs
       type: bind
 volumes:
