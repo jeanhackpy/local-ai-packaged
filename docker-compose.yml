@@ -173,6 +173,12 @@ services:
     networks:
       default: null
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/9000) 2>/dev/null']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     volumes:
     - source: /data/localai-cfg/functions
       target: /home/deno/functions
@@ -432,6 +438,12 @@ services:
     - 6333:6333
     - 6334:6334
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/6333) 2>/dev/null']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     volumes:
     - source: qdrant_storage
       target: /qdrant/storage
@@ -521,6 +533,12 @@ services:
     networks:
       default: null
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/3000) 2>/dev/null']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
   searxng:
     container_name: searxng
     deploy:
