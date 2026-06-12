@@ -690,7 +690,34 @@ services:
       source: /data/localai-cfg/pooler/pooler.exs
       target: /etc/pooler/pooler.exs
       type: bind
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    networks:
+      default: null
+    ports:
+    - 11235:11235
+    environment:
+    - MAX_CONCURRENT_TASKS=5
+    volumes:
+    - crawl4ai_data:/root/.crawl4ai
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:11235/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.5'
+
 volumes:
+  crawl4ai_data:
+    name: lap-deploy_crawl4ai_data
   db-config:
     name: lap-deploy_db-config
   minio_storage:
