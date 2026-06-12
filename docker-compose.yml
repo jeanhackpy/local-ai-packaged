@@ -713,6 +713,32 @@ services:
           memory: 2g
           cpus: '1.5'
 
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    networks:
+      default: null
+    ports:
+    - 3000:3000
+    volumes:
+    - /data/localai-cfg/homepage:/app/config
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /:/hostfs:ro
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - HOMEPAGE_VAR_VPS=Oracle ARM VPS
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
 volumes:
   crawl4ai_data:
     name: lap-deploy_crawl4ai_data
