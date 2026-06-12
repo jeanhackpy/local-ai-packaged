@@ -143,6 +143,14 @@ services:
       target: /etc/postgresql-custom
       type: volume
       volume: {}
+    - type: bind
+      source: /usr/bin/rclone
+      target: /usr/local/bin/rclone
+      read_only: true
+    - type: bind
+      source: /data/localai-cfg/localai-rclone.conf
+      target: /etc/localai-rclone.conf
+      read_only: true
   functions:
     command:
     - start
@@ -321,6 +329,14 @@ services:
       source: ./shared
       target: /data/shared
       type: bind
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:5678/healthz || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
   neo4j:
     container_name: neo4j
     deploy:
@@ -352,6 +368,14 @@ services:
       target: /plugins
       type: volume
       volume: {}
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:7474 || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
   ollama:
     container_name: ollama
     deploy:
@@ -379,6 +403,15 @@ services:
       target: /root/.ollama
       type: volume
       volume: {}
+    healthcheck:
+      test:
+      - CMD
+      - ollama
+      - list
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
   qdrant:
     container_name: qdrant
     deploy:
@@ -506,6 +539,14 @@ services:
       source: ./searxng
       target: /etc/searxng
       type: bind
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:8080/healthz || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
   storage:
     container_name: supabase-storage
     depends_on:
