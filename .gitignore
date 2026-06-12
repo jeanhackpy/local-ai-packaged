@@ -1,6 +1,5 @@
 .env
 .env.test
-volumes/
 shared/
 neo4j/
 shared-backup/
@@ -39,3 +38,4 @@ supabase/docker/volumes/db/data/
 scripts/
 
 __pycache__/
+supabase/docker/volumes/storage/

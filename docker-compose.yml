@@ -217,11 +217,8 @@ services:
     - ${KONG_HTTPS_PORT}:8443/tcp
     restart: unless-stopped
     volumes:
-    - bind:
-        create_host_path: true
-        selinux: z
-      read_only: true
-      source: ./supabase/docker/volumes/api/kong.yml
+    - read_only: true
+      source: /data/localai-cfg/kong.yml
       target: /home/kong/temp.yml
       type: bind
   meta:
