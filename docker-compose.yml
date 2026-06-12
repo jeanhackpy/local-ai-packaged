@@ -7,7 +7,14 @@ volumes:
   qdrant_storage:
   valkey-data:
   minio_storage:
+  neo4j-data:
+  neo4j-plugins:
 
+networks:
+  default:
+    name: localai_default
+  coolify:
+    external: true
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
@@ -25,36 +32,6 @@ x-n8n: &service-n8n
     - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
 
-x-ollama: &service-ollama
-  image: ollama/ollama:latest
-  container_name: ollama
-  restart: unless-stopped
-  expose:
-    - 11434/tcp
-  environment:
-    - OLLAMA_CONTEXT_LENGTH=8192
-    - OLLAMA_FLASH_ATTENTION=1
-    - OLLAMA_KV_CACHE_TYPE=q8_0
-    - OLLAMA_MAX_LOADED_MODELS=2
-    - OLLAMA_MAX_QUEUE=4
-    - OLLAMA_NUM_PARALLEL=1
-  volumes:
-    - ollama_storage:/root/.ollama
-
-# Model pull DISABLED — manage models manually:
-#   docker exec ollama ollama pull <model>
-#   docker exec ollama ollama list
-#   docker exec ollama ollama rm <model>
-# x-init-ollama: &init-ollama
-#   image: ollama/ollama:latest
-#   container_name: ollama-pull-llama
-#   volumes:
-#     - ollama_storage:/root/.ollama
-#   entrypoint: /bin/sh
-#   command:
-#     - "-c"
-#     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
-
 services:
   n8n:
     <<: *service-n8n
@@ -62,10 +39,30 @@ services:
     restart: unless-stopped
     expose:
       - 5678/tcp
+    ports:
+      - 5678:5678
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./n8n/backup:/backup
       - ./shared:/data/shared
+    networks:
+      - default
+      - coolify
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.n8n.rule=Host(`n8n.recall-agency.com`)
+      - traefik.http.routers.n8n.entrypoints=https
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+      - traefik.http.routers.n8n-http.rule=Host(`n8n.recall-agency.com`)
+      - traefik.http.routers.n8n-http.entrypoints=http
+      - traefik.http.routers.n8n-http.middlewares=n8n-https
+      - traefik.http.middlewares.n8n-https.redirectscheme.scheme=https
+    deploy:
+      resources:
+        limits:
+          memory: 700m
 
   qdrant:
     image: qdrant/qdrant
@@ -74,24 +71,38 @@ services:
     expose:
       - 6333/tcp
       - 6334/tcp
+    ports:
+      - 6333:6333
+      - 6334:6334
     volumes:
       - qdrant_storage:/qdrant/storage
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
   neo4j:
     image: neo4j:latest
     container_name: neo4j
+    restart: unless-stopped
     volumes:
-      - ./neo4j/logs:/logs
-      - ./neo4j/config:/config
-      - ./neo4j/data:/data
-      - ./neo4j/plugins:/plugins
+      - neo4j-data:/data
+      - neo4j-plugins:/plugins
     expose:
       - 7473/tcp
       - 7474/tcp
       - 7687/tcp
+    ports:
+      - 7473:7473
+      - 7474:7474
+      - 7687:7687
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
-    restart: always
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/your_password}
+      - NEO4J_PLUGINS=["apoc"]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
   minio:
     image: minio/minio:latest
@@ -111,14 +122,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
   redis:
     container_name: redis
     image: docker.io/valkey/valkey:8-alpine
-    command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped
     expose:
       - 6379/tcp
+    ports:
+      - 6379:6379
+    command: >
+      valkey-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
     volumes:
       - valkey-data:/data
     healthcheck:
@@ -126,6 +147,10 @@ services:
       interval: 3s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 300m
 
   searxng:
     container_name: searxng
@@ -133,28 +158,36 @@ services:
     restart: unless-stopped
     expose:
       - 8080/tcp
+    ports:
+      - 8081:8080
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
       - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
-  ollama-cpu:
-    profiles: [ "cpu" ]
-    <<: *service-ollama
-
-  # Model auto-pull disabled — use: docker exec ollama ollama pull <model>
-  # ollama-pull-llama-cpu:
-  #   profiles: [ "cpu" ]
-  #   <<: *init-ollama
-  #   depends_on:
-  #     - ollama-cpu
-
-networks:
-  default:
-    name: localai_default
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    expose:
+      - 11434/tcp
+    ports:
+      - 11434:11434
+    environment:
+      - OLLAMA_CONTEXT_LENGTH=8192
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_MAX_QUEUE=4
+      - OLLAMA_NUM_PARALLEL=1
+    volumes:
+      - ollama_storage:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 2500m
+          cpus: "1.5"
