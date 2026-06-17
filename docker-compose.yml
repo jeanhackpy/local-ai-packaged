@@ -87,6 +87,7 @@ services:
       timeout: 5s
     image: supabase/postgres:15.8.1.085
     networks:
+      coolify: null
       default: null
     restart: unless-stopped
     volumes:
