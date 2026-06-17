@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import tempfile
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -42,6 +43,87 @@ def clone_supabase_repo():
             os.chdir("..")
         else:
             print("Supabase directory exists and is fully integrated (no .git folder). Skipping update.")
+
+def ensure_supabase_volumes():
+    """Ensure supabase/docker/volumes/ config exists (Kong + Postgres init scripts).
+
+    These files are required for the stack to boot but are NOT committed to this
+    repo, and clone_supabase_repo() skips regeneration when supabase/ has no .git
+    dir. Without them, Docker bind-mounts the missing host paths as empty
+    directories: Kong reads an empty kong.yml (crash loop) and the Postgres init
+    SQL scripts become directories (schemas never initialize).
+
+    Idempotent: fetches the upstream config subtree only when missing, then
+    overlays the locked golden kong.yml. Never touches db/data or storage.
+    """
+    vol = os.path.join("supabase", "docker", "volumes")
+    golden_kong = os.path.join(".golden", "backups", "kong.yml.golden")
+    supabase_ref = os.environ.get("SUPABASE_REF", "master")
+
+    required = [
+        os.path.join("api", "kong.yml"),
+        os.path.join("db", "roles.sql"),
+        os.path.join("db", "jwt.sql"),
+        os.path.join("db", "realtime.sql"),
+        os.path.join("db", "_supabase.sql"),
+        os.path.join("db", "logs.sql"),
+        os.path.join("db", "pooler.sql"),
+        os.path.join("db", "webhooks.sql"),
+        os.path.join("pooler", "pooler.exs"),
+    ]
+
+    have_config = (
+        os.path.isfile(os.path.join(vol, "api", "kong.yml"))
+        and os.path.isfile(os.path.join(vol, "db", "roles.sql"))
+        and os.path.isfile(os.path.join(vol, "pooler", "pooler.exs"))
+    )
+
+    if have_config:
+        print("Supabase volumes config already present.")
+    else:
+        print(f"Supabase volumes config missing — fetching from upstream ({supabase_ref})...")
+        tmp = tempfile.mkdtemp(prefix="supabase-vol-")
+        try:
+            clone_dir = os.path.join(tmp, "supabase")
+            run_command([
+                "git", "clone", "--filter=blob:none", "--no-checkout",
+                "https://github.com/supabase/supabase.git", clone_dir,
+            ])
+            run_command(["git", "sparse-checkout", "init", "--cone"], cwd=clone_dir)
+            run_command(["git", "sparse-checkout", "set", "docker"], cwd=clone_dir)
+            run_command(["git", "checkout", supabase_ref], cwd=clone_dir)
+
+            src = os.path.join(clone_dir, "docker", "volumes")
+            os.makedirs(vol, exist_ok=True)
+            # Copy config only; skip runtime data dirs (data/, storage/).
+            shutil.copytree(
+                src, vol, dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns("data", "storage"),
+            )
+            print("Fetched Supabase volumes config tree.")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    # Overlay the locked golden kong.yml (authoritative; matches config-guard checksum).
+    if os.path.isfile(golden_kong):
+        os.makedirs(os.path.join(vol, "api"), exist_ok=True)
+        shutil.copyfile(golden_kong, os.path.join(vol, "api", "kong.yml"))
+        print("Restored kong.yml from golden backup.")
+    else:
+        print("WARNING: golden kong.yml not found — using upstream kong.yml.")
+
+    # Runtime dirs (empty; filled by data restore / first boot).
+    for d in (os.path.join("db", "data"), "storage", "functions"):
+        os.makedirs(os.path.join(vol, d), exist_ok=True)
+
+    # Verify required config is in place before we try to start anything.
+    missing = [f for f in required if not os.path.isfile(os.path.join(vol, f))]
+    if missing:
+        print("ERROR: Supabase volumes incomplete — Kong/Postgres will not boot:")
+        for f in missing:
+            print(f"  missing: {f}")
+        sys.exit(1)
+    print("Supabase volumes ready.")
 
 def prepare_supabase_env():
     """Merge .env in root with .env.example in supabase/docker and write to .env in supabase/docker."""
@@ -281,6 +363,9 @@ def main():
     # No need to start it here
 
     clone_supabase_repo()
+
+    # Ensure Kong + Postgres init config exists before starting Supabase
+    ensure_supabase_volumes()
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()

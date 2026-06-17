@@ -39,3 +39,6 @@ supabase/docker/volumes/db/data/
 scripts/
 
 __pycache__/
+
+# macOS
+.DS_Store
