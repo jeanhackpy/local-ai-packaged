@@ -1,21 +1,299 @@
-include:
-  - ./supabase/docker/docker-compose.yml
-
-volumes:
-  n8n_storage:
-  ollama_storage:
-  qdrant_storage:
-  caddy-data:
-  caddy-config:
-  valkey-data:
-  minio_storage:
-
-
-x-n8n: &service-n8n
-  image: n8nio/n8n:latest
-  environment:
+networks:
+  coolify:
+    external: true
+    name: coolify
+  default:
+    name: localai_default
+services:
+  auth:
+    container_name: supabase-auth
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
+      GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+      - CMD
+      - wget
+      - --no-verbose
+      - --tries=1
+      - --spider
+      - http://localhost:9999/health
+      timeout: 5s
+    image: supabase/gotrue:v2.184.0
+    networks:
+      default: null
+    restart: unless-stopped
+  db:
+    command:
+    - postgres
+    - -c
+    - config_file=/etc/postgresql/postgresql.conf
+    - -c
+    - log_min_messages=fatal
+    container_name: supabase-db
+    depends_on: {}
+    environment:
+      JWT_EXP: ${JWT_EXPIRY}
+      JWT_SECRET: ${JWT_SECRET}
+      PGDATABASE: ${POSTGRES_DB}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGPORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    healthcheck:
+      interval: 5s
+      retries: 10
+      test:
+      - CMD
+      - pg_isready
+      - -U
+      - postgres
+      - -h
+      - localhost
+      timeout: 5s
+    image: supabase/postgres:15.8.1.085
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/realtime.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/webhooks.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/roles.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/jwt.sql
+      target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: supabase-db-data
+      target: /var/lib/postgresql/data
+      type: volume
+      volume: {}
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/_supabase.sql
+      target: /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/logs.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-logs.sql
+      type: bind
+    - bind:
+        create_host_path: true
+        selinux: Z
+      source: ./supabase/docker/volumes/db/pooler.sql
+      target: /docker-entrypoint-initdb.d/migrations/99-pooler.sql
+      type: bind
+    - source: db-config
+      target: /etc/postgresql-custom
+      type: volume
+      volume: {}
+    - type: bind
+      source: /usr/bin/rclone
+      target: /usr/local/bin/rclone
+      read_only: true
+    - type: bind
+      source: /data/localai-cfg/localai-rclone.conf
+      target: /etc/localai-rclone.conf
+      read_only: true
+    - type: bind
+      source: /data/localai-cfg/localai-backup.sh
+      target: /usr/local/bin/localai-backup.sh
+      read_only: true
+  functions:
+    command:
+    - start
+    - --main-service
+    - /home/deno/functions/main
+    container_name: supabase-edge-functions
+    depends_on: {}
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_URL: http://kong:8000
+      VERIFY_JWT: ${FUNCTIONS_VERIFY_JWT}
+    image: supabase/edge-runtime:v1.69.28
+    networks:
+      default: null
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/9000) 2>/dev/null']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+    - source: /data/localai-cfg/functions
+      target: /home/deno/functions
+      type: bind
+  imgproxy:
+    container_name: supabase-imgproxy
+    environment:
+      IMGPROXY_BIND: :5001
+      IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION}
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: 'true'
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+      - CMD
+      - imgproxy
+      - health
+      timeout: 5s
+    image: darthsim/imgproxy:v3.8.0
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+    - bind:
+        create_host_path: true
+        selinux: z
+      source: ./supabase/docker/volumes/storage
+      target: /var/lib/storage
+      type: bind
+  kong:
+    container_name: supabase-kong
+    depends_on: {}
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    image: kong:2.8.1
+    networks:
+      default: null
+    ports:
+    - ${KONG_HTTP_PORT}:8000/tcp
+    - ${KONG_HTTPS_PORT}:8443/tcp
+    restart: unless-stopped
+    volumes:
+    - read_only: true
+      source: /data/localai-cfg/kong.yml
+      target: /home/kong/temp.yml
+      type: bind
+  meta:
+    container_name: supabase-meta
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      PG_META_DB_HOST: ${POSTGRES_HOST}
+      PG_META_DB_NAME: ${POSTGRES_DB}
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_DB_PORT: ${POSTGRES_PORT}
+      PG_META_DB_USER: supabase_admin
+      PG_META_PORT: 8080
+    image: supabase/postgres-meta:v0.95.1
+    networks:
+      default: null
+    restart: unless-stopped
+  minio:
+    command: server --address ":9000" --console-address ":9001" /data
+    container_name: minio
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    environment:
+    - MINIO_ROOT_USER=minio
+    - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    expose:
+    - 9000/tcp
+    - 9001/tcp
+    healthcheck:
+      interval: 5s
+      retries: 5
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:9000/minio/health/live
+      timeout: 5s
+    image: minio/minio:latest
+    networks:
+      default: null
+    restart: always
+    volumes:
+    - source: minio_storage
+      target: /data
+      type: volume
+      volume: {}
+  n8n:
+    container_name: n8n
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    environment:
     - DB_TYPE=postgresdb
-    - DB_POSTGRESDB_HOST=supabase-db
+    - DB_POSTGRESDB_HOST=db
     - DB_POSTGRESDB_USER=postgres
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
     - DB_POSTGRESDB_DATABASE=postgres
@@ -23,164 +301,496 @@ x-n8n: &service-n8n
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
-    - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
+    - WEBHOOK_URL=${N8N_WEBHOOK_URL}
     - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
-
-x-ollama: &service-ollama
-  image: ollama/ollama:latest
-  container_name: ollama
-  restart: unless-stopped
-  expose:
-    - 11434/tcp
-  environment:
+    expose:
+    - 5678/tcp
+    image: n8nio/n8n:latest
+    labels:
+    - traefik.enable=true
+    - traefik.docker.network=coolify
+    - traefik.http.routers.n8n.rule=Host(`n8n.recall-agency.com`)
+    - traefik.http.routers.n8n.entrypoints=https
+    - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+    - traefik.http.services.n8n.loadbalancer.server.port=5678
+    - traefik.http.routers.n8n-http.rule=Host(`n8n.recall-agency.com`)
+    - traefik.http.routers.n8n-http.entrypoints=http
+    - traefik.http.routers.n8n-http.middlewares=n8n-https
+    - traefik.http.middlewares.n8n-https.redirectscheme.scheme=https
+    networks:
+      coolify: null
+      default: null
+    ports:
+    - 5678:5678
+    restart: unless-stopped
+    volumes:
+    - source: n8n_storage
+      target: /home/node/.n8n
+      type: volume
+      volume: {}
+    - bind:
+        create_host_path: true
+      source: ./n8n/backup
+      target: /backup
+      type: bind
+    - bind:
+        create_host_path: true
+      source: ./shared
+      target: /data/shared
+      type: bind
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:5678/healthz || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+  neo4j:
+    container_name: neo4j
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    environment:
+    - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/your_password}
+    - NEO4J_PLUGINS=["apoc"]
+    - NEO4J_server_config_strict__validation_enabled=false
+    expose:
+    - 7473/tcp
+    - 7474/tcp
+    - 7687/tcp
+    image: neo4j:latest
+    networks:
+      default: null
+    ports:
+    - 7473:7473
+    - 7474:7474
+    - 7687:7687
+    restart: unless-stopped
+    volumes:
+    - source: neo4j-data
+      target: /data
+      type: volume
+      volume: {}
+    - source: neo4j-plugins
+      target: /plugins
+      type: volume
+      volume: {}
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:7474 || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+  ollama:
+    container_name: ollama
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2500m
+    environment:
     - OLLAMA_CONTEXT_LENGTH=8192
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
     - OLLAMA_MAX_QUEUE=4
     - OLLAMA_NUM_PARALLEL=1
-  volumes:
-    - ollama_storage:/root/.ollama
-
-# Model pull DISABLED — manage models manually:
-#   docker exec ollama ollama pull <model>
-#   docker exec ollama ollama list
-#   docker exec ollama ollama rm <model>
-# x-init-ollama: &init-ollama
-#   image: ollama/ollama:latest
-#   container_name: ollama-pull-llama
-#   volumes:
-#     - ollama_storage:/root/.ollama
-#   entrypoint: /bin/sh
-#   command:
-#     - "-c"
-#     - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
-
-services:
-  n8n:
-    <<: *service-n8n
-    container_name: n8n
-    restart: unless-stopped
     expose:
-      - 5678/tcp
-    volumes:
-      - n8n_storage:/home/node/.n8n
-      - ./n8n/backup:/backup
-      - ./shared:/data/shared
-
-  qdrant:
-    image: qdrant/qdrant
-    container_name: qdrant
-    restart: unless-stopped
-    expose:
-      - 6333/tcp
-      - 6334/tcp
-    volumes:
-      - qdrant_storage:/qdrant/storage
-
-  neo4j:
-    image: neo4j:latest
-    container_name: neo4j
-    volumes:
-      - ./neo4j/logs:/logs
-      - ./neo4j/config:/config
-      - ./neo4j/data:/data
-      - ./neo4j/plugins:/plugins
-    expose:
-      - 7473/tcp
-      - 7474/tcp
-      - 7687/tcp
-    environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-"neo4j/your_password"}
-    restart: always
-
-  caddy:
-    container_name: caddy
-    image: docker.io/library/caddy:2-alpine
-    restart: unless-stopped
+    - 11434/tcp
+    image: ollama/ollama:latest
+    networks:
+      default: null
     ports:
-      - 80:80/tcp
-      - 443:443/tcp
-    expose:
-      - 2019/tcp
+    - 11434:11434
+    restart: unless-stopped
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy-addon:/etc/caddy/addons:ro
-      - caddy-data:/data:rw
-      - caddy-config:/config:rw
-    environment:
-      - N8N_HOSTNAME=${N8N_HOSTNAME:-":8001"}
-      - SUPABASE_HOSTNAME=${SUPABASE_HOSTNAME:-":8005"}
-      - NEO4J_HOSTNAME=${NEO4J_HOSTNAME:-":8008"}
-      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    restart: always
-    command: server --address ":9000" --console-address ":9001" /data
-    expose:
-      - 9000/tcp
-      - 9001/tcp
-    environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    volumes:
-      - minio_storage:/data
+    - source: ollama_storage
+      target: /root/.ollama
+      type: volume
+      volume: {}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 5s
+      test:
+      - CMD
+      - ollama
+      - list
+      interval: 20s
       timeout: 5s
       retries: 5
-
-  redis:
-    container_name: redis
-    image: docker.io/valkey/valkey:8-alpine
-    command: valkey-server --save 30 1 --loglevel warning
-    restart: unless-stopped
+      start_period: 20s
+  qdrant:
+    container_name: qdrant
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     expose:
-      - 6379/tcp
-    volumes:
-      - valkey-data:/data
+    - 6333/tcp
+    - 6334/tcp
+    image: qdrant/qdrant
+    networks:
+      default: null
+    ports:
+    - 6333:6333
+    - 6334:6334
+    restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 3s
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/6333) 2>/dev/null']
+      interval: 30s
       timeout: 5s
-      retries: 10
+      retries: 3
+      start_period: 30s
+    volumes:
+    - source: qdrant_storage
+      target: /qdrant/storage
+      type: volume
+      volume: {}
+  realtime:
+    container_name: realtime-dev.supabase-realtime
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      API_JWT_SECRET: ${JWT_SECRET}
+      APP_NAME: realtime
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: supabaserealtime
+      DB_HOST: ${POSTGRES_HOST}
+      DB_NAME: ${POSTGRES_DB}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PORT: ${POSTGRES_PORT}
+      DB_USER: supabase_admin
+      DNS_NODES: ''''''
+      ERL_AFLAGS: -proto_dist inet_tcp
+      PORT: 4000
+      RLIMIT_NOFILE: '10000'
+      RUN_JANITOR: 'true'
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      SEED_SELF_HOST: 'true'
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+      - CMD-SHELL
+      - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer ${ANON_KEY}" http://localhost:4000/api/tenants/realtime-dev/health'
+      timeout: 5s
+    image: supabase/realtime:v2.68.0
+    networks:
+      default: null
+    restart: unless-stopped
+  redis:
+    command: 'valkey-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
 
+      '
+    container_name: redis
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+    expose:
+    - 6379/tcp
+    healthcheck:
+      interval: 3s
+      retries: 10
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      timeout: 5s
+    image: docker.io/valkey/valkey:8-alpine
+    networks:
+      default: null
+    ports:
+    - 6379:6379
+    restart: unless-stopped
+    volumes:
+    - source: valkey-data
+      target: /data
+      type: volume
+      volume: {}
+  rest:
+    command:
+    - postgrest
+    container_name: supabase-rest
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY}
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      PGRST_DB_USE_LEGACY_GUCS: 'false'
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    image: postgrest/postgrest:v14.1
+    networks:
+      default: null
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/usr/bin/bash', '-c', '(echo > /dev/tcp/localhost/3000) 2>/dev/null']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
   searxng:
     container_name: searxng
-    image: docker.io/searxng/searxng:latest
-    restart: unless-stopped
-    expose:
-      - 8080/tcp
-    volumes:
-      - ./searxng:/etc/searxng:rw
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     environment:
-      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
+    - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+    expose:
+    - 8080/tcp
+    image: docker.io/searxng/searxng:latest
+    networks:
+      default: null
+    ports:
+    - 8081:8080
+    restart: unless-stopped
+    volumes:
+    - bind:
+        create_host_path: true
+      source: ./searxng
+      target: /etc/searxng
+      type: bind
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget -qO- http://127.0.0.1:8080/healthz || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  storage:
+    container_name: supabase-storage
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+      imgproxy:
+        condition: service_started
+        required: true
+      rest:
+        condition: service_started
+        required: true
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      ENABLE_IMAGE_TRANSFORMATION: 'true'
+      FILE_SIZE_LIMIT: 52428800
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      GLOBAL_S3_BUCKET: stub
+      IMGPROXY_URL: http://imgproxy:5001
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      POSTGREST_URL: http://rest:3000
+      REGION: stub
+      REQUEST_ALLOW_X_FORWARDED_PATH: 'true'
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      STORAGE_BACKEND: file
+      TENANT_ID: stub
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+      - CMD
+      - wget
+      - --no-verbose
+      - --tries=1
+      - --spider
+      - http://storage:5000/status
+      timeout: 5s
+    image: supabase/storage-api:v1.33.0
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+    - bind:
+        create_host_path: true
+        selinux: z
+      source: ./supabase/docker/volumes/storage
+      target: /var/lib/storage
+      type: bind
+  studio:
+    container_name: supabase-studio
+    depends_on: {}
+    environment:
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
+      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
+      HOSTNAME: '::'
+      LOGFLARE_API_KEY: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_URL: http://analytics:4000
+      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
+      NEXT_PUBLIC_ENABLE_LOGS: true
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      STUDIO_PG_META_URL: http://meta:8080
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_URL: http://kong:8000
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+      - CMD
+      - node
+      - -e
+      - fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})
+      timeout: 10s
+    image: supabase/studio:2025.12.17-sha-43f4f7f
+    networks:
+      default: null
+    restart: unless-stopped
+  supavisor:
+    command:
+    - /bin/sh
+    - -c
+    - /app/bin/migrate && /app/bin/supavisor eval "$$(cat /etc/pooler/pooler.exs)" && /app/bin/server
+    container_name: supabase-pooler
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    environment:
+      API_JWT_SECRET: ${JWT_SECRET}
+      CLUSTER_POSTGRES: true
+      DATABASE_URL: ecto://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/_supabase
+      DB_POOL_SIZE: ${POOLER_DB_POOL_SIZE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      POOLER_DEFAULT_POOL_SIZE: ${POOLER_DEFAULT_POOL_SIZE}
+      POOLER_MAX_CLIENT_CONN: ${POOLER_MAX_CLIENT_CONN}
+      POOLER_POOL_MODE: transaction
+      POOLER_TENANT_ID: ${POOLER_TENANT_ID}
+      PORT: 4000
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REGION: local
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      VAULT_ENC_KEY: ${VAULT_ENC_KEY}
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - curl
+      - -sSfL
+      - --head
+      - -o
+      - /dev/null
+      - http://127.0.0.1:4000/api/health
+      timeout: 5s
+    image: supabase/supavisor:2.7.4
+    networks:
+      default: null
+    ports:
+    - ${POSTGRES_PORT}:5432
+    - ${POOLER_PROXY_PORT_TRANSACTION}:6543
+    restart: unless-stopped
+    volumes:
+    - read_only: true
+      source: /data/localai-cfg/pooler/pooler.exs
+      target: /etc/pooler/pooler.exs
+      type: bind
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    networks:
+      default: null
+    ports:
+    - 11235:11235
+    environment:
+    - MAX_CONCURRENT_TASKS=5
+    volumes:
+    - crawl4ai_data:/root/.crawl4ai
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:11235/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.5'
 
-  ollama-cpu:
-    profiles: [ "cpu" ]
-    <<: *service-ollama
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    networks:
+      default: null
+    ports:
+    - 3000:3000
+    volumes:
+    - /data/localai-cfg/homepage:/app/config
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /:/hostfs:ro
+    environment:
+    - PUID=1000
+    - PGID=1000
+    - HOMEPAGE_VAR_VPS=Oracle ARM VPS
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
-  # Model auto-pull disabled — use: docker exec ollama ollama pull <model>
-  # ollama-pull-llama-cpu:
-  #   profiles: [ "cpu" ]
-  #   <<: *init-ollama
-  #   depends_on:
-  #     - ollama-cpu
-
-networks:
-  default:
-    name: localai_default
+volumes:
+  crawl4ai_data:
+    name: lap-deploy_crawl4ai_data
+  db-config:
+    name: lap-deploy_db-config
+  minio_storage:
+    name: lap-deploy_minio_storage
+  n8n_storage:
+    name: lap-deploy_n8n_storage
+  neo4j-data:
+    name: lap-deploy_neo4j-data
+  neo4j-plugins:
+    name: lap-deploy_neo4j-plugins
+  ollama_storage:
+    name: lap-deploy_ollama_storage
+  qdrant_storage:
+    name: lap-deploy_qdrant_storage
+  supabase-db-data:
+    external: true
+    name: supabase-db-data
+  valkey-data:
+    name: lap-deploy_valkey-data
+x-n8n:
+  environment:
+  - DB_TYPE=postgresdb
+  - DB_POSTGRESDB_HOST=db
+  - DB_POSTGRESDB_USER=postgres
+  - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+  - DB_POSTGRESDB_DATABASE=postgres
+  - N8N_DIAGNOSTICS_ENABLED=false
+  - N8N_PERSONALIZATION_ENABLED=false
+  - N8N_ENCRYPTION_KEY
+  - N8N_USER_MANAGEMENT_JWT_SECRET
+  - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
+  - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+  - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-471505542}
+  image: n8nio/n8n:latest

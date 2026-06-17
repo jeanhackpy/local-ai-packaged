@@ -1,0 +1,430 @@
+{
+  "name": "WF-002-GENERATE-FAQ-REFLEXION",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Start Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "n2",
+      "name": "Pull Next Keyword",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id::text, keyword, content_type, priority FROM content_queue WHERE status = 'pending' ORDER BY priority DESC LIMIT 1"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Keyword Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Mark In Progress",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'in_progress', updated_at = now() WHERE id = '{{ $('Pull Next Keyword').item.json.id }}'::uuid"
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Generate Article",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "command": "/home/phil/venv/bin/python3 /home/phil/palanthai/content/n8n_runner.py --keyword \"{{ $('Pull Next Keyword').item.json.keyword }}\" --brand reflexion --type {{ $('Pull Next Keyword').item.json.content_type }} --queue-id {{ $('Pull Next Keyword').item.json.id }}"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Parse Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const raw = $input.first().json.stdout || '{}';\ntry {\n  const parsed = JSON.parse(raw);\n  return [{ json: parsed }];\n} catch(e) {\n  return [{ json: { success: false, error: 'JSON parse failed: ' + raw.substring(0,200) } }];\n}"
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Quality Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "c3",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n8",
+      "name": "Post to Slack Review",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        100
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#content-review",
+        "text": "📝 Draft prêt pour validation",
+        "blocksUi": {
+          "blockValues": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": "📝 Nouveau draft — Reflexion.asia"
+              }
+            },
+            {
+              "type": "section",
+              "fields": [
+                {
+                  "type": "mrkdwn",
+                  "text": "*Keyword:*\n{{ $json.keyword }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Score:*\n{{ $json.score }}/100"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Mots:*\n{{ $json.word_count }}"
+                },
+                {
+                  "type": "mrkdwn",
+                  "text": "*Type:*\n{{ $json.content_type }}"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Titre:* {{ $json.title }}\n*Extrait:* {{ $json.excerpt }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Draft WP:* {{ $json.wp_url }}"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ Approuver"
+                  },
+                  "style": "primary",
+                  "action_id": "approve",
+                  "value": "{{ $json.queue_id }}|{{ $json.wp_post_id }}"
+                },
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✏️ Réviser"
+                  },
+                  "action_id": "revise",
+                  "value": "{{ $json.queue_id }}|{{ $json.wp_post_id }}"
+                },
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Rejeter"
+                  },
+                  "style": "danger",
+                  "action_id": "reject",
+                  "value": "{{ $json.queue_id }}|{{ $json.wp_post_id }}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n9",
+      "name": "Mark Review Human",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        100
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'review_human', updated_at = now() WHERE id = '{{ $('Pull Next Keyword').item.json.id }}'::uuid"
+      }
+    },
+    {
+      "id": "n10",
+      "name": "Mark Rejected Low Quality",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1540,
+        350
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'rejected', notes = 'Quality score too low: {{ $json.score }}/100', updated_at = now() WHERE id = '{{ $('Pull Next Keyword').item.json.id }}'::uuid"
+      }
+    },
+    {
+      "id": "n11",
+      "name": "Alert Low Quality",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        350
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#alerts",
+        "text": "⚠️ WF-002 — Article rejeté (qualité insuffisante)\nKeyword: {{ $json.keyword }}\nScore: {{ $json.score }}/100\nProblèmes: {{ $json.issues.join(', ') }}"
+      }
+    },
+    {
+      "id": "n12",
+      "name": "No Keywords Pending",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        660,
+        400
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Start Manual": {
+      "main": [
+        [
+          {
+            "node": "Pull Next Keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pull Next Keyword": {
+      "main": [
+        [
+          {
+            "node": "Keyword Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Found?": {
+      "main": [
+        [
+          {
+            "node": "Mark In Progress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Keywords Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark In Progress": {
+      "main": [
+        [
+          {
+            "node": "Generate Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Article": {
+      "main": [
+        [
+          {
+            "node": "Parse Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Output": {
+      "main": [
+        [
+          {
+            "node": "Quality Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Gate": {
+      "main": [
+        [
+          {
+            "node": "Post to Slack Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Rejected Low Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Slack Review": {
+      "main": [
+        [
+          {
+            "node": "Mark Review Human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Rejected Low Quality": {
+      "main": [
+        [
+          {
+            "node": "Alert Low Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "A0pdtMqVdIfFu22V",
+  "versionId": "2b269738-272a-4a46-a4b4-bd370424d522",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f722e3e1e81e942a38faa434ad0aee8699371bbff9f883b9d5c59a7c726605af"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

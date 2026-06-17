@@ -1,34 +1,51 @@
-# Memory-optimized override — Updated 2026-03-26
+# Memory-optimized override — Updated 2026-06-10
 # Stack hardened: removed OpenWebUI, unified network, disabled auto model pull
+# 2026-06-10: internal services bound to 127.0.0.1 (defense-in-depth);
+#             n8n routed by Coolify/Traefik (coolify network + labels);
+#             Caddy ports released (Traefik owns 80/443).
 
 services:
 
-  # ── n8n ─── 700MB (usage réel 400MB + headroom workflows)
+  # ── n8n ─── routed by Traefik (Coolify). 5678 loopback for direct tunnel.
   n8n:
     ports:
-      - 5678:5678
+      - 127.0.0.1:5678:5678
+    networks:
+      - default
+      - coolify
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.n8n.rule=Host(`n8n.recall-agency.com`)
+      - traefik.http.routers.n8n.entrypoints=https
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+      - traefik.http.routers.n8n-http.rule=Host(`n8n.recall-agency.com`)
+      - traefik.http.routers.n8n-http.entrypoints=http
+      - traefik.http.routers.n8n-http.middlewares=n8n-https
+      - traefik.http.middlewares.n8n-https.redirectscheme.scheme=https
     deploy:
       resources:
         limits:
           memory: 700m
 
-  # ── Qdrant ─── 512MB (idle 38MB, burst upsert 35k vectors)
+  # ── Qdrant ─── 1GB
   qdrant:
     ports:
-      - 6333:6333
-      - 6334:6334
+      - 127.0.0.1:6333:6333
+      - 127.0.0.1:6334:6334
     deploy:
       resources:
         limits:
           memory: 1g
 
-  # ── Neo4j ─── 512MB (re-enabled for scraping pipeline)
+  # ── Neo4j ─── 1GB
   neo4j:
     restart: unless-stopped
     ports:
-      - 7473:7473
-      - 7474:7474
-      - 7687:7687
+      - 127.0.0.1:7473:7473
+      - 127.0.0.1:7474:7474
+      - 127.0.0.1:7687:7687
     deploy:
       resources:
         limits:
@@ -37,7 +54,7 @@ services:
   # ── Redis / Valkey ─── 256MB max + LRU eviction (no disk persistence)
   redis:
     ports:
-      - 6379:6379
+      - 127.0.0.1:6379:6379
     command: >
       valkey-server
       --maxmemory 256mb
@@ -51,46 +68,34 @@ services:
   # ── SearXNG ─── 256MB
   searxng:
     ports:
-      - 8081:8080
+      - 127.0.0.1:8081:8080
     deploy:
       resources:
         limits:
           memory: 256m
 
-  # ── Ollama ─── 2.5GB (nomic-embed-text ~700MB chargé + batch overhead)
+  # ── Ollama ─── 2.5GB
   ollama-cpu:
     ports:
-      - 11434:11434
+      - 127.0.0.1:11434:11434
     deploy:
       resources:
         limits:
           memory: 2500m
           cpus: "1.5"
 
-  # ── Caddy ─── 128MB (usage réel 16MB)
-  caddy:
-    ports:
-      - 80:80
-      - 443:443
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    deploy:
-      resources:
-        limits:
-          memory: 128m
-
-  # ── MinIO ─── 256MB (usage réel 63MB)
+  # ── MinIO ─── 256MB
   minio:
     deploy:
       resources:
         limits:
           memory: 256m
 
+networks:
+  coolify:
+    external: true
+
 # NOTES:
 # - Redis: maxmemory 256MB LRU, pas de persistance (pure cache/queue)
-# - Ollama: 2.5GB, CPU limited to 1.5 cores to prevent system saturation
-#   Manage models: docker exec ollama ollama list / pull / rm
-# - Neo4j: re-enabled for scraping pipeline (was disabled to save RAM)
-# - Langfuse: cloud-hosted at us.cloud.langfuse.com (not on-premise)
-# - Removed: OpenWebUI (2026-03-26), Flowise (never deployed)
-# - Network: all services on localai_default (unified)
+# - n8n: traefik labels target port 5678 via 'coolify' external network
+# - Caddy: ports !reset null frees 80/443 for Traefik; remove service in Phase C

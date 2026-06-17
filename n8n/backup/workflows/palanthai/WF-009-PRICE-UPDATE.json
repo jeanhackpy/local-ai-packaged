@@ -1,0 +1,126 @@
+{
+  "id": "wf009priceupdate",
+  "versionId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "name": "WF-009-PRICE-UPDATE",
+  "active": false,
+  "meta": {"instanceId": "palanthai-n8n"},
+  "pinData": {},
+  "tags": [{"name": "palanthai"}, {"name": "sync"}],
+  "nodes": [
+    {
+      "id": "webhook-price-update",
+      "name": "Webhook: Price Update",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "price-update",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "validate-price",
+      "name": "Validate & Compute Delta",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nif (!body.unit_id || !body.new_price_thb) {\n  return [{ json: { valid: false, error: 'unit_id and new_price_thb required' } }];\n}\n\nconst newPrice = parseInt(body.new_price_thb);\nconst oldPrice = body.old_price_thb ? parseInt(body.old_price_thb) : null;\n\nlet change_type = 'stable';\nlet change_pct = 0;\n\nif (oldPrice && oldPrice > 0) {\n  change_pct = ((newPrice - oldPrice) / oldPrice * 100);\n  if (change_pct > 0.5) change_type = 'increase';\n  else if (change_pct < -0.5) change_type = 'decrease';\n}\n\nreturn [{\n  json: {\n    valid: true,\n    unit_id: String(body.unit_id),\n    new_price_thb: newPrice,\n    old_price_thb: oldPrice,\n    change_type,\n    change_pct: Math.round(change_pct * 10) / 10,\n    source: body.source || 'webhook',\n    significant_change: Math.abs(change_pct) >= 3\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "check-price-valid",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "update-price-pg",
+      "name": "Update Price → Supabase",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [900, 200],
+      "parameters": {
+        "command": "/home/phil/venv/bin/python3 -c \"\nimport json, os\nfrom dotenv import load_dotenv\nload_dotenv('/home/phil/palanthai/config/.env')\nimport psycopg2\n\nunit_id = '={{ $json.unit_id }}'\nnew_price = {{ $json.new_price_thb }}\n\nconn = psycopg2.connect(os.getenv('VPS_PG_URL'))\ncur = conn.cursor()\n\n# Get current unit UUID for snapshot\ncur.execute('SELECT id, price_thb FROM units WHERE fazwaz_unit_id=%s', (unit_id,))\nrow = cur.fetchone()\nif row:\n    unit_uuid, old_price = row\n    # Save snapshot\n    cur.execute('INSERT INTO price_snapshots (unit_id, fazwaz_unit_id, price_thb, recorded_at) VALUES (%s,%s,%s,now())', (unit_uuid, unit_id, old_price))\n    # Update current price\n    cur.execute('UPDATE units SET price_thb=%s, updated_at=now() WHERE fazwaz_unit_id=%s', (new_price, unit_id))\n    conn.commit()\n    print(json.dumps({'ok': True, 'unit_id': unit_id, 'old_price': old_price, 'new_price': new_price}))\nelse:\n    print(json.dumps({'ok': False, 'error': 'Unit not found', 'unit_id': unit_id}))\ncur.close()\nconn.close()\n\""
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "check-significant",
+      "name": "Significant Change (≥3%)?",
+      "type": "n8n-nodes-base.if",
+      "position": [1120, 200],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.significant_change }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "slack-price-alert",
+      "name": "Slack: Price Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [1340, 140],
+      "parameters": {
+        "channel": "#ops",
+        "text": "💰 Price {{ $json.change_type }}: unit `{{ $json.unit_id }}` | {{ $json.change_pct > 0 ? '+' : '' }}{{ $json.change_pct }}% | ฿{{ $json.old_price_thb }} → ฿{{ $json.new_price_thb }}",
+        "authentication": "oAuth2"
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "respond-price-ok",
+      "name": "Respond: 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1340, 320],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, unit_id: $json.unit_id, change_type: $json.change_type, change_pct: $json.change_pct }) }}",
+        "options": {"responseCode": 200}
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "respond-price-error",
+      "name": "Respond: 400 Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 440],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error }) }}",
+        "options": {"responseCode": 400}
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook: Price Update": {"main": [[{"node": "Validate & Compute Delta", "type": "main", "index": 0}]]},
+    "Validate & Compute Delta": {"main": [[{"node": "Valid?", "type": "main", "index": 0}]]},
+    "Valid?": {
+      "main": [
+        [{"node": "Update Price → Supabase", "type": "main", "index": 0}],
+        [{"node": "Respond: 400 Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Update Price → Supabase": {"main": [[{"node": "Significant Change (≥3%)?", "type": "main", "index": 0}]]},
+    "Significant Change (≥3%)?": {
+      "main": [
+        [{"node": "Slack: Price Alert", "type": "main", "index": 0}, {"node": "Respond: 200 OK", "type": "main", "index": 0}],
+        [{"node": "Respond: 200 OK", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {"executionOrder": "v1"}
+}

@@ -1,0 +1,209 @@
+{
+  "name": "WF-004-PUBLISH-WP-REFLEXION",
+  "nodes": [
+    {
+      "id": "p1",
+      "name": "Publish Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wf004-publish",
+        "responseMode": "responseNode",
+        "responseData": "allEntries"
+      }
+    },
+    {
+      "id": "p2",
+      "name": "Get Article Details",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cp.wp_post_id, cp.title, cp.slug, cp.focus_keyword, cq.keyword FROM content_published cp JOIN content_queue cq ON cp.focus_keyword = cq.keyword WHERE cp.wp_post_id = {{ $json.wp_post_id }} LIMIT 1"
+      }
+    },
+    {
+      "id": "p3",
+      "name": "Publish WP Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://reflexion.asia/wp-json/wp/v2/posts/{{ $('Publish Webhook').item.json.wp_post_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "credentials": {
+          "httpBasicAuth": {
+            "id": "wp_cred",
+            "name": "WordPress reflexion"
+          }
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "publish"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "p4",
+      "name": "Embed to Qdrant",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "command": "/home/phil/venv/bin/python3 /home/phil/palanthai/content/article_embedder.py --post-id {{ $('Publish Webhook').item.json.wp_post_id }} --brand reflexion 2>&1 || echo '{\"embedded\": false}'"
+      }
+    },
+    {
+      "id": "p5",
+      "name": "Update Published Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'published', updated_at = now() WHERE id = '{{ $('Publish Webhook').item.json.queue_id }}'::uuid;\nUPDATE content_published SET wp_status = 'publish' WHERE wp_post_id = {{ $('Publish Webhook').item.json.wp_post_id }}"
+      }
+    },
+    {
+      "id": "p6",
+      "name": "Notify Published",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#content-published",
+        "text": "🚀 *Article publié sur Reflexion.asia*\n*Titre:* {{ $('Get Article Details').item.json.title }}\n*URL:* https://reflexion.asia/{{ $('Get Article Details').item.json.slug }}/\n*Keyword:* {{ $('Get Article Details').item.json.focus_keyword }}"
+      }
+    },
+    {
+      "id": "p7",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "{\"ok\": true}"
+      }
+    }
+  ],
+  "connections": {
+    "Publish Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Article Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Article Details": {
+      "main": [
+        [
+          {
+            "node": "Publish WP Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish WP Post": {
+      "main": [
+        [
+          {
+            "node": "Embed to Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed to Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Update Published Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Published Status": {
+      "main": [
+        [
+          {
+            "node": "Notify Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Published": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "ZaVnS86Aa5BAw8G6",
+  "versionId": "04577c73-f73e-4518-8ef0-4054a944ae07",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f722e3e1e81e942a38faa434ad0aee8699371bbff9f883b9d5c59a7c726605af"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

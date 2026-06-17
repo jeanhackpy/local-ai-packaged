@@ -1,0 +1,327 @@
+{
+  "name": "WF-003-REVIEW-HUMAN-REFLEXION",
+  "nodes": [
+    {
+      "id": "r1",
+      "name": "Slack Interactive Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-review-action",
+        "responseMode": "lastNode",
+        "responseData": "allEntries"
+      }
+    },
+    {
+      "id": "r2",
+      "name": "Parse Slack Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const body = $input.first().json.body || {};\nconst payload = typeof body.payload === 'string' ? JSON.parse(body.payload) : body.payload || {};\nconst action = (payload.actions || [{}])[0];\nconst actionId = action.action_id || 'unknown';\nconst value = action.value || '';\nconst [queueId, wpPostId] = value.split('|');\nreturn [{ json: { action: actionId, queue_id: queueId, wp_post_id: wpPostId, user: payload.user?.name || 'unknown', channel: payload.channel?.id || '' } }];"
+      }
+    },
+    {
+      "id": "r3",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "mode": "expression",
+        "output": "single",
+        "options": {},
+        "rules": {
+          "values": [
+            {
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.action }}",
+                  "rightValue": "approve",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.action }}",
+                  "rightValue": "revise",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            },
+            {
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.action }}",
+                  "rightValue": "reject",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "r4",
+      "name": "Mark Approved",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'approved', updated_at = now() WHERE id = '{{ $json.queue_id }}'::uuid"
+      }
+    },
+    {
+      "id": "r5",
+      "name": "Trigger Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.recall-agency.com/webhook/wf004-publish",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "queue_id",
+              "value": "={{ $json.queue_id }}"
+            },
+            {
+              "name": "wp_post_id",
+              "value": "={{ $json.wp_post_id }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "r6",
+      "name": "Ack Approve",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        100
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#content-review",
+        "text": "✅ Article approuvé par {{ $('Parse Slack Payload').item.json.user }} — publication en cours..."
+      }
+    },
+    {
+      "id": "r7",
+      "name": "Mark Revision",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'revision_requested', updated_at = now() WHERE id = '{{ $json.queue_id }}'::uuid"
+      }
+    },
+    {
+      "id": "r8",
+      "name": "Notify Revision",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        300
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#content-review",
+        "text": "✏️ Révision demandée par {{ $('Parse Slack Payload').item.json.user }}\nKeyword remis en queue. Réponds dans ce thread avec tes instructions de révision pour Léon."
+      }
+    },
+    {
+      "id": "r9",
+      "name": "Mark Rejected",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        500
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_queue SET status = 'rejected', updated_at = now() WHERE id = '{{ $json.queue_id }}'::uuid"
+      }
+    },
+    {
+      "id": "r10",
+      "name": "Ack Reject",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        500
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#content-review",
+        "text": "❌ Article rejeté par {{ $('Parse Slack Payload').item.json.user }}"
+      }
+    }
+  ],
+  "connections": {
+    "Slack Interactive Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Slack Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Slack Payload": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Mark Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Revision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Approved": {
+      "main": [
+        [
+          {
+            "node": "Trigger Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Publish": {
+      "main": [
+        [
+          {
+            "node": "Ack Approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Revision": {
+      "main": [
+        [
+          {
+            "node": "Notify Revision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Rejected": {
+      "main": [
+        [
+          {
+            "node": "Ack Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "Q3SLvTKFXDjdKFxq",
+  "versionId": "afb31724-afac-4a21-8f97-7802f77f6012",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f722e3e1e81e942a38faa434ad0aee8699371bbff9f883b9d5c59a7c726605af"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}
