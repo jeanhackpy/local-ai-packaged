@@ -1,61 +1,25 @@
 {
- # Global options - works for both environments
-acme_ca https://acme-v02.api.letsencrypt.org/directory
-email {$LETSENCRYPT_EMAIL}
-import /etc/caddy/addons/*.conf
+  # Global options
+  acme_ca https://acme-v02.api.letsencrypt.org/directory
+  email {$LETSENCRYPT_EMAIL}
+  import /etc/caddy/addons/*.conf
 }
-
 
 # N8N
 {$N8N_HOSTNAME} {
- # For domains, Caddy will automatically use Let's Encrypt
- # For localhost/port addresses, HTTPS won't be enabled
- reverse_proxy n8n:5678
+  reverse_proxy n8n:5678
 }
 
-# Open WebUI
-{$WEBUI_HOSTNAME} {
-    reverse_proxy open-webui:8080
-}
-
-# # Ollama API
-# {$OLLAMA_HOSTNAME} {
-# reverse_proxy ollama:11434
-# }
-
-# Supabase
+# Supabase (via Kong API gateway)
 {$SUPABASE_HOSTNAME} {
-reverse_proxy kong:8000
+  reverse_proxy kong:8000
 }
 
-# Neo4j
+# Neo4j Browser
 {$NEO4J_HOSTNAME} {
-reverse_proxy neo4j:7474
+  reverse_proxy neo4j:7474
 }
 
-
-
-# SearXNG example (fully commented & closed)
-# {$SEARXNG_HOSTNAME} {
-# encode zstd gzip
-#
-# @api {
-# path /config
-# path /healthz
-# path /stats/errors
-# path /stats/checker
-# }
-# @search {
-# path /search
-# }
-# @imageproxy {
-# path /image_proxy
-# }
-# @static {
-# path /static/*
-# }
-#
-# header {
-# # header config here
-# }
-# }
+# Disabled services:
+# Ollama API — access via internal Docker network only
+# SearXNG — access via internal Docker network only

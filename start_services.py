@@ -15,6 +15,7 @@ import argparse
 import platform
 import sys
 import secrets
+import tempfile
 
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
@@ -42,6 +43,87 @@ def clone_supabase_repo():
             os.chdir("..")
         else:
             print("Supabase directory exists and is fully integrated (no .git folder). Skipping update.")
+
+def ensure_supabase_volumes():
+    """Ensure supabase/docker/volumes/ config exists (Kong + Postgres init scripts).
+
+    These files are required for the stack to boot but are NOT committed to this
+    repo, and clone_supabase_repo() skips regeneration when supabase/ has no .git
+    dir. Without them, Docker bind-mounts the missing host paths as empty
+    directories: Kong reads an empty kong.yml (crash loop) and the Postgres init
+    SQL scripts become directories (schemas never initialize).
+
+    Idempotent: fetches the upstream config subtree only when missing, then
+    overlays the locked golden kong.yml. Never touches db/data or storage.
+    """
+    vol = os.path.join("supabase", "docker", "volumes")
+    golden_kong = os.path.join(".golden", "backups", "kong.yml.golden")
+    supabase_ref = os.environ.get("SUPABASE_REF", "master")
+
+    required = [
+        os.path.join("api", "kong.yml"),
+        os.path.join("db", "roles.sql"),
+        os.path.join("db", "jwt.sql"),
+        os.path.join("db", "realtime.sql"),
+        os.path.join("db", "_supabase.sql"),
+        os.path.join("db", "logs.sql"),
+        os.path.join("db", "pooler.sql"),
+        os.path.join("db", "webhooks.sql"),
+        os.path.join("pooler", "pooler.exs"),
+    ]
+
+    have_config = (
+        os.path.isfile(os.path.join(vol, "api", "kong.yml"))
+        and os.path.isfile(os.path.join(vol, "db", "roles.sql"))
+        and os.path.isfile(os.path.join(vol, "pooler", "pooler.exs"))
+    )
+
+    if have_config:
+        print("Supabase volumes config already present.")
+    else:
+        print(f"Supabase volumes config missing — fetching from upstream ({supabase_ref})...")
+        tmp = tempfile.mkdtemp(prefix="supabase-vol-")
+        try:
+            clone_dir = os.path.join(tmp, "supabase")
+            run_command([
+                "git", "clone", "--filter=blob:none", "--no-checkout",
+                "https://github.com/supabase/supabase.git", clone_dir,
+            ])
+            run_command(["git", "sparse-checkout", "init", "--cone"], cwd=clone_dir)
+            run_command(["git", "sparse-checkout", "set", "docker"], cwd=clone_dir)
+            run_command(["git", "checkout", supabase_ref], cwd=clone_dir)
+
+            src = os.path.join(clone_dir, "docker", "volumes")
+            os.makedirs(vol, exist_ok=True)
+            # Copy config only; skip runtime data dirs (data/, storage/).
+            shutil.copytree(
+                src, vol, dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns("data", "storage"),
+            )
+            print("Fetched Supabase volumes config tree.")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    # Overlay the locked golden kong.yml (authoritative; matches config-guard checksum).
+    if os.path.isfile(golden_kong):
+        os.makedirs(os.path.join(vol, "api"), exist_ok=True)
+        shutil.copyfile(golden_kong, os.path.join(vol, "api", "kong.yml"))
+        print("Restored kong.yml from golden backup.")
+    else:
+        print("WARNING: golden kong.yml not found — using upstream kong.yml.")
+
+    # Runtime dirs (empty; filled by data restore / first boot).
+    for d in (os.path.join("db", "data"), "storage", "functions"):
+        os.makedirs(os.path.join(vol, d), exist_ok=True)
+
+    # Verify required config is in place before we try to start anything.
+    missing = [f for f in required if not os.path.isfile(os.path.join(vol, f))]
+    if missing:
+        print("ERROR: Supabase volumes incomplete — Kong/Postgres will not boot:")
+        for f in missing:
+            print(f"  missing: {f}")
+        sys.exit(1)
+    print("Supabase volumes ready.")
 
 def prepare_supabase_env():
     """Merge .env in root with .env.example in supabase/docker and write to .env in supabase/docker."""
@@ -267,6 +349,8 @@ def check_and_fix_docker_compose_for_searxng():
     except Exception as e:
         print(f"Error checking/modifying docker-compose.yml for SearXNG: {e}")
 
+
+
 def main():
     parser = argparse.ArgumentParser(description='Start the local AI and Supabase services.')
     parser.add_argument('--profile', choices=['cpu', 'gpu-nvidia', 'gpu-amd', 'none'], default='cpu',
@@ -275,7 +359,13 @@ def main():
                       help='Environment to use for Docker Compose (default: private)')
     args = parser.parse_args()
 
+    # OpenClaw Gateway is managed by systemd (openclaw-gateway.service)
+    # No need to start it here
+
     clone_supabase_repo()
+
+    # Ensure Kong + Postgres init config exists before starting Supabase
+    ensure_supabase_volumes()
 
     # Generate secrets and check configuration
     generate_searxng_secret_key()
@@ -304,20 +394,87 @@ def main():
     # Wait for OpenClaw to be ready
     # wait_for_openclay()
     
-    print("\n" + "="*60)
-    print("🚀 All services started successfully!")
-    print("="*60)
-    print("\n📊 Service URLs:")
-    # print("  • OpenClaw Gateway:    http://localhost:18789")
-    # print("  • OpenClaw Control UI: http://localhost:18790")
-    print("  • Open WebUI:          http://localhost:8080")
-    print("  • n8n:                 http://localhost:5678")
-    print("  • Qdrant:              http://localhost:6333")
-    print("  • Neo4j Browser:       http://localhost:7474")
-    print("  • Supabase Kong:       http://localhost:8000")
-    print("  • Caddy (Proxy):       http://localhost:80")
-    print("\n📖 Documentation: docs/OPENCLAW_INTEGRATIONS.md")
-    print("="*60)
+    print("All services started successfully!")
+    print("============================================================")
+    print()
+    print("📊 Service URLs:")
+
+    def _get_compose_ports():
+        try:
+            out = subprocess.check_output([
+                "docker", "ps", "--filter", "label=com.docker.compose.project=localai",
+                "--format", "{{.Names}}|{{.Ports}}"
+            ], text=True)
+        except Exception:
+            return {}
+
+        m = {}
+        for line in out.splitlines():
+            if '|' in line:
+                name, ports = line.split('|', 1)
+                m[name.strip()] = ports.strip()
+        return m
+
+    def _extract_host_port(ports_str, prefer_container_port=None):
+        import re
+        if not ports_str:
+            return None
+        # match host port patterns like 0.0.0.0:5678->5678/tcp
+        m = re.search(r'0\.0\.0\.0:(\d+)->', ports_str)
+        if m:
+            return m.group(1)
+        # match host->container like 5678->5678/tcp
+        m = re.search(r'(\d+)->\d+/tcp', ports_str)
+        if m:
+            return m.group(1)
+        # fallback: any bare port like 8080/tcp
+        m = re.search(r'(\d+)/tcp', ports_str)
+        if m:
+            return m.group(1)
+        return None
+
+    ports_map = _get_compose_ports()
+
+    def find_port_for(matches, prefer=None):
+        for k, v in ports_map.items():
+            for match in matches:
+                if match in k:
+                    hp = _extract_host_port(v, prefer)
+                    if hp:
+                        return hp
+        return None
+
+    entries = []
+    # OpenClaw is not managed by Docker here; only show it if detected
+    openclaw_port = find_port_for(["openclaw", "openclaw-gateway"]) or None
+    entries.append(("OpenClaw Gateway", openclaw_port))
+    entries.append(("OpenClaw Control UI", openclaw_port))
+
+    # Try to detect Open WebUI (commonly exposed on 8080)
+    webui_port = find_port_for(["webui", "open-webui", "imgproxy", "studio", "searxng"], prefer="8080")
+    if not webui_port:
+        # try to find any mapping to container port 8080
+        for v in ports_map.values():
+            if ":8080->" in v or ":8080/tcp" in v or "->8080/tcp" in v:
+                webui_port = _extract_host_port(v)
+                break
+    entries.append(("Open WebUI", webui_port))
+
+    entries.append(("n8n", find_port_for(["n8n"])) )
+    entries.append(("Qdrant", find_port_for(["qdrant"])) )
+    entries.append(("Neo4j Browser", find_port_for(["neo4j"])) )
+    entries.append(("Supabase Kong", find_port_for(["kong", "supabase-kong"])) )
+    entries.append(("Caddy (Proxy)", find_port_for(["caddy"])) )
+
+    for name, port in entries:
+        if port:
+            print(f"  • {name}: http://localhost:{port}")
+        else:
+            print(f"  • {name}: not running / not exposed")
+
+    print()
+    print("📖 Documentation: docs/OPENCLAW_INTEGRATIONS.md")
+    print("============================================================")
 
 if __name__ == "__main__":
     main()

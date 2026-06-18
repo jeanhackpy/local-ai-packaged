@@ -1,0 +1,120 @@
+{
+  "id": "wf008syncnewlisting",
+  "versionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "WF-008-SYNC-NEW-LISTINGS",
+  "active": false,
+  "meta": {"instanceId": "palanthai-n8n"},
+  "pinData": {},
+  "tags": [{"name": "palanthai"}, {"name": "sync"}],
+  "nodes": [
+    {
+      "id": "webhook-new-listing",
+      "name": "Webhook: New Listing",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-listing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "validate-payload",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "// Validate incoming unit payload\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['unit_url', 'sale_price_thb', 'bedrooms', 'province'];\nconst missing = required.filter(f => !body[f]);\n\nif (missing.length > 0) {\n  return [{\n    json: {\n      valid: false,\n      error: `Missing required fields: ${missing.join(', ')}`,\n      body\n    }\n  }];\n}\n\n// Normalize\nconst unit = {\n  unit_url: body.unit_url,\n  unit_id: body.unit_id || String(body.unit_url).match(/u(\\d+)$/)?.[1] || '',\n  project_name: body.project_name || '',\n  project_url: body.project_url || '',\n  sale_price_thb: parseInt(body.sale_price_thb),\n  price_per_sqm_thb: body.price_per_sqm_thb ? parseInt(body.price_per_sqm_thb) : null,\n  bedrooms: body.bedrooms,\n  bathrooms: body.bathrooms,\n  floor_area_sqm: body.floor_area_sqm ? parseFloat(body.floor_area_sqm) : null,\n  plot_size_sqm: body.plot_size_sqm ? parseFloat(body.plot_size_sqm) : null,\n  floor_number: body.floor_number ? parseInt(body.floor_number) : null,\n  property_type: body.property_type || 'condo',\n  ownership: body.ownership || null,\n  furnishing: body.furnishing || null,\n  view_type: body.view_type || null,\n  district: body.district || null,\n  subdistrict: body.subdistrict || null,\n  province: body.province,\n  latitude: body.latitude ? parseFloat(body.latitude) : null,\n  longitude: body.longitude ? parseFloat(body.longitude) : null,\n  features: Array.isArray(body.features) ? body.features : [],\n  images: Array.isArray(body.images) ? body.images : [],\n  developer: body.developer || null,\n  construction_status: body.construction_status || null,\n  nearest_landmark: body.nearest_landmark || null,\n  building_name: body.building_name || null,\n  listed_by: body.listed_by || null,\n  cam_fee_thb: body.cam_fee_thb ? parseInt(body.cam_fee_thb) : null,\n  data_quality_score: body.data_quality_score || 70,\n  scraped_at: body.scraped_at || new Date().toISOString(),\n  source: body.source || 'webhook'\n};\n\nreturn [{ json: { valid: true, unit } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "check-valid",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "upsert-supabase",
+      "name": "Upsert → Supabase",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [900, 220],
+      "parameters": {
+        "command": "cd /home/phil/palanthai && /home/phil/venv/bin/python3 -c \"\nimport json, sys, uuid, os\nfrom dotenv import load_dotenv\nload_dotenv('/home/phil/palanthai/config/.env')\nimport psycopg2\nfrom psycopg2.extras import execute_values\n\nunit = json.loads(sys.stdin.read())\n\ndef uuid5(url):\n    ns = uuid.UUID('6ba7b811-9dad-11d1-80b4-00c04fd430c8')\n    return str(uuid.uuid5(ns, url))\n\nconn = psycopg2.connect(os.getenv('VPS_PG_URL'))\ncur = conn.cursor()\n\nexecute_values(cur, '''INSERT INTO units (id, project_id, fazwaz_unit_id, property_type, bedrooms, bathrooms, floor_area_sqm, plot_size_sqm, floor_number, price_thb, price_per_sqm_thb, ownership_type, foreign_quota_available, furnishing, view_type, district, subdistrict, province, latitude, longitude, cam_fee_thb, developer_name, construction_status, nearest_landmark, building_name, listed_by, features, images, primary_image_url, source_url, data_quality_score, scraped_at) VALUES %s ON CONFLICT (fazwaz_unit_id) DO UPDATE SET price_thb=EXCLUDED.price_thb, price_per_sqm_thb=EXCLUDED.price_per_sqm_thb, images=EXCLUDED.images, data_quality_score=EXCLUDED.data_quality_score, scraped_at=EXCLUDED.scraped_at, updated_at=now()''', [(\n    uuid5(unit['unit_url']), uuid5(unit.get('project_url','unknown')),\n    unit['unit_id'], unit.get('property_type','condo'),\n    unit.get('bedrooms'), unit.get('bathrooms'), unit.get('floor_area_sqm'), unit.get('plot_size_sqm'),\n    unit.get('floor_number'), unit['sale_price_thb'], unit.get('price_per_sqm_thb'),\n    unit.get('ownership'), unit.get('ownership')=='foreign_quota',\n    unit.get('furnishing'), unit.get('view_type'), unit.get('district'), unit.get('subdistrict'), unit['province'],\n    unit.get('latitude'), unit.get('longitude'), unit.get('cam_fee_thb'),\n    unit.get('developer'), unit.get('construction_status'), unit.get('nearest_landmark'), unit.get('building_name'),\n    unit.get('listed_by'), json.dumps(unit.get('features',[])), json.dumps(unit.get('images',[])),\n    unit['images'][0] if unit.get('images') else None,\n    unit['unit_url'], unit.get('data_quality_score',70), unit.get('scraped_at')\n)])\nconn.commit()\ncur.close()\nconn.close()\nprint(json.dumps({'ok': True, 'unit_id': unit['unit_id']}))\n\" <<< '={{ JSON.stringify($json.unit) }}'"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "embed-qdrant",
+      "name": "Embed → Qdrant",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [900, 380],
+      "parameters": {
+        "command": "/home/phil/venv/bin/python3 /home/phil/palanthai/phase2/embed_single_unit.py --unit-json '={{ JSON.stringify($json.unit) }}'"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "respond-success",
+      "name": "Respond: Created",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1120, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, unit_id: $json.unit.unit_id, message: 'Unit synced to Supabase + Qdrant' }) }}",
+        "options": {"responseCode": 201}
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "respond-error",
+      "name": "Respond: 400 Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 520],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error }) }}",
+        "options": {"responseCode": 400}
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "slack-notify-new",
+      "name": "Slack: New Listing Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [1120, 460],
+      "parameters": {
+        "channel": "#ops",
+        "text": "🏠 New listing synced: *{{ $json.unit.project_name }}* | {{ $json.unit.bedrooms }}BR | {{ $json.unit.province }} | ฿{{ $json.unit.sale_price_thb }}",
+        "authentication": "oAuth2"
+      },
+      "typeVersion": 2.2
+    }
+  ],
+  "connections": {
+    "Webhook: New Listing": {"main": [[{"node": "Validate Payload", "type": "main", "index": 0}]]},
+    "Validate Payload": {"main": [[{"node": "Valid?", "type": "main", "index": 0}]]},
+    "Valid?": {
+      "main": [
+        [
+          {"node": "Upsert → Supabase", "type": "main", "index": 0},
+          {"node": "Embed → Qdrant", "type": "main", "index": 0}
+        ],
+        [{"node": "Respond: 400 Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Upsert → Supabase": {"main": [[{"node": "Respond: Created", "type": "main", "index": 0}, {"node": "Slack: New Listing Alert", "type": "main", "index": 0}]]},
+    "Embed → Qdrant": {"main": [[{"node": "Respond: Created", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

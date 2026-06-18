@@ -1,0 +1,177 @@
+{
+  "name": "WF-006-MONITOR-HEALTH-ALL",
+  "nodes": [
+    {
+      "id": "h1",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "h2",
+      "name": "Check All Services",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "command": "python3 -c \"\nimport subprocess, json\nresults = {}\n# Qdrant\ntry:\n  r = subprocess.run(['curl','-sf','http://localhost:6333/health'],capture_output=True,text=True,timeout=5)\n  results['qdrant'] = 'ok' if r.returncode==0 else 'down'\nexcept: results['qdrant']='timeout'\n# Supabase\ntry:\n  r = subprocess.run(['docker','exec','supabase-db','psql','-U','postgres','-d','postgres','-c','SELECT 1'],capture_output=True,text=True,timeout=5)\n  results['supabase'] = 'ok' if r.returncode==0 else 'down'\nexcept: results['supabase']='timeout'\n# Neo4j\ntry:\n  r = subprocess.run(['curl','-sf','http://localhost:7474'],capture_output=True,text=True,timeout=5)\n  results['neo4j'] = 'ok' if r.returncode==0 else 'down'\nexcept: results['neo4j']='timeout'\n# WP Reflexion\ntry:\n  r = subprocess.run(['curl','-sf','https://reflexion.asia/wp-json/wp/v2/posts?per_page=1'],capture_output=True,text=True,timeout=10)\n  results['wp_reflexion'] = 'ok' if r.returncode==0 else 'down'\nexcept: results['wp_reflexion']='timeout'\nall_ok = all(v=='ok' for v in results.values())\nprint(json.dumps({'all_ok':all_ok,'services':results}))\n\""
+      }
+    },
+    {
+      "id": "h3",
+      "name": "Parse Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const raw = $input.first().json.stdout || '{}';\ntry { return [{ json: JSON.parse(raw) }]; } catch(e) { return [{ json: { all_ok: false, services: { parse_error: raw.substring(0,100) } } }]; }"
+      }
+    },
+    {
+      "id": "h4",
+      "name": "All OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "hc1",
+              "leftValue": "={{ $json.all_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "h5",
+      "name": "Alert Services Down",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        450
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_cred",
+          "name": "Slack account"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "#alerts",
+        "text": "🚨 *VPS Health Alert*\n{{ Object.entries($json.services).filter(([k,v])=>v!='ok').map(([k,v])=>`❌ ${k}: ${v}`).join('\\n') || 'Multiple services down' }}"
+      }
+    },
+    {
+      "id": "h6",
+      "name": "Silent OK",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "Check All Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check All Services": {
+      "main": [
+        [
+          {
+            "node": "Parse Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Health": {
+      "main": [
+        [
+          {
+            "node": "All OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All OK?": {
+      "main": [
+        [
+          {
+            "node": "Silent OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Services Down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "nyB2p3SI7AHszY1W",
+  "versionId": "3d08ae27-2ca7-402a-8977-588198cadd53",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f722e3e1e81e942a38faa434ad0aee8699371bbff9f883b9d5c59a7c726605af"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}
