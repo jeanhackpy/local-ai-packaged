@@ -1,6 +1,0 @@
-services:
-  kong:
-    ports: !reset null
-
-  supavisor:
-    ports: !reset null
