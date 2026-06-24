@@ -1,6 +1,6 @@
 """
 title: LLM Router Pipe
-version: 1.0.0
+version: 1.0.1
 description: Routes queries between local and cloud models based on difficulty evaluation and privacy settings.
 """
 
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import sys
 
 class Pipe:
     class Valves(BaseModel):
@@ -118,7 +119,7 @@ class Pipe:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
         except Exception as e:
-            print(f"Error evaluating difficulty: {e}")
+            print(f"Error evaluating difficulty: {e}", file=sys.stderr)
         return "Easy" # Default to Easy/Local on error
 
     def call_ollama(self, model: str, body: dict) -> str:
@@ -131,12 +132,13 @@ class Pipe:
         }
         try:
             response = requests.post(f"{self.valves.ollama_url}/api/chat", json=payload)
-            if response.status_code == 200:
-                return response.json()["message"]["content"]
-            else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+            response.raise_for_status()
+            return response.json()["message"]["content"]
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            print(f"Error calling Ollama: {str(e)}", file=sys.stderr)
+            if 'response' in locals() and hasattr(response, 'text'):
+                print(f"Ollama response: {response.text[:500]}", file=sys.stderr)
+            return "Error: Failed to get response from local model."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
@@ -151,11 +153,10 @@ class Pipe:
         }
         try:
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-            if response.status_code == 200:
-                return response.json()["choices"][0]["message"]["content"]
-            else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
-
-
+            print(f"Error calling OpenRouter: {str(e)}", file=sys.stderr)
+            if 'response' in locals() and hasattr(response, 'text'):
+                print(f"OpenRouter response: {response.text[:500]}", file=sys.stderr)
+            return "Error: Failed to get response from cloud model."
