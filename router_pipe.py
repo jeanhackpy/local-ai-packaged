@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import os
 import requests
 import json
+import sys
 
 class Pipe:
     class Valves(BaseModel):
@@ -118,7 +119,7 @@ class Pipe:
                 result = response.json().get("response", "").strip()
                 return "Hard" if "Hard" in result else "Easy"
         except Exception as e:
-            print(f"Error evaluating difficulty: {e}")
+            sys.stderr.write(f"Error evaluating difficulty: {e}\n")
         return "Easy" # Default to Easy/Local on error
 
     def call_ollama(self, model: str, body: dict) -> str:
@@ -134,9 +135,11 @@ class Pipe:
             if response.status_code == 200:
                 return response.json()["message"]["content"]
             else:
-                return f"Error from Ollama: {response.status_code} - {response.text}"
+                sys.stderr.write(f"Ollama Error: {response.status_code} - {response.text}\n")
+                return "An error occurred while calling the local model."
         except Exception as e:
-            return f"Error calling Ollama: {str(e)}"
+            sys.stderr.write(f"Exception calling Ollama: {str(e)}\n")
+            return "An error occurred while calling the local model."
 
     def call_openrouter(self, model: str, body: dict) -> str:
         # Clean model name for OpenRouter
@@ -154,8 +157,10 @@ class Pipe:
             if response.status_code == 200:
                 return response.json()["choices"][0]["message"]["content"]
             else:
-                return f"Error from OpenRouter: {response.status_code} - {response.text}"
+                sys.stderr.write(f"OpenRouter Error: {response.status_code} - {response.text}\n")
+                return "An error occurred while calling the cloud model."
         except Exception as e:
-            return f"Error calling OpenRouter: {str(e)}"
+            sys.stderr.write(f"Exception calling OpenRouter: {str(e)}\n")
+            return "An error occurred while calling the cloud model."
 
 

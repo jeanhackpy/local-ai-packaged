@@ -9,6 +9,7 @@ from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
 import time
+import sys
 import requests
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
@@ -105,18 +106,22 @@ class Pipe:
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
-                    raise Exception(f"Error: {response.status_code} - {response.text}")
+                    # Log details to stderr, return generic error to user
+                    sys.stderr.write(f"N8N Error: {response.status_code} - {response.text}\n")
+                    raise Exception("An error occurred during sequence execution.")
 
                 # Set assitant message with chain reply
                 body["messages"].append({"role": "assistant", "content": n8n_response})
             except Exception as e:
+                # Log full exception to stderr for internal debugging
+                sys.stderr.write(f"Exception in n8n_pipe: {str(e)}\n")
                 await self.emit_status(
                     __event_emitter__,
                     "error",
-                    f"Error during sequence execution: {str(e)}",
+                    "Error during sequence execution.",
                     True,
                 )
-                return {"error": str(e)}
+                return {"error": "An error occurred during sequence execution."}
         # If no message is available alert user
         else:
             await self.emit_status(
