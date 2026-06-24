@@ -9,7 +9,7 @@ from typing import Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 import os
 import time
-import requests
+import httpx
 
 def extract_event_info(event_emitter) -> tuple[Optional[str], Optional[str]]:
     if not event_emitter or not event_emitter.__closure__:
@@ -42,7 +42,8 @@ class Pipe:
         self.name = "N8N Pipe"
         self.valves = self.Valves()
         self.last_emit_time = 0
-        pass
+        # Bolt: Initialize AsyncClient for connection pooling
+        self.client = httpx.AsyncClient()
 
     async def emit_status(
         self,
@@ -96,12 +97,15 @@ class Pipe:
                 }
                 payload = {"sessionId": f"{chat_id}"}
                 payload[self.valves.input_field] = question
-                response = requests.post(
+
+                # Bolt: Use async client and explicit timeout
+                response = await self.client.post(
                     self.valves.n8n_url,
                     json=payload,
                     headers=headers,
-                    timeout=30,
+                    timeout=30.0,
                 )
+
                 if response.status_code == 200:
                     n8n_response = response.json()[self.valves.response_field]
                 else:
@@ -131,6 +135,7 @@ class Pipe:
                     "content": "No messages found in the request body",
                 }
             )
+            n8n_response = "No messages found in the request body"
 
         await self.emit_status(__event_emitter__, "info", "Complete", True)
         return n8n_response
